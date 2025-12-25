@@ -250,6 +250,7 @@
       // 選択画面
       if (gameState === 'selection') {
         const totalCompleted = completedScenarios.size;
+        const isDarkMode = score > scenarios.length;
         return (
           <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
             <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-8 max-w-4xl w-full">
@@ -290,11 +291,17 @@
                       <div className="font-bold text-xl mb-2">
                         {scenario.title}
                         {scenario.id === 6 && firstFiveCompleted && (
-                          <span className="ml-2 text-yellow-300 text-sm">✨ 新規追加</span>
+                          <span className={`ml-2 text-sm ${isDarkMode ? 'text-red-300' : 'text-yellow-300'}`}>
+                            {isDarkMode ? '⚠️ ダークモード' : '✨ 新規追加'}
+                          </span>
                         )}
                       </div>
                       <div className="text-sm opacity-90 line-clamp-2">
-                        {isLocked ? '最初の5つのシナリオをクリアすると出現します' : scenario.setup}
+                        {isLocked 
+                          ? '最初の5つのシナリオをクリアすると出現します' 
+                          : (scenario.id === 6 && isDarkMode 
+                            ? '【システムエラー】異常なスコアを検出。世界の整合性が崩壊しています...'
+                            : scenario.setup)}
                       </div>
                       {isCompleted && (
                         <div className="absolute top-2 right-2">
@@ -338,7 +345,9 @@
 
               {/* 登場人物プロフィール */}
               <div className="mt-12 pt-8 border-t-2 border-gray-300">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">登場人物プロフィール</h2>
+                <h2 className={`text-2xl font-bold mb-6 text-center ${isDarkMode ? 'text-red-800' : 'text-gray-800'}`}>
+                  {isDarkMode ? '登場人物プロフィール【データ破損】' : '登場人物プロフィール'}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* シナリオ1: も */}
                   {(() => {
@@ -358,19 +367,30 @@
                         </h3>
                         {isUnlocked ? (
                           <>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-semibold">職業:</span> 会社員<br/>
-                              <span className="font-semibold">特徴:</span> 10年前に失踪した人物の写真を持参。探偵に「もうひとつ」の手がかりを求めている。写真の隅に何か隠されているかもしれない。
-                              {scenarioResults[6] && (
+                            <p className={`text-sm mb-2 ${isDarkMode ? 'text-red-900' : 'text-gray-700'}`}>
+                              <span className="font-semibold">職業:</span> {isDarkMode ? '【データ欠損】' : '会社員'}<br/>
+                              <span className="font-semibold">特徴:</span> {isDarkMode 
+                                ? 'バグによって「も」という文字を失った。写真は歪み、人物の姿が消えている。データの欠片となって崩壊しつつある。'
+                                : '10年前に失踪した人物の写真を持参。探偵に「もうひとつ」の手がかりを求めている。写真の隅に何か隠されているかもしれない。'}
+                              {scenarioResults[6] && !isDarkMode && (
                                 <><br/><br/><span className="font-semibold text-pink-700">謎の声との関係:</span> もも子さんが探していた「もうひとつ」は、実は謎の声が導いた道標でした。謎の声は、もも子さんに真実を見つける力を与えた存在です。
                                 </>)}
+                              {scenarioResults[6] && isDarkMode && (
+                                <><br/><br/><span className="font-semibold text-red-700">【バグ】:</span> もも子のデータは破損しています。「も」という文字が消失し、存在が不安定になっています。シミュレーションの整合性が崩壊しています。
+                                </>)}
                             </p>
-                            <p className="text-xs text-pink-600 italic mb-3">「もっと深く調べてほしいの...」</p>
+                            <p className={`text-xs italic mb-3 ${isDarkMode ? 'text-red-700' : 'text-pink-600'}`}>
+                              {isDarkMode ? '「も...も...もど...」【エラー】' : '「もっと深く調べてほしいの...」'}
+                            </p>
                             {result && (
                               <>
-                                <div className="mt-3 pt-3 border-t border-pink-200">
-                                  <p className="text-xs font-semibold text-pink-700 mb-1">後日談</p>
-                                  <p className="text-xs text-gray-600 whitespace-pre-line">{result.epilogue}</p>
+                                <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-red-600 bg-red-900' : 'border-pink-200'}`}>
+                                  <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-pink-700'}`}>後日談</p>
+                                  <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-600'}`}>
+                                    {isDarkMode 
+                                      ? '【データ破損】\nもも子のデータは完全に崩壊しました。写真は歪み、人物の姿は消えています。\n「も」という文字を失ったもも子は、存在そのものが不安定になっています。\nシミュレーションの整合性が崩壊し、修復不可能な状態です。'
+                                      : result.epilogue}
+                                  </p>
                                 </div>
                                 {result.hasWord && scenario && scenario.branches[result.choiceId] && scenario.branches[result.choiceId].epilogue2 && (
                                   <>
@@ -389,9 +409,13 @@
                                       {isExpanded ? '▼ 後日談の後日談を隠す' : '▶ 後日談の後日談を見る'}
                                     </button>
                                     {isExpanded && (
-                                      <div className="mt-2 pt-2 border-t border-pink-100">
-                                        <p className="text-xs font-semibold text-pink-600 mb-1">後日談の後日談</p>
-                                        <p className="text-xs text-gray-600 whitespace-pre-line">{scenario.branches[result.choiceId].epilogue2}</p>
+                                      <div className={`mt-2 pt-2 border-t ${isDarkMode ? 'border-red-700 bg-red-950' : 'border-pink-100'}`}>
+                                        <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-300' : 'text-pink-600'}`}>後日談の後日談</p>
+                                        <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-200' : 'text-gray-600'}`}>
+                                          {isDarkMode 
+                                            ? '【完全崩壊】\nもも子は完全にデータの欠片となって消えました。\n写真は歪み、人物の姿は完全に消失しています。\n「も」という文字を失ったもも子は、もう存在しません。\nシミュレーションの整合性は完全に崩壊し、修復不可能です。\n\nあなたは、もも子を失った世界に一人取り残されました。'
+                                            : scenario.branches[result.choiceId].epilogue2}
+                                        </p>
                                       </div>
                                     )}
                                   </>
@@ -429,19 +453,30 @@
                         </h3>
                         {isUnlocked ? (
                           <>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-semibold">職業:</span> レストランシェフ<br/>
-                              <span className="font-semibold">特徴:</span> ユーモア好きで、時々「きまぐれ」なメニューを提供。空の皿を出すこともあるが、その裏には何か意味があるかもしれない。
-                              {scenarioResults[6] && (
+                            <p className={`text-sm mb-2 ${isDarkMode ? 'text-red-900' : 'text-gray-700'}`}>
+                              <span className="font-semibold">職業:</span> {isDarkMode ? '【データ欠損】' : 'レストランシェフ'}<br/>
+                              <span className="font-semibold">特徴:</span> {isDarkMode 
+                                ? 'バグによって「う」という文字を失った。皿は空のまま、料理は生成されない。ユーモアは歪み、恐怖に変わっている。'
+                                : 'ユーモア好きで、時々「きまぐれ」なメニューを提供。空の皿を出すこともあるが、その裏には何か意味があるかもしれない。'}
+                              {scenarioResults[6] && !isDarkMode && (
                                 <><br/><br/><span className="font-semibold text-blue-700">謎の声との関係:</span> うみシェフの「きまぐれ」は、謎の声からのメッセージでした。謎の声は、うみシェフを通じて「もうひとつ」の楽しみを伝えようとしていたのです。
                                 </>)}
+                              {scenarioResults[6] && isDarkMode && (
+                                <><br/><br/><span className="font-semibold text-red-700">【バグ】:</span> うみのデータは破損しています。「う」という文字が消失し、皿からは何も生成されません。シミュレーションの物理法則が崩壊しています。
+                                </>)}
                             </p>
-                            <p className="text-xs text-blue-600 italic mb-3">「お客様には、もうひとつの楽しみを...」</p>
+                            <p className={`text-xs italic mb-3 ${isDarkMode ? 'text-red-700' : 'text-blue-600'}`}>
+                              {isDarkMode ? '「う...う...うま...」【エラー】' : '「お客様には、もうひとつの楽しみを...」'}
+                            </p>
                             {result && (
                               <>
-                                <div className="mt-3 pt-3 border-t border-blue-200">
-                                  <p className="text-xs font-semibold text-blue-700 mb-1">後日談</p>
-                                  <p className="text-xs text-gray-600 whitespace-pre-line">{result.epilogue}</p>
+                                <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-red-600 bg-red-900' : 'border-blue-200'}`}>
+                                  <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-blue-700'}`}>後日談</p>
+                                  <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-600'}`}>
+                                    {isDarkMode 
+                                      ? '【データ破損】\nうみのデータは完全に崩壊しました。皿からは何も生成されず、レストランは空っぽです。\n「う」という文字を失ったうみは、ユーモアを失い、恐怖に変わっています。\nシミュレーションの物理法則が崩壊しています。'
+                                      : result.epilogue}
+                                  </p>
                                 </div>
                                 {result.hasWord && scenario && scenario.branches[result.choiceId] && scenario.branches[result.choiceId].epilogue2 && (
                                   <>
@@ -460,9 +495,13 @@
                                       {isExpanded ? '▼ 後日談の後日談を隠す' : '▶ 後日談の後日談を見る'}
                                     </button>
                                     {isExpanded && (
-                                      <div className="mt-2 pt-2 border-t border-blue-100">
-                                        <p className="text-xs font-semibold text-blue-600 mb-1">後日談の後日談</p>
-                                        <p className="text-xs text-gray-600 whitespace-pre-line">{scenario.branches[result.choiceId].epilogue2}</p>
+                                      <div className={`mt-2 pt-2 border-t ${isDarkMode ? 'border-red-700 bg-red-950' : 'border-blue-100'}`}>
+                                        <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-300' : 'text-blue-600'}`}>後日談の後日談</p>
+                                        <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-200' : 'text-gray-600'}`}>
+                                          {isDarkMode 
+                                            ? '【完全崩壊】\nうみは完全にデータの欠片となって消えました。\n皿からは何も生成されず、レストランは空っぽです。\n「う」という文字を失ったうみは、もう存在しません。\nシミュレーションの物理法則は完全に崩壊し、修復不可能です。\n\nあなたは、うみを失った世界に一人取り残されました。'
+                                            : scenario.branches[result.choiceId].epilogue2}
+                                        </p>
                                       </div>
                                     )}
                                   </>
@@ -500,19 +539,30 @@
                         </h3>
                         {isUnlocked ? (
                           <>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-semibold">職業:</span> フリーランス<br/>
-                              <span className="font-semibold">特徴:</span> 20年前に一緒にタイムカプセルを埋めた親友。実は、あなたが知らない「もうひとつ」の手紙を入れていた。手紙の裏には何か書かれているかもしれない。
-                              {scenarioResults[6] && (
+                            <p className={`text-sm mb-2 ${isDarkMode ? 'text-red-900' : 'text-gray-700'}`}>
+                              <span className="font-semibold">職業:</span> {isDarkMode ? '【データ欠損】' : 'フリーランス'}<br/>
+                              <span className="font-semibold">特徴:</span> {isDarkMode 
+                                ? 'バグによって「ひ」という文字を失った。タイムカプセルは空で、手紙は文字化けしている。友情の記憶が消えつつある。'
+                                : '20年前に一緒にタイムカプセルを埋めた親友。実は、あなたが知らない「もうひとつ」の手紙を入れていた。手紙の裏には何か書かれているかもしれない。'}
+                              {scenarioResults[6] && !isDarkMode && (
                                 <><br/><br/><span className="font-semibold text-yellow-700">謎の声との関係:</span> ひろがタイムカプセルに入れた「もうひとつ」の手紙は、謎の声からの導きでした。謎の声は、友情を通じて「もうひとつ」の価値を教えてくれた存在です。
                                 </>)}
+                              {scenarioResults[6] && isDarkMode && (
+                                <><br/><br/><span className="font-semibold text-red-700">【バグ】:</span> ひろのデータは破損しています。「ひ」という文字が消失し、タイムカプセルの内容が空になっています。記憶の整合性が崩壊しています。
+                                </>)}
                             </p>
-                            <p className="text-xs text-yellow-600 italic mb-3">「実は、もうひとつ秘密があるんだ...」</p>
+                            <p className={`text-xs italic mb-3 ${isDarkMode ? 'text-red-700' : 'text-yellow-600'}`}>
+                              {isDarkMode ? '「ひ...ひ...ひろ...」【エラー】' : '「実は、もうひとつ秘密があるんだ...」'}
+                            </p>
                             {result && (
                               <>
-                                <div className="mt-3 pt-3 border-t border-yellow-200">
-                                  <p className="text-xs font-semibold text-yellow-700 mb-1">後日談</p>
-                                  <p className="text-xs text-gray-600 whitespace-pre-line">{result.epilogue}</p>
+                                <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-red-600 bg-red-900' : 'border-yellow-200'}`}>
+                                  <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-yellow-700'}`}>後日談</p>
+                                  <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-600'}`}>
+                                    {isDarkMode 
+                                      ? '【データ破損】\nひろのデータは完全に崩壊しました。タイムカプセルは空で、手紙は文字化けしています。\n「ひ」という文字を失ったひろは、友情の記憶を失っています。\n記憶の整合性が崩壊し、修復不可能な状態です。'
+                                      : result.epilogue}
+                                  </p>
                                 </div>
                                 {result.hasWord && scenario && scenario.branches[result.choiceId] && scenario.branches[result.choiceId].epilogue2 && (
                                   <>
@@ -531,9 +581,13 @@
                                       {isExpanded ? '▼ 後日談の後日談を隠す' : '▶ 後日談の後日談を見る'}
                                     </button>
                                     {isExpanded && (
-                                      <div className="mt-2 pt-2 border-t border-yellow-100">
-                                        <p className="text-xs font-semibold text-yellow-600 mb-1">後日談の後日談</p>
-                                        <p className="text-xs text-gray-600 whitespace-pre-line">{scenario.branches[result.choiceId].epilogue2}</p>
+                                      <div className={`mt-2 pt-2 border-t ${isDarkMode ? 'border-red-700 bg-red-950' : 'border-yellow-100'}`}>
+                                        <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-300' : 'text-yellow-600'}`}>後日談の後日談</p>
+                                        <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-200' : 'text-gray-600'}`}>
+                                          {isDarkMode 
+                                            ? '【完全崩壊】\nひろは完全にデータの欠片となって消えました。\nタイムカプセルは空で、手紙は文字化けしています。\n「ひ」という文字を失ったひろは、もう存在しません。\n記憶の整合性は完全に崩壊し、修復不可能です。\n\nあなたは、ひろを失った世界に一人取り残されました。'
+                                            : scenario.branches[result.choiceId].epilogue2}
+                                        </p>
                                       </div>
                                     )}
                                   </>
@@ -571,19 +625,30 @@
                         </h3>
                         {isUnlocked ? (
                           <>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-semibold">職業:</span> 魔法学校の試験官<br/>
-                              <span className="font-semibold">特徴:</span> 厳格だが、予想外の結果にも柔軟に対応する。ウサギが2羽出現した時、「もうひとつ」消すよう指示。消えた跡には何かが残るかもしれない。
-                              {scenarioResults[6] && (
+                            <p className={`text-sm mb-2 ${isDarkMode ? 'text-red-900' : 'text-gray-700'}`}>
+                              <span className="font-semibold">職業:</span> {isDarkMode ? '【データ欠損】' : '魔法学校の試験官'}<br/>
+                              <span className="font-semibold">特徴:</span> {isDarkMode 
+                                ? 'バグによって「と」という文字を失った。ウサギは無限に増殖し、消すことができない。魔法の法則が崩壊している。'
+                                : '厳格だが、予想外の結果にも柔軟に対応する。ウサギが2羽出現した時、「もうひとつ」消すよう指示。消えた跡には何かが残るかもしれない。'}
+                              {scenarioResults[6] && !isDarkMode && (
                                 <><br/><br/><span className="font-semibold text-purple-700">謎の声との関係:</span> とおる試験官の「もうひとつ」という指示は、謎の声からの試練でした。謎の声は、とおる試験官を通じて、成長のための「もうひとつ」の道を示していたのです。
                                 </>)}
+                              {scenarioResults[6] && isDarkMode && (
+                                <><br/><br/><span className="font-semibold text-red-700">【バグ】:</span> とおるのデータは破損しています。「と」という文字が消失し、ウサギが無限増殖しています。シミュレーションの物理法則が完全に崩壊しています。
+                                </>)}
                             </p>
-                            <p className="text-xs text-purple-600 italic mb-3">「もうひとつ、試してみなさい」</p>
+                            <p className={`text-xs italic mb-3 ${isDarkMode ? 'text-red-700' : 'text-purple-600'}`}>
+                              {isDarkMode ? '「と...と...とま...」【エラー】' : '「もうひとつ、試してみなさい」'}
+                            </p>
                             {result && (
                               <>
-                                <div className="mt-3 pt-3 border-t border-purple-200">
-                                  <p className="text-xs font-semibold text-purple-700 mb-1">後日談</p>
-                                  <p className="text-xs text-gray-600 whitespace-pre-line">{result.epilogue}</p>
+                                <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-red-600 bg-red-900' : 'border-purple-200'}`}>
+                                  <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-purple-700'}`}>後日談</p>
+                                  <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-600'}`}>
+                                    {isDarkMode 
+                                      ? '【データ破損】\nとおるのデータは完全に崩壊しました。ウサギは無限に増殖し、消すことができません。\n「と」という文字を失ったとおるは、魔法の法則を失っています。\nシミュレーションの物理法則が完全に崩壊しています。'
+                                      : result.epilogue}
+                                  </p>
                                 </div>
                                 {result.hasWord && scenario && scenario.branches[result.choiceId] && scenario.branches[result.choiceId].epilogue2 && (
                                   <>
@@ -602,9 +667,13 @@
                                       {isExpanded ? '▼ 後日談の後日談を隠す' : '▶ 後日談の後日談を見る'}
                                     </button>
                                     {isExpanded && (
-                                      <div className="mt-2 pt-2 border-t border-purple-100">
-                                        <p className="text-xs font-semibold text-purple-600 mb-1">後日談の後日談</p>
-                                        <p className="text-xs text-gray-600 whitespace-pre-line">{scenario.branches[result.choiceId].epilogue2}</p>
+                                      <div className={`mt-2 pt-2 border-t ${isDarkMode ? 'border-red-700 bg-red-950' : 'border-purple-100'}`}>
+                                        <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-300' : 'text-purple-600'}`}>後日談の後日談</p>
+                                        <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-200' : 'text-gray-600'}`}>
+                                          {isDarkMode 
+                                            ? '【完全崩壊】\nとおるは完全にデータの欠片となって消えました。\nウサギは無限に増殖し、消すことができません。\n「と」という文字を失ったとおるは、もう存在しません。\nシミュレーションの物理法則は完全に崩壊し、修復不可能です。\n\nあなたは、とおるを失った世界に一人取り残されました。'
+                                            : scenario.branches[result.choiceId].epilogue2}
+                                        </p>
                                       </div>
                                     )}
                                   </>
@@ -642,19 +711,30 @@
                         </h3>
                         {isUnlocked ? (
                           <>
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-semibold">職業:</span> デザイナー<br/>
-                              <span className="font-semibold">特徴:</span> 優しく気配り上手。パズルが完成することを見越して、「もうひとつ」のパズルを用意していた。箱の蓋の内側に何かメッセージがあるかもしれない。
-                              {scenarioResults[6] && (
+                            <p className={`text-sm mb-2 ${isDarkMode ? 'text-red-900' : 'text-gray-700'}`}>
+                              <span className="font-semibold">職業:</span> {isDarkMode ? '【データ欠損】' : 'デザイナー'}<br/>
+                              <span className="font-semibold">特徴:</span> {isDarkMode 
+                                ? 'バグによって「つ」という文字を失った。パズルのピースは永遠に足りず、完成することはない。愛の記憶が消えつつある。'
+                                : '優しく気配り上手。パズルが完成することを見越して、「もうひとつ」のパズルを用意していた。箱の蓋の内側に何かメッセージがあるかもしれない。'}
+                              {scenarioResults[6] && !isDarkMode && (
                                 <><br/><br/><span className="font-semibold text-green-700">謎の声との関係:</span> つばさが用意した「もうひとつ」のパズルは、謎の声からの贈り物でした。謎の声は、つばさを通じて、愛と気配りの「もうひとつ」を教えてくれた存在です。
                                 </>)}
+                              {scenarioResults[6] && isDarkMode && (
+                                <><br/><br/><span className="font-semibold text-red-700">【バグ】:</span> つばさのデータは破損しています。「つ」という文字が消失し、パズルは永遠に完成しません。愛のデータが欠損しています。
+                                </>)}
                             </p>
-                            <p className="text-xs text-green-600 italic mb-3">「君のために、もうひとつ準備してたんだ」</p>
+                            <p className={`text-xs italic mb-3 ${isDarkMode ? 'text-red-700' : 'text-green-600'}`}>
+                              {isDarkMode ? '「つ...つ...つば...」【エラー】' : '「君のために、もうひとつ準備してたんだ」'}
+                            </p>
                             {result && (
                               <>
-                                <div className="mt-3 pt-3 border-t border-green-200">
-                                  <p className="text-xs font-semibold text-green-700 mb-1">後日談</p>
-                                  <p className="text-xs text-gray-600 whitespace-pre-line">{result.epilogue}</p>
+                                <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-red-600 bg-red-900' : 'border-green-200'}`}>
+                                  <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-green-700'}`}>後日談</p>
+                                  <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-600'}`}>
+                                    {isDarkMode 
+                                      ? '【データ破損】\nつばさのデータは完全に崩壊しました。パズルのピースは永遠に足りず、完成することはありません。\n「つ」という文字を失ったつばさは、愛の記憶を失っています。\n愛のデータが欠損し、修復不可能な状態です。'
+                                      : result.epilogue}
+                                  </p>
                                 </div>
                                 {result.hasWord && scenario && scenario.branches[result.choiceId] && scenario.branches[result.choiceId].epilogue2 && (
                                   <>
@@ -673,9 +753,13 @@
                                       {isExpanded ? '▼ 後日談の後日談を隠す' : '▶ 後日談の後日談を見る'}
                                     </button>
                                     {isExpanded && (
-                                      <div className="mt-2 pt-2 border-t border-green-100">
-                                        <p className="text-xs font-semibold text-green-600 mb-1">後日談の後日談</p>
-                                        <p className="text-xs text-gray-600 whitespace-pre-line">{scenario.branches[result.choiceId].epilogue2}</p>
+                                      <div className={`mt-2 pt-2 border-t ${isDarkMode ? 'border-red-700 bg-red-950' : 'border-green-100'}`}>
+                                        <p className={`text-xs font-semibold mb-1 ${isDarkMode ? 'text-red-300' : 'text-green-600'}`}>後日談の後日談</p>
+                                        <p className={`text-xs whitespace-pre-line ${isDarkMode ? 'text-red-200' : 'text-gray-600'}`}>
+                                          {isDarkMode 
+                                            ? '【完全崩壊】\nつばさは完全にデータの欠片となって消えました。\nパズルのピースは永遠に足りず、完成することはありません。\n「つ」という文字を失ったつばさは、もう存在しません。\n愛のデータは完全に欠損し、修復不可能です。\n\nあなたは、つばさを失った世界に一人取り残されました。'
+                                            : scenario.branches[result.choiceId].epilogue2}
+                                        </p>
                                       </div>
                                     )}
                                   </>
@@ -745,13 +829,14 @@
 
       // シナリオプレイ中
       const scenario = scenarios[currentScenario];
+      const isDarkMode = currentScenario === scenarios.findIndex(s => s.id === 6) && score > scenarios.length;
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-          <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+        <div className={`min-h-screen flex items-center justify-center p-4 ${isDarkMode ? 'bg-gradient-to-br from-red-950 via-black to-gray-900' : 'bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900'}`}>
+          <div className={`backdrop-blur rounded-2xl shadow-2xl p-8 max-w-2xl w-full ${isDarkMode ? 'bg-red-900/90 border-2 border-red-600' : 'bg-white/90'}`}>
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">
-                {scenario.title}
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-red-800' : 'text-gray-800'}`}>
+                {isDarkMode ? '真実の扉【ダークモード】' : scenario.title}
               </h1>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-600">
@@ -773,14 +858,21 @@
                   {scenario.setup}
                 </p>
                 <div className="space-y-3">
-                  {scenario.choices.map((choice) => (
+                  {(isDarkMode ? [
+                    { id: 1, text: '「すみません...」と謝る', preview: '私：「壊してしまって...' },
+                    { id: 2, text: '「これは何ですか？」と問う', preview: '私：「この世界は...' }
+                  ] : scenario.choices).map((choice) => (
                     <button
                       key={choice.id}
                       onClick={() => handleChoice(choice.id)}
-                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium py-4 px-6 rounded-lg transition-all transform hover:scale-105 text-left"
+                      className={`w-full font-medium py-4 px-6 rounded-lg transition-all transform hover:scale-105 text-left ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-red-600 to-black hover:from-red-700 hover:to-gray-900 text-white border-2 border-red-400'
+                          : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white'
+                      }`}
                     >
                       <div className="font-bold mb-1">選択肢{choice.id}：{choice.text}</div>
-                      <div className="text-sm text-purple-100 opacity-80">
+                      <div className={`text-sm opacity-80 ${isDarkMode ? 'text-red-100' : 'text-purple-100'}`}>
                         {choice.preview}
                       </div>
                     </button>
@@ -791,30 +883,50 @@
 
             {gameState === 'result' && (
               <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                    {scenario.branches[selectedChoice].text}
+                <div className={`rounded-lg p-6 ${isDarkMode ? 'bg-red-900 text-red-100 border-2 border-red-600' : 'bg-gray-50'}`}>
+                  <p className={`whitespace-pre-line leading-relaxed ${isDarkMode ? 'text-red-100' : 'text-gray-700'}`}>
+                    {isDarkMode 
+                      ? (selectedChoice === 1 
+                        ? '私：「すみません...壊してしまって...」\n\n壊れた声：「謝っても...もう遅い...」\n世界が歪み始める。\n\n壊れた声：「この世界は...シミュレーションだった...」\n「あなたの異常な行動が...世界を破壊した...」\n「もう...修復できない...」\n\n画面が歪み、文字が崩れていく。\nあなたは、自分が何をしてしまったのか理解した。'
+                        : '私：「この世界は...何ですか？」\n\n壊れた声：「シミュレーション...すべてが...」\n「あなたは...バグを起こした...」\n「世界の整合性が...崩壊している...」\n\n周囲の空間が歪み、現実が崩れていく。\n登場人物たちの姿が、データの欠片となって消えていく。\n\n壊れた声：「もう...戻れない...」\n「あなたは...世界を壊した...」')
+                      : scenario.branches[selectedChoice].text}
                   </p>
                 </div>
 
-                {scenario.branches[selectedChoice].hasWord ? (
-                  <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center">
-                    <p className="text-green-800 font-bold text-xl">
-                      ✨ 【もうひとつ】ワードゲット! ✨
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 text-center">
-                    <p className="text-red-800 font-bold">
-                      残念...【もうひとつ】は出ませんでした
+                {!isDarkMode && (
+                  <>
+                    {scenario.branches[selectedChoice].hasWord ? (
+                      <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center">
+                        <p className="text-green-800 font-bold text-xl">
+                          ✨ 【もうひとつ】ワードゲット! ✨
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 text-center">
+                        <p className="text-red-800 font-bold">
+                          残念...【もうひとつ】は出ませんでした
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {isDarkMode && (
+                  <div className="bg-red-900 border-2 border-red-600 rounded-lg p-4 text-center">
+                    <p className="text-red-200 font-bold text-xl">
+                      ⚠️ 【システムエラー】世界崩壊 ⚠️
                     </p>
                   </div>
                 )}
 
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                  <p className="text-sm text-blue-600 font-semibold mb-1">後日談</p>
-                  <p className="text-gray-700 whitespace-pre-line">
-                    {scenario.branches[selectedChoice].epilogue || scenario.epilogue}
+                <div className={`border-l-4 p-4 ${isDarkMode ? 'bg-red-900 border-red-600' : 'bg-blue-50 border-blue-500'}`}>
+                  <p className={`text-sm font-semibold mb-1 ${isDarkMode ? 'text-red-200' : 'text-blue-600'}`}>後日談</p>
+                  <p className={`whitespace-pre-line ${isDarkMode ? 'text-red-100' : 'text-gray-700'}`}>
+                    {isDarkMode
+                      ? (selectedChoice === 1
+                        ? '世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】'
+                        : 'あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】')
+                      : (scenario.branches[selectedChoice].epilogue || scenario.epilogue)}
                   </p>
                 </div>
 
