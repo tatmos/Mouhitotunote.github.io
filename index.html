@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ミニノベルゲーム</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React and ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone for JSX transformation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* カスタムスタイル */
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // アイコンコンポーネント（SVG）
+    const RotateCcw = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+      </svg>
+    );
+
+    const Award = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+      </svg>
+    );
+
+    const scenarios = [
+      {
+        id: 1,
+        title: '謎の依頼',
+        setup: 'あなたは探偵事務所で古い写真を手渡されました。',
+        choices: [
+          { id: 1, text: '写真の人物について調べる', preview: '私：「この人物は...' },
+          { id: 2, text: '写真の背景について調べる', preview: '私：「この建物は...' }
+        ],
+        branches: {
+          1: {
+            text: '私：「この人物は10年前に失踪した田中様ですね」\n依頼人：「そう、でも私が知りたいのは・・・」\n私：「失礼しました。【もうひとつ】の手がかりを調べます。背景の建物ですね」',
+            hasWord: true
+          },
+          2: {
+            text: '私：「この建物は取り壊された旧市庁舎です」\n依頼人：「まさにそこ!ありがとう、探偵さん」',
+            hasWord: false
+          }
+        },
+        epilogue: 'その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。'
+      },
+      {
+        id: 2,
+        title: '不思議なレストラン',
+        setup: 'メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。',
+        choices: [
+          { id: 1, text: '本日のおすすめを注文する', preview: 'シェフ：「お待たせ...' },
+          { id: 2, text: 'シェフのきまぐれを注文する', preview: 'シェフ：「お待たせ...' }
+        ],
+        branches: {
+          1: {
+            text: 'シェフ：「お待たせしました」\n美味しい料理が運ばれてきた。\nシェフ：「お気に召しましたか?」\n私：「はい!」',
+            hasWord: false
+          },
+          2: {
+            text: 'シェフ：「お待たせしました」\n運ばれてきたのは空の皿。\n私：「あの・・・これは?」\nシェフ：にっこり笑って「今日のきまぐれは『想像の料理』です」\n私：「・・・?」\nシェフ：「冗談です。【もうひとつ】お持ちします」',
+            hasWord: true
+          }
+        },
+        epilogue: 'シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。'
+      },
+      {
+        id: 3,
+        title: 'タイムカプセル',
+        setup: '20年前に埋めたタイムカプセルを掘り起こす日がきました。',
+        choices: [
+          { id: 1, text: '一人で開ける', preview: '中には手紙と壊れた...' },
+          { id: 2, text: '幼馴染を呼んで一緒に開ける', preview: '友：「開けよう!」...' }
+        ],
+        branches: {
+          1: {
+            text: '中には手紙と壊れたキーホルダーが入っていた。\n手紙：「未来の僕へ。夢は叶った?」\n胸が締め付けられる。\n(あいつと一緒に埋めたのに・・・)',
+            hasWord: false
+          },
+          2: {
+            text: '友：「開けよう!」\n中には手紙が二通。\n私：「あれ、一通しか入れてないよね?」\n友：ニヤリと笑って「実は僕も【もうひとつ】入れてたんだ。読んでみて」\n手紙には励ましの言葉が綴られていた。',
+            hasWord: true
+          }
+        },
+        epilogue: '幼馴染との絆を再確認したあなたは、二人で新しいタイムカプセルを埋めることにしました。'
+      },
+      {
+        id: 4,
+        title: '魔法学校の試験',
+        setup: '試験官：「ウサギを出現させなさい」',
+        choices: [
+          { id: 1, text: '呪文を唱える', preview: 'パッ!ウサギが2...' },
+          { id: 2, text: '帽子から取り出す', preview: 'スッと帽子からウサ...' }
+        ],
+        branches: {
+          1: {
+            text: 'パッ!ウサギが2羽出現した。\n試験官：「おや?」\n私：「すみません、魔力が強すぎて・・・」\n試験官：「構いません。では【もうひとつ】消してください」\n私：冷や汗をかく。',
+            hasWord: true
+          },
+          2: {
+            text: 'スッと帽子からウサギを取り出した。\n試験官：「完璧です。合格」\n試験が終わってから気づいた。\n(あれ、魔法使ってないぞ?)',
+            hasWord: false
+          }
+        },
+        epilogue: 'あなたは魔法と手品の両方をマスターし、誰もが驚くエンターテイナーになりました。'
+      },
+      {
+        id: 5,
+        title: '最後のピース',
+        setup: '1000ピースのジグソーパズルがあと1ピースで完成します。',
+        choices: [
+          { id: 1, text: '最後のピースをはめる', preview: 'カチッ。完成した絵は...' },
+          { id: 2, text: '周りを探してみる', preview: '床を這いつくばって探...' }
+        ],
+        branches: {
+          1: {
+            text: 'カチッ。完成した絵は美しい星空。\n達成感に満たされる。\nその時、床に何かが落ちているのに気づいた。\n(え・・・まさか)',
+            hasWord: false
+          },
+          2: {
+            text: '床を這いつくばって探す。見つからない。\n恋人：「探し物?」\n私：「最後のピースが・・・」\n恋人：ポケットから取り出して「実は【もうひとつ】買っておいたんだ。君が完成させた時のために」\n箱には同じパズルが入っていた。',
+            hasWord: true
+          }
+        },
+        epilogue: '恋人の優しさに感動したあなたは、二人で新しいパズルを完成させながら幸せな時間を過ごしました。'
+      }
+    ];
+
+    function MiniNovelGame() {
+      const [currentScenario, setCurrentScenario] = useState(null);
+      const [gameState, setGameState] = useState('selection');
+      const [selectedChoice, setSelectedChoice] = useState(null);
+      const [score, setScore] = useState(0);
+      const [completedScenarios, setCompletedScenarios] = useState(new Set());
+      const [scenarioResults, setScenarioResults] = useState({}); // 各シナリオの結果を保存
+
+      const handleScenarioSelect = (scenarioId) => {
+        const scenarioIndex = scenarios.findIndex(s => s.id === scenarioId);
+        setCurrentScenario(scenarioIndex);
+        setGameState('setup');
+        setSelectedChoice(null);
+      };
+
+      const handleChoice = (choiceId) => {
+        setSelectedChoice(choiceId);
+        const branch = scenarios[currentScenario].branches[choiceId];
+        
+        if (branch.hasWord) {
+          const newScore = score + 1;
+          setScore(newScore);
+          setCompletedScenarios(new Set([...completedScenarios, scenarios[currentScenario].id]));
+          setScenarioResults({
+            ...scenarioResults,
+            [scenarios[currentScenario].id]: { hasWord: true }
+          });
+        } else {
+          setScenarioResults({
+            ...scenarioResults,
+            [scenarios[currentScenario].id]: { hasWord: false }
+          });
+        }
+        
+        setGameState('result');
+      };
+
+      const backToSelection = () => {
+        setGameState('selection');
+        setCurrentScenario(null);
+        setSelectedChoice(null);
+      };
+
+      const reset = () => {
+        setCurrentScenario(null);
+        setGameState('selection');
+        setSelectedChoice(null);
+        setScore(0);
+        setCompletedScenarios(new Set());
+        setScenarioResults({});
+      };
+
+      // 選択画面
+      if (gameState === 'selection') {
+        const totalCompleted = completedScenarios.size;
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+            <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-8 max-w-4xl w-full">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">ミニノベルゲーム</h1>
+                <p className="text-lg text-gray-600 mb-4">
+                  【もうひとつ】ワードゲット数: {score} / {scenarios.length}
+                </p>
+                <p className="text-sm text-gray-500">シナリオを選択してください</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {scenarios.map((scenario) => {
+                  const isCompleted = completedScenarios.has(scenario.id);
+                  const result = scenarioResults[scenario.id];
+                  return (
+                    <button
+                      key={scenario.id}
+                      onClick={() => handleScenarioSelect(scenario.id)}
+                      className={`relative p-6 rounded-lg transition-all transform hover:scale-105 text-left ${
+                        isCompleted
+                          ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
+                          : 'bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600'
+                      }`}
+                    >
+                      <div className="font-bold text-xl mb-2">{scenario.title}</div>
+                      <div className="text-sm opacity-90 line-clamp-2">
+                        {scenario.setup}
+                      </div>
+                      {isCompleted && (
+                        <div className="absolute top-2 right-2">
+                          <Award className="w-6 h-6 text-yellow-300" />
+                        </div>
+                      )}
+                      {result && !result.hasWord && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-xs bg-white/30 px-2 py-1 rounded">未獲得</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {totalCompleted === scenarios.length && (
+                <div className="mt-8 text-center">
+                  <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 inline-block">
+                    <p className="text-yellow-800 font-bold text-lg">
+                      🎉 全シナリオクリア！ 🎉
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // シナリオプレイ中
+      const scenario = scenarios[currentScenario];
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+          <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">
+                {scenario.title}
+              </h1>
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  スコア: {score} / {scenarios.length}
+                </div>
+                <button
+                  onClick={backToSelection}
+                  className="text-sm text-purple-600 hover:text-purple-800 underline"
+                >
+                  選択画面に戻る
+                </button>
+              </div>
+            </div>
+
+            {gameState === 'setup' && (
+              <div className="space-y-6">
+                <p className="text-lg text-gray-700 whitespace-pre-line leading-relaxed">
+                  {scenario.setup}
+                </p>
+                <div className="space-y-3">
+                  {scenario.choices.map((choice) => (
+                    <button
+                      key={choice.id}
+                      onClick={() => handleChoice(choice.id)}
+                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium py-4 px-6 rounded-lg transition-all transform hover:scale-105 text-left"
+                    >
+                      <div className="font-bold mb-1">選択肢{choice.id}：{choice.text}</div>
+                      <div className="text-sm text-purple-100 opacity-80">
+                        {choice.preview}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {gameState === 'result' && (
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                    {scenario.branches[selectedChoice].text}
+                  </p>
+                </div>
+
+                {scenario.branches[selectedChoice].hasWord ? (
+                  <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center">
+                    <p className="text-green-800 font-bold text-xl">
+                      ✨ 【もうひとつ】ワードゲット! ✨
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-red-100 border-2 border-red-500 rounded-lg p-4 text-center">
+                    <p className="text-red-800 font-bold">
+                      残念...【もうひとつ】は出ませんでした
+                    </p>
+                  </div>
+                )}
+
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">後日談</p>
+                  <p className="text-gray-700">
+                    {scenario.epilogue}
+                  </p>
+                </div>
+
+                <button
+                  onClick={backToSelection}
+                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 px-6 rounded-lg transition-all"
+                >
+                  シナリオ選択に戻る
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // アプリをレンダリング
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<MiniNovelGame />);
+  </script>
+</body>
+</html>
+
