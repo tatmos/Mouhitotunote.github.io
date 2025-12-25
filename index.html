@@ -138,6 +138,26 @@
           }
         },
         epilogue: '恋人の優しさに感動したあなたは、二人で新しいパズルを完成させながら幸せな時間を過ごしました。'
+      },
+      {
+        id: 6,
+        title: '真実の扉',
+        setup: '5つの「もうひとつ」を集めたあなたの前に、古びた扉が現れました。\n扉には「もうひとつ」という文字が刻まれています。\n謎の声が響きます：「なぜ、あなたは『もうひとつ』を探し続けたのか？」',
+        choices: [
+          { id: 1, text: '「好奇心からです」と答える', preview: '私：「ただ、気になっただけ...' },
+          { id: 2, text: '「答えを知りたかったからです」と答える', preview: '声：「では、その答えを...' }
+        ],
+        branches: {
+          1: {
+            text: '私：「ただ、気になっただけです」\n声：「なるほど...では、その好奇心があなたをここへ導いたのですね」\n扉がゆっくりと開く。\n中から光が溢れ出し、あなたの前に現れたのは...\n\n声：「実は、『もうひとつ』を探すことは、人生の縮図なのです」\n「いつも、もうひとつの選択肢、もうひとつの可能性、もうひとつの答えがある」\n「それを探し続けることが、成長への鍵なのです」\n\nあなたは深く頷いた。',
+            hasWord: false
+          },
+          2: {
+            text: '声：「では、その答えを教えましょう」\n扉が大きく開く。\n\n声：「『もうひとつ』を探す理由...それは、あなた自身が『もうひとつ』の存在だからです」\n「この世界には、あなたという『もうひとつ』の可能性が必要だった」\n「5つの物語を通じて、あなたは『もうひとつ』の価値を学びました」\n「選択肢が2つある時、常に『もうひとつ』の道を探すこと」\n「それが、あなたを特別な存在にするのです」\n\n光に包まれながら、あなたは全てを理解した。\nそして、扉の向こうには新しい世界が広がっていた。',
+            hasWord: true
+          }
+        },
+        epilogue: '「もうひとつ」の真実を知ったあなたは、これからも常に新しい可能性を探し続けることを誓いました。'
       }
     ];
 
@@ -210,21 +230,37 @@
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {scenarios.map((scenario) => {
+                  // 6番目のシナリオは最初の5つをクリアするまで表示しない
+                  const firstFiveCompleted = scenarios.filter(s => s.id <= 5).every(s => completedScenarios.has(s.id));
+                  if (scenario.id === 6 && !firstFiveCompleted) {
+                    return null;
+                  }
+                  
                   const isCompleted = completedScenarios.has(scenario.id);
                   const result = scenarioResults[scenario.id];
+                  const isLocked = scenario.id === 6 && !firstFiveCompleted;
+                  
                   return (
                     <button
                       key={scenario.id}
-                      onClick={() => handleScenarioSelect(scenario.id)}
+                      onClick={() => !isLocked && handleScenarioSelect(scenario.id)}
+                      disabled={isLocked}
                       className={`relative p-6 rounded-lg transition-all transform hover:scale-105 text-left ${
-                        isCompleted
+                        isLocked
+                          ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                          : isCompleted
                           ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
                           : 'bg-gradient-to-br from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600'
                       }`}
                     >
-                      <div className="font-bold text-xl mb-2">{scenario.title}</div>
+                      <div className="font-bold text-xl mb-2">
+                        {scenario.title}
+                        {scenario.id === 6 && firstFiveCompleted && (
+                          <span className="ml-2 text-yellow-300 text-sm">✨ 新規追加</span>
+                        )}
+                      </div>
                       <div className="text-sm opacity-90 line-clamp-2">
-                        {scenario.setup}
+                        {isLocked ? '最初の5つのシナリオをクリアすると出現します' : scenario.setup}
                       </div>
                       {isCompleted && (
                         <div className="absolute top-2 right-2">
@@ -234,6 +270,11 @@
                       {result && !result.hasWord && (
                         <div className="absolute top-2 right-2">
                           <span className="text-xs bg-white/30 px-2 py-1 rounded">未獲得</span>
+                        </div>
+                      )}
+                      {isLocked && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-xs bg-white/30 px-2 py-1 rounded">🔒 ロック</span>
                         </div>
                       )}
                     </button>
@@ -246,6 +287,16 @@
                   <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 inline-block">
                     <p className="text-yellow-800 font-bold text-lg">
                       🎉 全シナリオクリア！ 🎉
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {scenarios.filter(s => s.id <= 5).every(s => completedScenarios.has(s.id)) && !completedScenarios.has(6) && (
+                <div className="mt-8 text-center">
+                  <div className="bg-purple-100 border-2 border-purple-500 rounded-lg p-4 inline-block animate-pulse">
+                    <p className="text-purple-800 font-bold text-lg">
+                      ✨ 新しいシナリオが出現しました！ ✨
                     </p>
                   </div>
                 </div>
