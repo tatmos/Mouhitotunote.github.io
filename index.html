@@ -187,6 +187,7 @@
       const [collectedLetters, setCollectedLetters] = useState(new Set()); // 集めた文字を保存
       const [showHint, setShowHint] = useState(false); // ヒントの表示/非表示
       const [expandedProfiles, setExpandedProfiles] = useState(new Set()); // 後日談の後日談を展開しているプロフィール
+      const [showCredits, setShowCredits] = useState(false); // エンドクレジットの表示/非表示
 
       const handleScenarioSelect = (scenarioId) => {
         const scenarioIndex = scenarios.findIndex(s => s.id === scenarioId);
@@ -201,6 +202,7 @@
         const scenarioId = scenarios[currentScenario].id;
         
         const epilogue = branch.epilogue || scenarios[currentScenario].epilogue;
+        const currentScore = branch.hasWord ? score + 1 : score;
         
         if (branch.hasWord) {
           const newScore = score + 1;
@@ -208,7 +210,7 @@
           setCompletedScenarios(new Set([...completedScenarios, scenarioId]));
           setScenarioResults({
             ...scenarioResults,
-            [scenarioId]: { hasWord: true, choiceId: choiceId, epilogue: epilogue }
+            [scenarioId]: { hasWord: true, choiceId: choiceId, epilogue: epilogue, scoreAtCompletion: newScore }
           });
           
           // 文字を収集（シナリオ1-5のみ）
@@ -222,7 +224,7 @@
         } else {
           setScenarioResults({
             ...scenarioResults,
-            [scenarioId]: { hasWord: false, choiceId: choiceId, epilogue: epilogue }
+            [scenarioId]: { hasWord: false, choiceId: choiceId, epilogue: epilogue, scoreAtCompletion: currentScore }
           });
         }
         
@@ -245,7 +247,82 @@
         setCollectedLetters(new Set());
         setShowHint(false);
         setExpandedProfiles(new Set());
+        setShowCredits(false);
       };
+
+      // エンドクレジット画面
+      if (showCredits) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+            <div className="bg-black/80 backdrop-blur rounded-2xl shadow-2xl p-12 max-w-3xl w-full text-center text-white">
+              <h1 className="text-5xl font-bold mb-12 animate-pulse">「もうひとつ」</h1>
+              
+              <div className="space-y-8 text-lg">
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">ゲームデザイン</p>
+                  <p className="text-xl">tatmos</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">AIディレクション</p>
+                  <p className="text-xl">tatmos</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">シナリオ</p>
+                  <p className="text-xl">Claude sonnet 4.5</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">リードプログラマ</p>
+                  <p className="text-xl">Claude sonnet 4.5</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">プログラマ</p>
+                  <p className="text-xl">tatmos</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">音楽</p>
+                  <p className="text-xl">tatmos</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">効果音</p>
+                  <p className="text-xl">tatmos</p>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">グラフィック</p>
+                  <p className="text-xl">Chat GPT 5.2</p>
+                </div>
+                
+                <div className="mt-12 pt-8 border-t border-white/30">
+                  <p className="text-3xl font-bold mb-6 text-yellow-300">エンドクレジット楽曲</p>
+                  <p className="text-2xl font-bold mb-4">曲：「もうひとつ」 / 作曲：suno ai v5 / 作詞：Claude sonnet 4.5</p>
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">歌：suno ai v5</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">演奏：suno ai v5</p>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">ミキシング：suno ai v5</p>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">マスタリング：suno ai v5</p>
+                  <p className="text-2xl font-bold mb-4 text-yellow-300">サウンドエンジニア：tatmos</p>
+                </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowCredits(false)}
+                className="mt-12 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        );
+      }
 
       // 選択画面
       if (gameState === 'selection') {
@@ -804,6 +881,18 @@
                     );
                   })()}
                 </div>
+
+                {/* エンドクレジットボタン（真実の扉クリア後） */}
+                {scenarioResults[6] && (
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={() => setShowCredits(true)}
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                    >
+                      🎬 エンドクレジットを見る
+                    </button>
+                  </div>
+                )}
                 
                 <div className="mt-6 text-center">
                   <button
@@ -821,6 +910,115 @@
                     </div>
                   )}
                 </div>
+
+                {/* 実績画面（全シナリオクリア後） */}
+                {totalCompleted === scenarios.length && (
+                  <div className="mt-12 pt-8 border-t-2 border-gray-300">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">実績一覧</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* シナリオ1-5のエンド */}
+                      {scenarios.filter(s => s.id <= 5).map((scenario) => {
+                        const result = scenarioResults[scenario.id];
+                        // trueエンド: hasWordがtrueの選択肢
+                        const trueChoiceId = scenario.choices.find(c => scenario.branches[c.id]?.hasWord)?.id;
+                        // falseエンド: hasWordがfalseの選択肢
+                        const falseChoiceId = scenario.choices.find(c => !scenario.branches[c.id]?.hasWord)?.id;
+                        const trueEndSeen = result && result.hasWord && result.choiceId === trueChoiceId;
+                        const falseEndSeen = result && !result.hasWord && result.choiceId === falseChoiceId;
+                        
+                        return (
+                          <div key={scenario.id} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border-2 border-gray-300">
+                            <h3 className="font-bold text-lg text-gray-800 mb-3">{scenario.title}</h3>
+                            <div className="space-y-2">
+                              <div className={`p-3 rounded ${trueEndSeen ? 'bg-green-50 border-2 border-green-400' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${trueEndSeen ? 'text-green-800' : 'text-gray-500'}`}>
+                                  ✨ Trueエンド
+                                </p>
+                                {trueEndSeen && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    【もうひとつ】を獲得したエンド
+                                  </p>
+                                )}
+                              </div>
+                              <div className={`p-3 rounded ${falseEndSeen ? 'bg-red-50 border-2 border-red-400' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${falseEndSeen ? 'text-red-800' : 'text-gray-500'}`}>
+                                  ❌ Falseエンド
+                                </p>
+                                {falseEndSeen && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    【もうひとつ】を獲得できなかったエンド
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* 真実の扉のエンド */}
+                      {(() => {
+                        const result = scenarioResults[6];
+                        const wasDarkMode = result && result.scoreAtCompletion > scenarios.length;
+                        const trueEndSeen = result && result.hasWord && result.choiceId === 2 && !wasDarkMode;
+                        const falseEndSeen = result && !result.hasWord && result.choiceId === 1 && !wasDarkMode;
+                        const darkModeEnd1Seen = result && wasDarkMode && result.choiceId === 1;
+                        const darkModeEnd2Seen = result && wasDarkMode && result.choiceId === 2;
+                        
+                        return (
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border-2 border-gray-300">
+                            <h3 className="font-bold text-lg text-gray-800 mb-3">真実の扉</h3>
+                            <div className="space-y-2">
+                              {/* 通常モードのエンド */}
+                              <div className={`p-3 rounded ${trueEndSeen ? 'bg-green-50 border-2 border-green-400' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${trueEndSeen ? 'text-green-800' : 'text-gray-500'}`}>
+                                  ✨ Trueエンド
+                                </p>
+                                {trueEndSeen && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    「答えを知りたかった」を選んだエンド
+                                  </p>
+                                )}
+                              </div>
+                              <div className={`p-3 rounded ${falseEndSeen ? 'bg-red-50 border-2 border-red-400' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${falseEndSeen ? 'text-red-800' : 'text-gray-500'}`}>
+                                  ❌ Falseエンド
+                                </p>
+                                {falseEndSeen && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    「好奇心から」を選んだエンド
+                                  </p>
+                                )}
+                              </div>
+                              
+                              {/* ダークモードのエンド */}
+                              <div className={`p-3 rounded ${darkModeEnd1Seen ? 'bg-red-900 border-2 border-red-600' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${darkModeEnd1Seen ? 'text-red-200' : 'text-gray-500'}`}>
+                                  ⚠️ ダークエンド1
+                                </p>
+                                {darkModeEnd1Seen && (
+                                  <p className="text-xs text-red-100 mt-1">
+                                    「すみません...」と謝ったエンド
+                                  </p>
+                                )}
+                              </div>
+                              <div className={`p-3 rounded ${darkModeEnd2Seen ? 'bg-red-900 border-2 border-red-600' : 'bg-gray-200 border-2 border-gray-400 opacity-50 blur-sm'}`}>
+                                <p className={`text-sm font-semibold ${darkModeEnd2Seen ? 'text-red-200' : 'text-gray-500'}`}>
+                                  ⚠️ ダークエンド2
+                                </p>
+                                {darkModeEnd2Seen && (
+                                  <p className="text-xs text-red-100 mt-1">
+                                    「これは何ですか？」と問うたエンド
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    
+                  </div>
+                )}
               </div>
             </div>
           </div>
