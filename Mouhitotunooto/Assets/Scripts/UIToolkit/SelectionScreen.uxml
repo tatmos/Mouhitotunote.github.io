@@ -1,12 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441134900000000&amp;guid=00000000000000000000000000000000&amp;type=3#GameStyles" />
-    <ui:VisualElement name="SelectionScreen" style="flex-grow: 1;">
+    <ui:VisualElement name="SelectionScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
-        <ui:VisualElement name="Content" style="flex-grow: 1; flex-direction: column; align-items: center; padding: 20px;">
+        <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; align-items: center; padding: 32px; max-width: 1200px; margin: 20px auto;">
             <ui:Label name="TitleText" text="ミニノベルゲーム" style="font-size: 48px; -unity-font-style: bold; margin-bottom: 10px;" />
             <ui:Label name="ScoreText" text="【もうひとつ】ワードゲット数: 0 / 6" style="font-size: 24px; margin-bottom: 20px;" />
-            <ui:VisualElement name="ScenarioButtonContainer" style="flex-grow: 1; flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1000px; gap: 20px;" />
-            <ui:Button name="ShowProfileButton" text="登場人物プロフィールを見る" style="margin-top: 20px; min-width: 300px; min-height: 50px;" />
+            <ui:VisualElement name="ScenarioButtonContainer" class="scenario-grid-container" style="flex-grow: 1; flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 960px; gap: 20px;" />
+            <ui:Button name="ShowProfileButton" text="登場人物プロフィールを見る" class="button-gradient" style="margin-top: 20px; min-width: 300px; min-height: 50px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

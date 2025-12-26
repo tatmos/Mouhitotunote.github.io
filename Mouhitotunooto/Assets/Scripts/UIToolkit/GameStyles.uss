@@ -1,5 +1,98 @@
 /* ゲーム全体のスタイル */
 
+/* 画面全体の背景（グラデーション風） */
+.screen-background {
+    background-color: rgb(55, 48, 163); /* purple-900 */
+}
+
+/* カードスタイル（index.htmlのbg-white/90 backdrop-blur rounded-2xl shadow-2xlに近づける） */
+.card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ダークモードのカード */
+.card-dark {
+    background-color: rgba(127, 29, 29, 0.9); /* red-900/90 */
+    border-width: 2px;
+    border-color: rgb(220, 38, 38); /* red-600 */
+    border-radius: 16px;
+    padding: 32px;
+    margin: 16px;
+}
+
+/* プロフィールタブレイアウト */
+.profile-tab-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    min-height: 500px;
+}
+
+/* プロフィールリスト（左側） */
+.profile-list-container {
+    width: 250px;
+    flex-shrink: 0;
+    background-color: rgba(240, 240, 240, 0.5);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* プロフィール詳細（右側） */
+.profile-detail-container {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* プロフィールリストボタン */
+.profile-list-button {
+    width: 100%;
+    min-height: 60px;
+    padding: 12px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0.1);
+    text-align: left;
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(50, 50, 50);
+    white-space: normal;
+    transition-duration: 0.2s;
+}
+
+.profile-list-button:hover {
+    background-color: rgba(200, 200, 255, 0.6);
+    border-color: rgba(100, 100, 255, 0.5);
+}
+
+.profile-list-button.active {
+    background-color: rgba(139, 92, 246, 0.8); /* purple-500 */
+    border-color: rgb(124, 58, 237); /* purple-600 */
+    color: rgb(255, 255, 255);
+}
+
+.profile-list-button.locked {
+    background-color: rgba(200, 200, 200, 0.5);
+    color: rgb(150, 150, 150);
+    opacity: 0.6;
+}
+
+/* プロフィール詳細カード */
+.profile-detail-card {
+    padding: 20px;
+    border-radius: 8px;
+    border-width: 2px;
+    min-height: 400px;
+}
+
 /* プロフィールカード */
 .profile-card {
     width: 300px;
@@ -9,6 +102,37 @@
     border-radius: 8px;
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* プロフィールカードの色分け（index.htmlの各キャラクターの色に合わせる） */
+.profile-card-momo {
+    background-color: rgba(255, 241, 242, 0.9); /* from-pink-50 to-rose-50 */
+    border-color: rgba(251, 207, 232, 0.8); /* border-pink-200 */
+}
+
+.profile-card-umi {
+    background-color: rgba(239, 246, 255, 0.9); /* from-blue-50 to-cyan-50 */
+    border-color: rgba(191, 219, 254, 0.8); /* border-blue-200 */
+}
+
+.profile-card-hiro {
+    background-color: rgba(255, 251, 235, 0.9); /* from-yellow-50 to-amber-50 */
+    border-color: rgba(254, 240, 138, 0.8); /* border-yellow-200 */
+}
+
+.profile-card-toru {
+    background-color: rgba(250, 245, 255, 0.9); /* from-purple-50 to-indigo-50 */
+    border-color: rgba(221, 214, 254, 0.8); /* border-purple-200 */
+}
+
+.profile-card-tsubasa {
+    background-color: rgba(240, 253, 244, 0.9); /* from-green-50 to-emerald-50 */
+    border-color: rgba(187, 247, 208, 0.8); /* border-green-200 */
+}
+
+.profile-card-voice {
+    background-color: rgba(238, 242, 255, 0.9); /* from-indigo-50 to-violet-50 */
+    border-color: rgba(199, 210, 254, 0.8); /* border-indigo-200 */
 }
 
 .profile-name {
@@ -93,11 +217,68 @@ Button:disabled {
     color: rgb(200, 200, 200);
 }
 
-/* シナリオボタン */
+/* グラデーションボタン（index.htmlのbg-gradient-to-r from-purple-500 to-blue-500に近づける） */
+.button-gradient {
+    background-color: rgb(139, 92, 246); /* purple-500 */
+    border-radius: 8px;
+    transition-duration: 0.2s;
+}
+
+.button-gradient:hover {
+    background-color: rgb(124, 58, 237); /* purple-600 */
+}
+
+.button-gradient-indigo {
+    background-color: rgb(99, 102, 241); /* indigo-500 */
+    border-radius: 8px;
+}
+
+.button-gradient-indigo:hover {
+    background-color: rgb(79, 70, 229); /* indigo-600 */
+}
+
+/* シナリオボタンのスタイル（index.htmlのbg-gradient-to-br from-purple-500 to-blue-500に近づける） */
+.scenario-button-completed {
+    background-color: rgb(34, 197, 94); /* green-500 */
+    border-radius: 8px;
+    color: rgb(255, 255, 255);
+}
+
+.scenario-button-normal {
+    background-color: rgb(139, 92, 246); /* purple-500 */
+    border-radius: 8px;
+    color: rgb(255, 255, 255);
+}
+
+.scenario-button-normal:hover {
+    background-color: rgb(124, 58, 237); /* purple-600 */
+}
+
+.scenario-button-locked {
+    background-color: rgb(156, 163, 175); /* gray-400 */
+    border-radius: 8px;
+    color: rgb(255, 255, 255);
+    opacity: 0.5;
+}
+
+/* シナリオボタンコンテナ（2行3列のグリッド） */
+.scenario-grid-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 960px;
+    gap: 20px;
+}
+
+/* シナリオボタン（グリッド用の固定サイズ） */
 .scenario-button {
-    min-width: 300px;
-    min-height: 100px;
-    font-size: 24px;
+    width: 300px;
+    min-height: 120px;
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
 /* 選択肢ボタン */
@@ -107,5 +288,127 @@ Button:disabled {
     font-size: 20px;
     flex-direction: column;
     align-items: flex-start;
+    background-color: rgb(139, 92, 246); /* purple-500 */
+    border-radius: 8px;
+    color: rgb(255, 255, 255);
+    padding: 16px 24px;
+}
+
+.choice-button:hover {
+    background-color: rgb(124, 58, 237); /* purple-600 */
+}
+
+/* ダークモードの選択肢ボタン */
+.choice-button-dark {
+    background-color: rgb(220, 38, 38); /* red-600 */
+    border-width: 2px;
+    border-color: rgb(248, 113, 113); /* red-400 */
+    color: rgb(255, 255, 255);
+}
+
+.choice-button-dark:hover {
+    background-color: rgb(185, 28, 28); /* red-700 */
+}
+
+/* テキストスタイル */
+.title-text {
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: rgb(31, 41, 55); /* gray-800 */
+    margin-bottom: 10px;
+}
+
+.title-text-dark {
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: rgb(153, 27, 27); /* red-800 */
+    margin-bottom: 10px;
+}
+
+.score-text {
+    font-size: 24px;
+    color: rgb(75, 85, 99); /* gray-600 */
+    margin-bottom: 20px;
+}
+
+.score-text-anomaly {
+    font-size: 24px;
+    color: rgb(239, 68, 68); /* red-500 */
+    -unity-font-style: bold;
+}
+
+/* 結果表示のスタイル */
+.word-get-success {
+    background-color: rgb(220, 252, 231); /* green-100 */
+    border-width: 2px;
+    border-color: rgb(34, 197, 94); /* green-500 */
+    border-radius: 8px;
+    padding: 16px;
+    color: rgb(22, 101, 52); /* green-800 */
+    -unity-font-style: bold;
+    font-size: 20px;
+    text-align: center;
+}
+
+.word-get-failed {
+    background-color: rgb(254, 226, 226); /* red-100 */
+    border-width: 2px;
+    border-color: rgb(239, 68, 68); /* red-500 */
+    border-radius: 8px;
+    padding: 16px;
+    color: rgb(153, 27, 27); /* red-800 */
+    -unity-font-style: bold;
+    text-align: center;
+}
+
+.word-get-dark {
+    background-color: rgb(127, 29, 29); /* red-900 */
+    border-width: 2px;
+    border-color: rgb(220, 38, 38); /* red-600 */
+    border-radius: 8px;
+    padding: 16px;
+    color: rgb(254, 202, 202); /* red-200 */
+    -unity-font-style: bold;
+    font-size: 20px;
+    text-align: center;
+}
+
+/* 後日談のスタイル */
+.epilogue-box {
+    border-left-width: 4px;
+    border-left-color: rgb(59, 130, 246); /* blue-500 */
+    padding: 16px;
+    background-color: rgb(239, 246, 255); /* blue-50 */
+}
+
+.epilogue-box-dark {
+    border-left-width: 4px;
+    border-left-color: rgb(220, 38, 38); /* red-600 */
+    padding: 16px;
+    background-color: rgb(127, 29, 29); /* red-900 */
+}
+
+.epilogue-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+    color: rgb(37, 99, 235); /* blue-600 */
+}
+
+.epilogue-title-dark {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+    color: rgb(254, 202, 202); /* red-200 */
+}
+
+.epilogue-text {
+    white-space: normal;
+    color: rgb(31, 41, 55); /* gray-700 */
+}
+
+.epilogue-text-dark {
+    white-space: normal;
+    color: rgb(254, 226, 226); /* red-100 */
 }
 

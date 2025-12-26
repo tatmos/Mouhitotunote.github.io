@@ -30,6 +30,7 @@ namespace NovelGame
         private UIDocument currentDocument;
         private List<GameObject> currentButtons = new List<GameObject>();
         private HashSet<int> expandedProfiles = new HashSet<int>();
+        private int selectedProfileId = 1; // 選択中のプロフィールID
 
         private void Start()
         {
@@ -83,6 +84,7 @@ namespace NovelGame
             if (titleLabel != null)
             {
                 titleLabel.text = "ミニノベルゲーム";
+                titleLabel.AddToClassList("title-text");
             }
 
             // プロフィールボタンの設定
@@ -127,7 +129,14 @@ namespace NovelGame
             {
                 bool isDarkMode = gameManager.IsDarkMode();
                 titleLabel.text = isDarkMode ? "登場人物プロフィール【データ破損】" : "登場人物プロフィール";
-                titleLabel.style.color = isDarkMode ? Color.red : Color.black;
+                if (isDarkMode)
+                {
+                    titleLabel.AddToClassList("title-text-dark");
+                }
+                else
+                {
+                    titleLabel.AddToClassList("title-text");
+                }
             }
 
             CreateProfileCards(root);
@@ -159,6 +168,15 @@ namespace NovelGame
             if (titleLabel != null)
             {
                 titleLabel.text = scenario.title;
+                bool isDarkMode = gameManager.IsDarkMode() && scenario.id == 6;
+                if (isDarkMode)
+                {
+                    titleLabel.AddToClassList("title-text-dark");
+                }
+                else
+                {
+                    titleLabel.AddToClassList("title-text");
+                }
             }
 
             var setupLabel = root.Q<Label>("SetupText");
@@ -213,39 +231,78 @@ namespace NovelGame
             }
 
             // ワードゲット表示
+            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
             var wordGetLabel = root.Q<Label>("WordGetText");
             if (wordGetLabel != null)
             {
+                // 既存のクラスをクリア
+                wordGetLabel.ClearClassList();
+                
                 if (isDarkMode)
                 {
                     wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
-                    wordGetLabel.style.color = Color.red;
+                    wordGetLabel.AddToClassList("word-get-dark");
                 }
                 else if (result.hasWord)
                 {
                     wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
-                    wordGetLabel.style.color = Color.green;
+                    wordGetLabel.AddToClassList("word-get-success");
                 }
                 else
                 {
                     wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
-                    wordGetLabel.style.color = Color.red;
+                    wordGetLabel.AddToClassList("word-get-failed");
                 }
             }
 
             // 後日談を設定
+            var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
             var epilogueLabel = root.Q<Label>("EpilogueText");
+            if (epilogueContainer != null)
+            {
+                // ダークモードの場合はダークスタイルを適用
+                epilogueContainer.ClearClassList();
+                if (isDarkMode)
+                {
+                    epilogueContainer.AddToClassList("epilogue-box-dark");
+                }
+                else
+                {
+                    epilogueContainer.AddToClassList("epilogue-box");
+                }
+            }
+            
             if (epilogueLabel != null)
             {
+                // 既存のクラスをクリア
+                epilogueLabel.ClearClassList();
+                
                 if (isDarkMode)
                 {
                     epilogueLabel.text = result.choiceId == 1
                         ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
                         : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】";
+                    epilogueLabel.AddToClassList("epilogue-text-dark");
                 }
                 else
                 {
                     epilogueLabel.text = result.epilogue;
+                    epilogueLabel.AddToClassList("epilogue-text");
+                }
+            }
+            
+            // 後日談のタイトルも更新
+            var epilogueTitle = root.Q<Label>("EpilogueTitle");
+            if (epilogueTitle != null)
+            {
+                epilogueTitle.ClearClassList();
+                if (isDarkMode)
+                {
+                    epilogueTitle.AddToClassList("epilogue-title-dark");
+                }
+                else
+                {
+                    epilogueTitle.AddToClassList("epilogue-title");
                 }
             }
 
@@ -275,6 +332,17 @@ namespace NovelGame
                 int score = gameManager.GetScore();
                 int totalScenarios = gameManager.GetScenarios().Count;
                 scoreLabel.text = $"【もうひとつ】ワードゲット数: {score} / {totalScenarios}";
+                
+                // 異常なスコアの場合はスタイルを適用
+                scoreLabel.ClearClassList();
+                if (score > totalScenarios)
+                {
+                    scoreLabel.AddToClassList("score-text-anomaly");
+                }
+                else
+                {
+                    scoreLabel.AddToClassList("score-text");
+                }
             }
             
             // 選択画面のスコアも更新
@@ -289,6 +357,17 @@ namespace NovelGame
                         int score = gameManager.GetScore();
                         int totalScenarios = gameManager.GetScenarios().Count;
                         selectionScoreLabel.text = $"【もうひとつ】ワードゲット数: {score} / {totalScenarios}";
+                        
+                        // 異常なスコアの場合はスタイルを適用
+                        selectionScoreLabel.ClearClassList();
+                        if (score > totalScenarios)
+                        {
+                            selectionScoreLabel.AddToClassList("score-text-anomaly");
+                        }
+                        else
+                        {
+                            selectionScoreLabel.AddToClassList("score-text");
+                        }
                     }
                 }
             }
@@ -313,7 +392,33 @@ namespace NovelGame
 
                 // ボタンを作成
                 Button button = new Button();
-                button.text = scenario.title;
+                
+                // グリッド用のスタイルを適用
+                button.AddToClassList("scenario-button");
+                
+                // ボタンの内容を構造化
+                var buttonContent = new VisualElement();
+                buttonContent.style.flexDirection = FlexDirection.Column;
+                buttonContent.style.alignItems = Align.FlexStart;
+                buttonContent.style.width = Length.Percent(100);
+                
+                var titleLabel = new Label(scenario.title);
+                titleLabel.style.fontSize = 20;
+                titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                titleLabel.style.whiteSpace = WhiteSpace.Normal;
+                titleLabel.style.marginBottom = 5;
+                buttonContent.Add(titleLabel);
+                
+                // シナリオの説明を追加（2行まで）
+                var descriptionLabel = new Label(scenario.setup);
+                descriptionLabel.style.fontSize = 14;
+                descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
+                descriptionLabel.style.opacity = 0.9f;
+                descriptionLabel.style.maxHeight = 40; // 2行分の高さに制限
+                descriptionLabel.style.overflow = Overflow.Hidden;
+                buttonContent.Add(descriptionLabel);
+                
+                button.Add(buttonContent);
                 
                 bool isCompleted = gameManager.IsScenarioCompleted(scenario.id);
                 bool isLocked = !gameManager.CanAccessScenario(scenario.id);
@@ -321,11 +426,26 @@ namespace NovelGame
                 if (isLocked)
                 {
                     button.SetEnabled(false);
-                    button.text += " (🔒 ロック)";
+                    var lockLabel = new Label("🔒 ロック");
+                    lockLabel.style.fontSize = 12;
+                    lockLabel.style.marginTop = 5;
+                    buttonContent.Add(lockLabel);
+                    button.AddToClassList("scenario-button-locked");
                 }
                 else if (isCompleted)
                 {
-                    button.style.backgroundColor = new Color(0.2f, 0.8f, 0.2f);
+                    button.AddToClassList("scenario-button-completed");
+                    // 完了マークを追加
+                    var completedMark = new Label("✓");
+                    completedMark.style.fontSize = 16;
+                    completedMark.style.position = Position.Absolute;
+                    completedMark.style.top = 5;
+                    completedMark.style.right = 5;
+                    button.Add(completedMark);
+                }
+                else
+                {
+                    button.AddToClassList("scenario-button-normal");
                 }
 
                 int scenarioId = scenario.id;
@@ -363,10 +483,21 @@ namespace NovelGame
                 // ボタンを作成
                 Button button = new Button();
                 
+                // ダークモードの場合はダークスタイルを適用
+                if (isDarkMode)
+                {
+                    button.AddToClassList("choice-button-dark");
+                }
+                else
+                {
+                    button.AddToClassList("choice-button");
+                }
+                
                 // ボタンの中にテキストを配置
                 var buttonText = new Label($"選択肢{choice.id}：{choice.text}");
                 buttonText.style.fontSize = 18;
                 buttonText.style.whiteSpace = WhiteSpace.Normal;
+                buttonText.style.unityFontStyleAndWeight = FontStyle.Bold;
                 
                 var previewText = new Label(choice.preview);
                 previewText.style.fontSize = 14;
@@ -374,6 +505,8 @@ namespace NovelGame
                 previewText.style.whiteSpace = WhiteSpace.Normal;
 
                 var buttonContent = new VisualElement();
+                buttonContent.style.flexDirection = FlexDirection.Column;
+                buttonContent.style.alignItems = Align.FlexStart;
                 buttonContent.Add(buttonText);
                 buttonContent.Add(previewText);
                 button.Add(buttonContent);
@@ -400,26 +533,30 @@ namespace NovelGame
 
         private void CreateProfileCards(VisualElement root)
         {
-            var profileContainer = root.Q<VisualElement>("ProfileContainer");
-            if (profileContainer == null) return;
+            var profileList = root.Q<VisualElement>("ProfileList");
+            var profileDetail = root.Q<VisualElement>("ProfileDetail");
+            
+            if (profileList == null || profileDetail == null) return;
 
-            // 既存のカードを削除
-            profileContainer.Clear();
+            // 既存の要素を削除
+            profileList.Clear();
+            profileDetail.Clear();
 
             var scenarios = gameManager.GetScenarios();
             bool isDarkMode = gameManager.IsDarkMode();
             bool scenario6Completed = gameManager.IsScenarioCompleted(6);
 
+            // 利用可能なプロフィールIDのリストを作成
+            List<int> availableProfileIds = new List<int>();
+            
             // シナリオ1-5のプロフィール
             for (int i = 1; i <= 5; i++)
             {
                 var profile = CharacterProfileManager.GetProfile(i);
-                if (profile == null) continue;
-
-                var result = gameManager.GetScenarioResult(i);
-                bool isUnlocked = result != null;
-
-                CreateProfileCard(profileContainer, profile, result, isUnlocked, isDarkMode, scenario6Completed);
+                if (profile != null)
+                {
+                    availableProfileIds.Add(i);
+                }
             }
 
             // シナリオ6のプロフィール（クリア後のみ表示）
@@ -428,8 +565,79 @@ namespace NovelGame
                 var profile = CharacterProfileManager.GetProfile(6);
                 if (profile != null)
                 {
-                    var result = gameManager.GetScenarioResult(6);
-                    CreateProfileCard(profileContainer, profile, result, true, isDarkMode, scenario6Completed);
+                    availableProfileIds.Add(6);
+                }
+            }
+
+            // 選択中のプロフィールが利用可能でない場合、最初の利用可能なものを選択
+            if (!availableProfileIds.Contains(selectedProfileId) && availableProfileIds.Count > 0)
+            {
+                selectedProfileId = availableProfileIds[0];
+            }
+
+            // 左側にプロフィールリストを作成
+            foreach (int profileId in availableProfileIds)
+            {
+                var profile = CharacterProfileManager.GetProfile(profileId);
+                if (profile == null) continue;
+
+                var result = gameManager.GetScenarioResult(profileId);
+                bool isUnlocked = result != null;
+
+                // リストボタンを作成
+                Button listButton = new Button();
+                listButton.AddToClassList("profile-list-button");
+                
+                // ボタンの中身を構造化
+                var buttonContent = new VisualElement();
+                buttonContent.style.flexDirection = FlexDirection.Column;
+                buttonContent.style.alignItems = Align.FlexStart;
+                
+                var nameLabel = new Label(isUnlocked ? profile.name : "???");
+                nameLabel.style.fontSize = 16;
+                nameLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                nameLabel.style.marginBottom = 4;
+                
+                var roleLabel = new Label($"({profile.role})");
+                roleLabel.style.fontSize = 12;
+                roleLabel.style.opacity = 0.8f;
+                
+                buttonContent.Add(nameLabel);
+                buttonContent.Add(roleLabel);
+                listButton.Add(buttonContent);
+                
+                if (!isUnlocked)
+                {
+                    listButton.AddToClassList("locked");
+                }
+                
+                if (profileId == selectedProfileId && isUnlocked)
+                {
+                    listButton.AddToClassList("active");
+                }
+
+                int currentProfileId = profileId;
+                listButton.clicked += () => {
+                    if (isUnlocked)
+                    {
+                        selectedProfileId = currentProfileId;
+                        ShowProfileScreen(); // 再生成して詳細を更新
+                    }
+                };
+
+                profileList.Add(listButton);
+            }
+
+            // 右側に選択中のプロフィール詳細を表示
+            if (selectedProfileId > 0)
+            {
+                var selectedProfile = CharacterProfileManager.GetProfile(selectedProfileId);
+                if (selectedProfile != null)
+                {
+                    var result = gameManager.GetScenarioResult(selectedProfileId);
+                    bool isUnlocked = result != null;
+                    
+                    CreateProfileDetail(profileDetail, selectedProfile, result, isUnlocked, isDarkMode, scenario6Completed);
                 }
             }
 
@@ -441,25 +649,70 @@ namespace NovelGame
             }
         }
 
-        private void CreateProfileCard(VisualElement container, CharacterProfile profile, ScenarioResult result, bool isUnlocked, bool isDarkMode, bool scenario6Completed)
+        private void CreateProfileDetail(VisualElement container, CharacterProfile profile, ScenarioResult result, bool isUnlocked, bool isDarkMode, bool scenario6Completed)
         {
-            // プロフィールカードを作成
-            var card = new VisualElement();
-            card.AddToClassList("profile-card");
+            // プロフィール詳細コンテナを作成
+            var detailCard = new VisualElement();
             
+            // キャラクターごとの色分けクラスを追加（index.htmlのスタイルに合わせる）
             if (isUnlocked)
             {
-                card.style.backgroundColor = profile.profileColor;
+                switch (profile.scenarioId)
+                {
+                    case 1:
+                        detailCard.AddToClassList("profile-card-momo");
+                        break;
+                    case 2:
+                        detailCard.AddToClassList("profile-card-umi");
+                        break;
+                    case 3:
+                        detailCard.AddToClassList("profile-card-hiro");
+                        break;
+                    case 4:
+                        detailCard.AddToClassList("profile-card-toru");
+                        break;
+                    case 5:
+                        detailCard.AddToClassList("profile-card-tsubasa");
+                        break;
+                    case 6:
+                        detailCard.AddToClassList("profile-card-voice");
+                        break;
+                }
+                detailCard.style.backgroundColor = profile.profileColor;
             }
             else
             {
-                card.style.backgroundColor = new Color(0.8f, 0.8f, 0.8f);
+                detailCard.style.backgroundColor = new Color(0.8f, 0.8f, 0.8f);
             }
+            
+            detailCard.style.paddingTop = 20;
+            detailCard.style.paddingBottom = 20;
+            detailCard.style.paddingLeft = 20;
+            detailCard.style.paddingRight = 20;
+            
+            // ボーダー半径を各角に設定
+            detailCard.style.borderTopLeftRadius = 8;
+            detailCard.style.borderTopRightRadius = 8;
+            detailCard.style.borderBottomLeftRadius = 8;
+            detailCard.style.borderBottomRightRadius = 8;
+            
+            // ボーダー幅を各方向に設定
+            var borderColor = isUnlocked ? profile.borderColor : new Color(0.2f, 0.2f, 0.2f);
+            detailCard.style.borderTopWidth = 2;
+            detailCard.style.borderRightWidth = 2;
+            detailCard.style.borderBottomWidth = 2;
+            detailCard.style.borderLeftWidth = 2;
+            
+            // ボーダー色を各方向に設定
+            detailCard.style.borderTopColor = borderColor;
+            detailCard.style.borderRightColor = borderColor;
+            detailCard.style.borderBottomColor = borderColor;
+            detailCard.style.borderLeftColor = borderColor;
 
             // 名前
             var nameLabel = new Label(isUnlocked ? $"{profile.name}（{profile.role}）" : $"???（{profile.role}）");
             nameLabel.AddToClassList("profile-name");
-            card.Add(nameLabel);
+            detailCard.Add(nameLabel);
 
             if (isUnlocked)
             {
@@ -479,7 +732,7 @@ namespace NovelGame
                 
                 infoLabel.text = info;
                 infoLabel.AddToClassList("profile-info");
-                card.Add(infoLabel);
+                detailCard.Add(infoLabel);
 
                 // セリフ
                 if (!string.IsNullOrEmpty(profile.quote) || !string.IsNullOrEmpty(profile.quoteDarkMode))
@@ -487,7 +740,7 @@ namespace NovelGame
                     var quoteLabel = new Label(isDarkMode ? profile.quoteDarkMode : profile.quote);
                     quoteLabel.AddToClassList("profile-quote");
                     quoteLabel.style.color = isDarkMode ? Color.red : profile.borderColor;
-                    card.Add(quoteLabel);
+                    detailCard.Add(quoteLabel);
                 }
 
                 // 後日談
@@ -495,7 +748,7 @@ namespace NovelGame
                 {
                     var epilogueLabel = new Label(isDarkMode ? GetDarkModeEpilogue(profile.scenarioId, result.choiceId) : result.epilogue);
                     epilogueLabel.AddToClassList("profile-epilogue");
-                    card.Add(epilogueLabel);
+                    detailCard.Add(epilogueLabel);
 
                     // 後日談の後日談
                     if (result.hasWord && profile.scenarioId <= 5)
@@ -509,13 +762,13 @@ namespace NovelGame
                             var expandButton = new Button();
                             expandButton.text = isExpanded ? "▼ 後日談の後日談を隠す" : "▶ 後日談の後日談を見る";
                             expandButton.clicked += () => ToggleEpilogue2(profile.scenarioId);
-                            card.Add(expandButton);
+                            detailCard.Add(expandButton);
 
                             if (isExpanded)
                             {
                                 var epilogue2Label = new Label(isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2);
                                 epilogue2Label.AddToClassList("profile-epilogue2");
-                                card.Add(epilogue2Label);
+                                detailCard.Add(epilogue2Label);
                             }
                         }
                     }
@@ -529,7 +782,7 @@ namespace NovelGame
                         {
                             var hintLabel = new Label(scenario.branches[result.choiceId].hint);
                             hintLabel.AddToClassList("profile-hint");
-                            card.Add(hintLabel);
+                            detailCard.Add(hintLabel);
                         }
                     }
                 }
@@ -538,10 +791,16 @@ namespace NovelGame
             {
                 var lockedLabel = new Label($"シナリオ「{GetScenarioTitle(profile.scenarioId)}」をクリアすると表示されます");
                 lockedLabel.AddToClassList("profile-locked");
-                card.Add(lockedLabel);
+                detailCard.Add(lockedLabel);
             }
 
-            container.Add(card);
+            container.Add(detailCard);
+        }
+        
+        // 旧メソッド（互換性のため残すが、使用しない）
+        private void CreateProfileCard(VisualElement container, CharacterProfile profile, ScenarioResult result, bool isUnlocked, bool isDarkMode, bool scenario6Completed)
+        {
+            CreateProfileDetail(container, profile, result, isUnlocked, isDarkMode, scenario6Completed);
         }
 
         private void ToggleEpilogue2(int scenarioId)

@@ -3,11 +3,15 @@
     <ui:VisualElement name="ResultScreen" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
         <ui:ScrollView name="Content" style="flex-grow: 1;">
-            <ui:VisualElement style="flex-direction: column; align-items: center; padding: 20px;">
+            <ui:VisualElement class="card" style="flex-direction: column; align-items: center; padding: 20px; max-width: 800px; margin: 20px auto;">
             <ui:Label name="ResultText" text="結果テキスト" style="font-size: 18px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
+            <ui:VisualElement name="WordGetContainer" style="width: 100%; margin-bottom: 20px;" />
             <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 20px;" />
-            <ui:Label name="EpilogueText" text="後日談" style="font-size: 16px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
-            <ui:Button name="BackToSelectionButton" text="シナリオ選択に戻る" style="margin-top: 20px; min-width: 200px; min-height: 50px;" />
+            <ui:VisualElement name="EpilogueContainer" class="epilogue-box" style="width: 100%; margin-bottom: 20px;">
+                <ui:Label name="EpilogueTitle" text="後日談" class="epilogue-title" style="margin-bottom: 4px;" />
+                <ui:Label name="EpilogueText" text="後日談" style="font-size: 16px; white-space: normal; max-width: 800px;" />
+            </ui:VisualElement>
+            <ui:Button name="BackToSelectionButton" text="シナリオ選択に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px;" />
             </ui:VisualElement>
         </ui:ScrollView>
     </ui:VisualElement>
