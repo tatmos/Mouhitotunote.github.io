@@ -482,3 +482,20 @@ Button:disabled {
     margin-bottom: 16px;
 }
 
+/* クリッカブルな「もうひとつ」のスタイル */
+.clickable-word {
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0.2, 0.6, 1.0, 1.0);
+    cursor: pointer;
+}
+
+/* カウントダウンコンテナ */
+.countdown-container {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    padding: 12px 16px;
+    min-width: 80px;
+}
+

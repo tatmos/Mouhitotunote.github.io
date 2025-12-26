@@ -105,7 +105,7 @@ namespace NovelGame
             return new HashSet<char>(collectedLetters);
         }
 
-        public void HandleChoice(int choiceId)
+        public void HandleChoice(int choiceId, bool? overrideHasWord = null)
         {
             var scenario = GetCurrentScenario();
             if (scenario == null) return;
@@ -113,7 +113,7 @@ namespace NovelGame
             var branch = scenario.branches[choiceId];
             var scenarioId = scenario.id;
 
-            bool hasWord = branch.hasWord;
+            bool hasWord = overrideHasWord ?? branch.hasWord;
             if (hasWord)
             {
                 score++;

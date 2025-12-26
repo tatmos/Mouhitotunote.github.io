@@ -3,6 +3,8 @@
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
 .utmp/
+
+/Mouhitotunooto/[Pp]ublish/
 /Mouhitotunooto/[Ll]ibrary/
 /Mouhitotunooto/[Tt]emp/
 /Mouhitotunooto/[Oo]bj/

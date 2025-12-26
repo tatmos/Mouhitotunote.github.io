@@ -38,6 +38,10 @@ namespace NovelGame
         private int selectedProfileId = 1; // 選択中のプロフィールID
         private Coroutine currentTransition; // 現在実行中のトランジション
         private Coroutine currentTypewriterEffect; // 現在実行中のタイプライター効果
+        private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
+        private Label clickableWordLabel = null; // クリッカブルな「もうひとつ」のLabel
+        private Coroutine countdownCoroutine = null; // カウントダウンコルーチン
+        private float countdownTime = 10f; // カウントダウン時間（秒）
 
         private void Start()
         {
@@ -236,24 +240,74 @@ namespace NovelGame
                 }
             }
 
-            var setupLabel = root.Q<Label>("SetupText");
+            var setupContainer = root.Q<VisualElement>("SetupText");
             var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
+            var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
+            var countdownContainer = root.Q<VisualElement>("CountdownContainer");
+            var countdownText = root.Q<Label>("CountdownText");
+            
+            Debug.Log($"ShowScenarioScreen: choiceButtonContainer={(choiceButtonContainer != null ? "見つかった" : "見つからない")}");
+            
+            // フラグをリセット
+            wordFoundInCurrentScenario = false;
+            clickableWordLabel = null;
+            
+            // 既存のカウントダウンを停止
+            if (countdownCoroutine != null)
+            {
+                StopCoroutine(countdownCoroutine);
+                countdownCoroutine = null;
+            }
             
             // 選択肢ボタンコンテナを最初は非表示にする
             if (choiceButtonContainer != null)
             {
                 choiceButtonContainer.style.display = DisplayStyle.None;
+                Debug.Log("選択肢ボタンコンテナを非表示にしました");
+            }
+            else
+            {
+                Debug.LogWarning("choiceButtonContainerが見つかりません");
             }
             
-            if (setupLabel != null)
+            // メッセージラベルを非表示にする
+            if (wordFoundMessageLabel != null)
             {
+                wordFoundMessageLabel.style.display = DisplayStyle.None;
+            }
+            
+            if (wordFailedMessageLabel != null)
+            {
+                wordFailedMessageLabel.style.display = DisplayStyle.None;
+            }
+            
+            // カウントダウンコンテナを非表示にする
+            if (countdownContainer != null)
+            {
+                countdownContainer.style.display = DisplayStyle.None;
+            }
+            
+            if (setupContainer != null)
+            {
+                // 既存の子要素をクリア
+                setupContainer.Clear();
+                
                 // タイプライター効果で表示（完了後に選択肢ボタンを表示）
-                StartTypewriterEffect(setupLabel, scenario.setup, () =>
+                StartTypewriterEffectWithClickableWord(setupContainer, scenario.setup, () =>
                 {
                     // タイプライター効果が完了したら選択肢ボタンを表示
-                    if (choiceButtonContainer != null)
+                    Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを表示します。");
+                    // 再取得を試みる
+                    var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+                    if (buttonContainer != null)
                     {
-                        choiceButtonContainer.style.display = DisplayStyle.Flex;
+                        buttonContainer.style.display = DisplayStyle.Flex;
+                        Debug.Log($"選択肢ボタンコンテナを表示: {buttonContainer.childCount}個のボタン");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("choiceButtonContainerが見つかりません");
                     }
                 });
             }
@@ -339,6 +393,36 @@ namespace NovelGame
                 }
             }
 
+            // ワードゲット表示（最初は非表示、結果テキストのタイプライター効果が完了したら表示）
+            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
+            var wordGetLabel = root.Q<Label>("WordGetText");
+            var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
+            var countdownContainer = root.Q<VisualElement>("CountdownContainer");
+            var countdownText = root.Q<Label>("CountdownText");
+            
+            // フラグをリセット（結果画面で「もうひとつ」を探すため）
+            wordFoundInCurrentScenario = false;
+            clickableWordLabel = null;
+            
+            // 既存のカウントダウンを停止
+            if (countdownCoroutine != null)
+            {
+                StopCoroutine(countdownCoroutine);
+                countdownCoroutine = null;
+            }
+            
+            // カウントダウンコンテナを非表示にする
+            if (countdownContainer != null)
+            {
+                countdownContainer.style.display = DisplayStyle.None;
+            }
+            
+            // 失敗メッセージを非表示にする
+            if (wordFailedMessageLabel != null)
+            {
+                wordFailedMessageLabel.style.display = DisplayStyle.None;
+            }
+            
             // 結果テキストを設定（タイプライター効果で表示）
             var resultLabel = root.Q<Label>("ResultText");
             if (resultLabel != null)
@@ -355,35 +439,38 @@ namespace NovelGame
                     resultText = scenario.branches[result.choiceId].text;
                 }
                 
-                // タイプライター効果で表示（完了後に後日談を表示）
-                StartTypewriterEffect(resultLabel, resultText, () =>
+                // 結果テキストをVisualElementに変更して「もうひとつ」をクリッカブルにする
+                var resultContainer = new VisualElement();
+                resultContainer.style.fontSize = 18;
+                resultContainer.style.whiteSpace = WhiteSpace.Normal;
+                resultContainer.style.maxWidth = 800;
+                resultContainer.style.marginBottom = 20;
+                
+                // 元のLabelを非表示にして、新しいコンテナを追加
+                resultLabel.style.display = DisplayStyle.None;
+                resultLabel.parent.Insert(resultLabel.parent.IndexOf(resultLabel), resultContainer);
+                
+                // タイプライター効果で表示（完了後にカウントダウンを開始）
+                StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
                 {
-                    // 結果テキストのタイプライター効果が完了したら後日談を表示
-                    if (epilogueContainer != null)
-                    {
-                        epilogueContainer.style.display = DisplayStyle.Flex;
-                    }
-                    
-                    // 後日談のタイプライター効果を開始
-                    if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
-                    {
-                        StartTypewriterEffect(epilogueLabel, epilogueText);
-                    }
+                    // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
+                    StartCountdown(root, countdownContainer, countdownText, wordGetContainer, wordFailedMessageLabel, epilogueContainer, epilogueLabel, epilogueText);
                 });
             }
-            else if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+            else if (wordFoundInCurrentScenario && epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
             {
-                // 結果テキストがない場合は即座に後日談を表示
+                // 結果テキストがない場合は即座に後日談を表示（wordFoundInCurrentScenarioがtrueの場合のみ）
                 if (epilogueContainer != null)
                 {
                     epilogueContainer.style.display = DisplayStyle.Flex;
                 }
                 StartTypewriterEffect(epilogueLabel, epilogueText);
             }
-
-            // ワードゲット表示
-            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
-            var wordGetLabel = root.Q<Label>("WordGetText");
+            if (wordGetContainer != null)
+            {
+                wordGetContainer.style.display = DisplayStyle.None;
+            }
+            
             if (wordGetLabel != null)
             {
                 // 既存のクラスをクリア
@@ -394,13 +481,14 @@ namespace NovelGame
                     wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
                     wordGetLabel.AddToClassList("word-get-dark");
                 }
-                else if (result.hasWord)
+                else if (wordFoundInCurrentScenario)
                 {
                     wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
                     wordGetLabel.AddToClassList("word-get-success");
                 }
                 else
                 {
+                    // カウントダウンが終了するまで表示しない（カウントダウン終了時に表示される）
                     wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
                     wordGetLabel.AddToClassList("word-get-failed");
                 }
@@ -421,10 +509,11 @@ namespace NovelGame
                 }
             }
 
-            // 戻るボタン
+            // 戻るボタン（最初は非表示）
             var backButton = root.Q<Button>("BackToSelectionButton");
             if (backButton != null)
             {
+                backButton.style.display = DisplayStyle.None;
                 backButton.clicked += ShowSelectionScreen;
             }
 
@@ -647,7 +736,8 @@ namespace NovelGame
 
         private void OnChoiceSelected(int choiceId)
         {
-            gameManager.HandleChoice(choiceId);
+            // wordFoundInCurrentScenarioフラグをhasWordとして使用
+            gameManager.HandleChoice(choiceId, wordFoundInCurrentScenario);
             ShowResultScreen();
         }
 
@@ -1434,6 +1524,416 @@ namespace NovelGame
         {
             yield return new WaitForSeconds(delay);
             StartTypewriterEffect(label, fullText);
+        }
+
+        /// <summary>
+        /// クリッカブルな「もうひとつ」を含むタイプライター効果を開始
+        /// </summary>
+        private void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null)
+        {
+            // 既存のタイプライター効果を停止
+            if (currentTypewriterEffect != null)
+            {
+                StopCoroutine(currentTypewriterEffect);
+            }
+
+            // タイプライター効果開始
+            currentTypewriterEffect = StartCoroutine(TypewriterEffectWithClickableWordCoroutine(container, fullText, onComplete));
+        }
+
+        /// <summary>
+        /// クリッカブルな「もうひとつ」を含むタイプライター効果コルーチン
+        /// </summary>
+        private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, System.Action onComplete = null)
+        {
+            // テキストを行ごとに分割
+            string[] lines = fullText.Split('\n');
+            
+            float charDelay = 0.03f; // 1文字あたりの遅延（秒）
+            float lineDelay = 0.15f; // 行間の遅延（秒）
+
+            for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+            {
+                string line = lines[lineIndex];
+                
+                // 行を解析して「【もうひとつ】」の位置を検出
+                int wordStartIndex = line.IndexOf("【もうひとつ】");
+                
+                if (wordStartIndex >= 0)
+                {
+                    // 「【もうひとつ】」が見つかった場合
+                    // 前の部分を通常のLabelとして表示
+                    if (wordStartIndex > 0)
+                    {
+                        string beforeWord = line.Substring(0, wordStartIndex);
+                        Label beforeLabel = new Label();
+                        beforeLabel.style.fontSize = 20;
+                        beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        container.Add(beforeLabel);
+                        
+                        for (int i = 0; i < beforeWord.Length; i++)
+                        {
+                            beforeLabel.text = beforeWord.Substring(0, i + 1);
+                            yield return new WaitForSeconds(charDelay);
+                        }
+                    }
+                    
+                    // 「もうひとつ」をクリッカブルなLabelとして表示
+                    Label clickableLabel = new Label("もうひとつ");
+                    clickableLabel.style.fontSize = 20;
+                    clickableLabel.style.whiteSpace = WhiteSpace.Normal;
+                    clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
+                    // カーソルと下線はUSSクラスで表現
+                    clickableLabel.AddToClassList("clickable-word");
+                    clickableLabel.RegisterCallback<ClickEvent>(OnWordClicked);
+                    clickableWordLabel = clickableLabel;
+                    container.Add(clickableLabel);
+                    
+                    // 後の部分を通常のLabelとして表示
+                    int wordEndIndex = wordStartIndex + "【もうひとつ】".Length;
+                    if (wordEndIndex < line.Length)
+                    {
+                        string afterWord = line.Substring(wordEndIndex);
+                        Label afterLabel = new Label();
+                        afterLabel.style.fontSize = 20;
+                        afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        container.Add(afterLabel);
+                        
+                        for (int i = 0; i < afterWord.Length; i++)
+                        {
+                            afterLabel.text = afterWord.Substring(0, i + 1);
+                            yield return new WaitForSeconds(charDelay);
+                        }
+                    }
+                }
+                else
+                {
+                    // 「【もうひとつ】」が見つからない場合、通常のタイプライター効果
+                    Label textLabel = new Label();
+                    textLabel.style.fontSize = 20;
+                    textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    container.Add(textLabel);
+                    
+                    for (int charIndex = 0; charIndex < line.Length; charIndex++)
+                    {
+                        textLabel.text = line.Substring(0, charIndex + 1);
+                        yield return new WaitForSeconds(charDelay);
+                    }
+                }
+                
+                // 最後の行以外は改行を追加
+                if (lineIndex < lines.Length - 1)
+                {
+                    Label lineBreak = new Label("\n");
+                    lineBreak.style.fontSize = 20;
+                    container.Add(lineBreak);
+                    
+                    // 行間の遅延
+                    yield return new WaitForSeconds(lineDelay);
+                }
+            }
+            
+            // 完了コールバックを呼び出し
+            onComplete?.Invoke();
+            
+            currentTypewriterEffect = null;
+        }
+
+        /// <summary>
+        /// カウントダウンを開始
+        /// </summary>
+        private void StartCountdown(VisualElement root, VisualElement countdownContainer, Label countdownText, VisualElement wordGetContainer, Label wordFailedMessageLabel, VisualElement epilogueContainer = null, Label epilogueLabel = null, string epilogueText = "")
+        {
+            // カウントダウンコンテナが見つからない場合は再取得を試みる
+            if (countdownContainer == null)
+            {
+                // rootから取得を試みる
+                countdownContainer = root.Q<VisualElement>("CountdownContainer");
+                
+                // それでも見つからない場合は、scenarioScreenDocumentまたはresultScreenDocumentから直接取得
+                if (countdownContainer == null && scenarioScreenDocument != null && scenarioScreenDocument.gameObject.activeSelf)
+                {
+                    countdownContainer = scenarioScreenDocument.rootVisualElement.Q<VisualElement>("CountdownContainer");
+                }
+                if (countdownContainer == null && resultScreenDocument != null && resultScreenDocument.gameObject.activeSelf)
+                {
+                    countdownContainer = resultScreenDocument.rootVisualElement.Q<VisualElement>("CountdownContainer");
+                }
+            }
+            
+            if (countdownText == null)
+            {
+                // countdownContainerから取得を試みる
+                if (countdownContainer != null)
+                {
+                    countdownText = countdownContainer.Q<Label>("CountdownText");
+                }
+                
+                // それでも見つからない場合は、rootから取得
+                if (countdownText == null)
+                {
+                    countdownText = root.Q<Label>("CountdownText");
+                }
+            }
+            
+            // カウントダウンコンテナを表示
+            if (countdownContainer != null)
+            {
+                countdownContainer.style.display = DisplayStyle.Flex;
+            }
+            
+            // カウントダウンを開始
+            if (countdownCoroutine != null)
+            {
+                StopCoroutine(countdownCoroutine);
+            }
+            countdownCoroutine = StartCoroutine(CountdownCoroutine(countdownText, wordGetContainer, wordFailedMessageLabel, countdownContainer, epilogueContainer, epilogueLabel, epilogueText));
+        }
+
+        /// <summary>
+        /// カウントダウンコルーチン
+        /// </summary>
+        private IEnumerator CountdownCoroutine(Label countdownText, VisualElement wordGetContainer, Label wordFailedMessageLabel, VisualElement countdownContainer, VisualElement epilogueContainer = null, Label epilogueLabel = null, string epilogueText = "")
+        {
+            float remainingTime = countdownTime;
+            
+            while (remainingTime > 0 && !wordFoundInCurrentScenario)
+            {
+                if (countdownText != null)
+                {
+                    int displayTime = Mathf.CeilToInt(remainingTime);
+                    countdownText.text = displayTime.ToString();
+                }
+                
+                remainingTime -= Time.deltaTime;
+                yield return null;
+            }
+            
+            // カウントダウンコンテナを非表示にする
+            if (countdownContainer != null)
+            {
+                countdownContainer.style.display = DisplayStyle.None;
+            }
+            
+            // カウントダウンが終了した場合の処理
+            if (!wordFoundInCurrentScenario)
+            {
+                // 失敗メッセージを表示
+                if (wordFailedMessageLabel != null)
+                {
+                    wordFailedMessageLabel.style.display = DisplayStyle.Flex;
+                }
+            }
+            
+            // ワードゲット表示を表示
+            if (wordGetContainer != null)
+            {
+                wordGetContainer.style.display = DisplayStyle.Flex;
+            }
+            
+            // 後日談を表示（wordFoundInCurrentScenarioがtrueの場合のみ）
+            if (wordFoundInCurrentScenario && epilogueContainer != null)
+            {
+                epilogueContainer.style.display = DisplayStyle.Flex;
+                
+                // 後日談のタイプライター効果を開始
+                if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+                {
+                    StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                    {
+                        // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                        ShowBackButton();
+                    });
+                }
+                else
+                {
+                    // 後日談がない場合は即座に戻るボタンを表示
+                    ShowBackButton();
+                }
+            }
+            else
+            {
+                // 後日談がない場合も戻るボタンを表示
+                ShowBackButton();
+            }
+            
+            countdownCoroutine = null;
+        }
+
+        /// <summary>
+        /// 戻るボタンを表示
+        /// </summary>
+        private void ShowBackButton()
+        {
+            VisualElement root = null;
+            if (resultScreenDocument != null && resultScreenDocument.gameObject.activeSelf)
+            {
+                root = resultScreenDocument.rootVisualElement;
+            }
+            
+            if (root != null)
+            {
+                var backButton = root.Q<Button>("BackToSelectionButton");
+                if (backButton != null)
+                {
+                    backButton.style.display = DisplayStyle.Flex;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 「もうひとつ」がクリックされた時の処理
+        /// </summary>
+        private void OnWordClicked(ClickEvent evt)
+        {
+            if (wordFoundInCurrentScenario || clickableWordLabel == null) return;
+            
+            wordFoundInCurrentScenario = true;
+            
+            // カウントダウンを停止
+            if (countdownCoroutine != null)
+            {
+                StopCoroutine(countdownCoroutine);
+                countdownCoroutine = null;
+            }
+            
+            // カウントダウンコンテナを非表示にする
+            VisualElement root = null;
+            if (scenarioScreenDocument != null && scenarioScreenDocument.gameObject.activeSelf)
+            {
+                root = scenarioScreenDocument.rootVisualElement;
+            }
+            else if (resultScreenDocument != null && resultScreenDocument.gameObject.activeSelf)
+            {
+                root = resultScreenDocument.rootVisualElement;
+            }
+            
+            if (root != null)
+            {
+                var countdownContainer = root.Q<VisualElement>("CountdownContainer");
+                if (countdownContainer != null)
+                {
+                    countdownContainer.style.display = DisplayStyle.None;
+                }
+            }
+            
+            // 色を変更（緑色）
+            clickableWordLabel.style.color = new StyleColor(new Color(0.2f, 0.8f, 0.4f));
+            clickableWordLabel.RemoveFromClassList("clickable-word");
+            
+            // クリックイベントを削除
+            clickableWordLabel.UnregisterCallback<ClickEvent>(OnWordClicked);
+            
+            // シェイクアニメーションでメッセージを表示
+            if (root != null)
+            {
+                var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
+                if (wordFoundMessageLabel != null)
+                {
+                    wordFoundMessageLabel.text = "あなたは何かをみつけた気がした";
+                    wordFoundMessageLabel.style.display = DisplayStyle.Flex;
+                    StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
+                }
+                
+                // シナリオ画面の場合、選択肢ボタンを表示
+                if (scenarioScreenDocument != null && scenarioScreenDocument.gameObject.activeSelf)
+                {
+                    var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+                    if (choiceButtonContainer != null)
+                    {
+                        choiceButtonContainer.style.display = DisplayStyle.Flex;
+                    }
+                }
+                
+                // 結果画面の場合、カウントダウン終了後の処理を実行
+                if (resultScreenDocument != null && resultScreenDocument.gameObject.activeSelf)
+                {
+                    // カウントダウンを停止して、成功時の処理を実行
+                    var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
+                    var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
+                    var epilogueLabel = root.Q<Label>("EpilogueText");
+                    
+                    // ワードゲット表示を表示
+                    if (wordGetContainer != null)
+                    {
+                        wordGetContainer.style.display = DisplayStyle.Flex;
+                    }
+                    
+                    // 後日談を表示
+                    if (epilogueContainer != null)
+                    {
+                        epilogueContainer.style.display = DisplayStyle.Flex;
+                        
+                        // 後日談のタイプライター効果を開始
+                        if (epilogueLabel != null)
+                        {
+                            var scenario = gameManager.GetCurrentScenario();
+                            var result = gameManager.GetScenarioResult(scenario != null ? scenario.id : 0);
+                            bool isDarkMode = gameManager.IsDarkMode() && scenario != null && scenario.id == 6;
+                            
+                            string epilogueText = "";
+                            if (isDarkMode && result != null)
+                            {
+                                epilogueText = result.choiceId == 1
+                                    ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
+                                    : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】";
+                            }
+                            else if (result != null)
+                            {
+                                epilogueText = result.epilogue;
+                            }
+                            
+                            if (!string.IsNullOrEmpty(epilogueText))
+                            {
+                                StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                {
+                                    // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                                    ShowBackButton();
+                                });
+                            }
+                            else
+                            {
+                                // 後日談がない場合は即座に戻るボタンを表示
+                                ShowBackButton();
+                            }
+                        }
+                        else
+                        {
+                            // 後日談がない場合は即座に戻るボタンを表示
+                            ShowBackButton();
+                        }
+                    }
+                    else
+                    {
+                        // 後日談がない場合は即座に戻るボタンを表示
+                        ShowBackButton();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// シェイクアニメーション
+        /// </summary>
+        private IEnumerator ShakeAnimation(Label label)
+        {
+            float duration = 0.5f;
+            float shakeIntensity = 10f;
+            float elapsed = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float offsetX = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
+                float offsetY = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
+                
+                label.style.translate = new Translate(offsetX, offsetY, 0);
+                
+                yield return null;
+            }
+            
+            // 元の位置に戻す
+            label.style.translate = new Translate(0, 0, 0);
         }
 
         /// <summary>

@@ -2,9 +2,15 @@
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441134900000000&amp;guid=00000000000000000000000000000000&amp;type=3#GameStyles" />
     <ui:VisualElement name="ScenarioScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="CountdownContainer" class="countdown-container" style="position: absolute; left: 20px; bottom: 20px; display: none;">
+            <ui:Label text="⏰" style="font-size: 24px; margin-right: 8px;" />
+            <ui:Label name="CountdownText" text="10" style="font-size: 32px; -unity-font-style: bold; color: rgb(239, 68, 68);" />
+        </ui:VisualElement>
         <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; align-items: center; padding: 32px; max-width: 1000px; margin: 20px auto;">
             <ui:Label name="ScenarioTitleText" text="シナリオタイトル" style="font-size: 36px; -unity-font-style: bold; margin-bottom: 10px;" />
-            <ui:Label name="SetupText" text="シナリオの設定" style="font-size: 20px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
+            <ui:VisualElement name="SetupText" style="font-size: 20px; white-space: normal; max-width: 800px; margin-bottom: 20px; flex-direction: row; flex-wrap: wrap;" />
+            <ui:Label name="WordFoundMessage" text="" style="font-size: 24px; -unity-font-style: bold; color: #10b981; margin-bottom: 20px; display: none;" />
+            <ui:Label name="WordFailedMessage" text="残念...【もうひとつ】は出ませんでした" style="font-size: 24px; -unity-font-style: bold; color: rgb(239, 68, 68); margin-bottom: 20px; display: none;" />
             <ui:VisualElement name="ChoiceButtonContainer" style="flex-grow: 1; flex-direction: column; width: 100%; max-width: 800px; gap: 15px;" />
             <ui:Button name="BackToSelectionButtonFromScenario" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px;" />
         </ui:VisualElement>
