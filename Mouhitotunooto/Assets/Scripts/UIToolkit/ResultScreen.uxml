@@ -2,8 +2,8 @@
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441134900000000&amp;guid=00000000000000000000000000000000&amp;type=3#GameStyles" />
     <ui:VisualElement name="ResultScreen" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
-        <ui:ScrollView name="Content" style="flex-grow: 1;">
-            <ui:VisualElement class="card" style="flex-direction: column; align-items: center; padding: 20px; max-width: 800px; margin: 20px auto;">
+        <ui:ScrollView style="flex-grow: 1;">
+            <ui:VisualElement name="Content" class="card" style="flex-direction: column; align-items: center; padding: 20px; max-width: 800px; margin: 20px auto;">
             <ui:Label name="ResultText" text="結果テキスト" style="font-size: 18px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
             <ui:VisualElement name="WordGetContainer" style="width: 100%; margin-bottom: 20px;" />
             <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 20px;" />
