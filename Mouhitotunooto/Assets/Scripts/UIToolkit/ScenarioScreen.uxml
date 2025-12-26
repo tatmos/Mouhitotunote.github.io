@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441134900000000&amp;guid=00000000000000000000000000000000&amp;type=3#GameStyles" />
+    <ui:VisualElement name="ScenarioScreen" style="flex-grow: 1;">
+        <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Content" style="flex-grow: 1; flex-direction: column; align-items: center; padding: 20px;">
+            <ui:Label name="ScenarioTitleText" text="シナリオタイトル" style="font-size: 36px; -unity-font-style: bold; margin-bottom: 10px;" />
+            <ui:Label name="SetupText" text="シナリオの設定" style="font-size: 20px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
+            <ui:VisualElement name="ChoiceButtonContainer" style="flex-grow: 1; flex-direction: column; width: 100%; max-width: 800px; gap: 15px;" />
+            <ui:Button name="BackToSelectionButtonFromScenario" text="選択画面に戻る" style="margin-top: 20px; min-width: 200px; min-height: 50px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

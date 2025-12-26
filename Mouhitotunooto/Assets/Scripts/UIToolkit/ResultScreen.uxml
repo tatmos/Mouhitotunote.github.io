@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441134900000000&amp;guid=00000000000000000000000000000000&amp;type=3#GameStyles" />
+    <ui:VisualElement name="ResultScreen" style="flex-grow: 1;">
+        <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:ScrollView name="Content" style="flex-grow: 1;">
+            <ui:VisualElement style="flex-direction: column; align-items: center; padding: 20px;">
+            <ui:Label name="ResultText" text="結果テキスト" style="font-size: 18px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
+            <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 20px;" />
+            <ui:Label name="EpilogueText" text="後日談" style="font-size: 16px; white-space: normal; max-width: 800px; margin-bottom: 20px;" />
+            <ui:Button name="BackToSelectionButton" text="シナリオ選択に戻る" style="margin-top: 20px; min-width: 200px; min-height: 50px;" />
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>
+
