@@ -89,6 +89,28 @@ namespace NovelGame
 
             if (scenarioButtonParent == null || scenarioButtonPrefab == null) return;
 
+            // レイアウトコンポーネントを追加（GridLayoutGroup）
+            var gridLayout = scenarioButtonParent.GetComponent<GridLayoutGroup>();
+            if (gridLayout == null)
+            {
+                gridLayout = scenarioButtonParent.gameObject.AddComponent<GridLayoutGroup>();
+                gridLayout.cellSize = new Vector2(300, 100);
+                gridLayout.spacing = new Vector2(20, 20);
+                gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                gridLayout.constraintCount = 3; // 3列
+                gridLayout.startCorner = GridLayoutGroup.Corner.UpperLeft;
+                gridLayout.startAxis = GridLayoutGroup.Axis.Horizontal;
+                gridLayout.childAlignment = TextAnchor.UpperCenter;
+            }
+
+            // ContentSizeFitterを追加（必要に応じて）
+            var contentSizeFitter = scenarioButtonParent.GetComponent<ContentSizeFitter>();
+            if (contentSizeFitter == null)
+            {
+                contentSizeFitter = scenarioButtonParent.gameObject.AddComponent<ContentSizeFitter>();
+                contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+
             var scenarios = gameManager.GetScenarios();
             foreach (var scenario in scenarios)
             {
@@ -176,6 +198,27 @@ namespace NovelGame
 
             if (choiceButtonParent == null || choiceButtonPrefab == null) return;
 
+            // レイアウトコンポーネントを追加（VerticalLayoutGroup）
+            var verticalLayout = choiceButtonParent.GetComponent<VerticalLayoutGroup>();
+            if (verticalLayout == null)
+            {
+                verticalLayout = choiceButtonParent.gameObject.AddComponent<VerticalLayoutGroup>();
+                verticalLayout.spacing = 15f;
+                verticalLayout.padding = new RectOffset(10, 10, 10, 10);
+                verticalLayout.childControlWidth = true;
+                verticalLayout.childControlHeight = false;
+                verticalLayout.childForceExpandWidth = true;
+                verticalLayout.childForceExpandHeight = false;
+            }
+
+            // ContentSizeFitterを追加
+            var contentSizeFitter = choiceButtonParent.GetComponent<ContentSizeFitter>();
+            if (contentSizeFitter == null)
+            {
+                contentSizeFitter = choiceButtonParent.gameObject.AddComponent<ContentSizeFitter>();
+                contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+
             var scenario = gameManager.GetCurrentScenario();
             if (scenario == null) return;
 
@@ -193,6 +236,14 @@ namespace NovelGame
                 GameObject buttonObj = Instantiate(choiceButtonPrefab, choiceButtonParent);
                 var button = buttonObj.GetComponent<Button>();
                 var texts = buttonObj.GetComponentsInChildren<TextMeshProUGUI>();
+
+                // ボタンのレイアウト要素を設定
+                var layoutElement = buttonObj.GetComponent<LayoutElement>();
+                if (layoutElement == null)
+                {
+                    layoutElement = buttonObj.AddComponent<LayoutElement>();
+                }
+                layoutElement.preferredHeight = 120f; // 選択肢ボタンの高さ
 
                 if (texts.Length > 0 && texts[0] != null)
                 {

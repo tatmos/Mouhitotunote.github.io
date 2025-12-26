@@ -24,9 +24,19 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
 1. Canvasの子として空のGameObjectを作成し、「SelectionScreen」と命名
 2. SelectionScreenの子要素として以下を作成：
    - **TitleText** (TextMeshProUGUI): タイトル「ミニノベルゲーム」
+     - 位置: 上部中央
+     - フォントサイズ: 48
    - **ScoreText** (TextMeshProUGUI): スコア表示
+     - 位置: TitleTextの下
+     - フォントサイズ: 24
    - **ScenarioButtonParent** (Empty GameObject): シナリオボタンの親
+     - RectTransformの設定:
+       - Anchor: Top-Left
+       - Position: 適切な位置（例: X=0, Y=-200）
+       - Width: 1000, Height: 600
+     - **注意**: GridLayoutGroupは自動的に追加されます
    - **ScenarioButtonPrefab** (Button):
+     - サイズ: Width=300, Height=100
      - 子要素にTextMeshProUGUIを追加
      - ボタンのテキストを設定
 
@@ -34,11 +44,23 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
 1. Canvasの子として空のGameObjectを作成し、「ScenarioScreen」と命名
 2. ScenarioScreenの子要素として以下を作成：
    - **ScenarioTitleText** (TextMeshProUGUI): シナリオタイトル
+     - 位置: 上部中央
+     - フォントサイズ: 36
    - **SetupText** (TextMeshProUGUI): シナリオの設定テキスト
+     - 位置: ScenarioTitleTextの下
+     - サイズ: Width=800, Height=200
+     - テキストの折り返しを有効化
    - **ChoiceButtonParent** (Empty GameObject): 選択肢ボタンの親
+     - RectTransformの設定:
+       - Anchor: Center
+       - Position: 適切な位置（例: X=0, Y=-100）
+       - Width: 800, Height: 400
+     - **注意**: VerticalLayoutGroupは自動的に追加されます
    - **ChoiceButtonPrefab** (Button):
+     - サイズ: Width=780, Height=120
      - 子要素に2つのTextMeshProUGUIを追加（1つ目: 選択肢テキスト、2つ目: プレビューテキスト）
    - **BackToSelectionButton** (Button): 選択画面に戻るボタン
+     - 位置: 下部中央または右上
 
 #### 結果画面（Result Screen）の作成
 1. Canvasの子として空のGameObjectを作成し、「ResultScreen」と命名
