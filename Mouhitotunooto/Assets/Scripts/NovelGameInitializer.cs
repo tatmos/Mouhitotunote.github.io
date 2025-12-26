@@ -18,7 +18,7 @@ namespace NovelGame
             }
 
             // ScenarioDataLoaderを探すか、作成する
-            if (FindObjectOfType<ScenarioDataLoader>() == null)
+            if (FindFirstObjectByType<ScenarioDataLoader>() == null)
             {
                 GameObject dataLoaderObj = new GameObject("ScenarioDataLoader");
                 dataLoaderObj.AddComponent<ScenarioDataLoader>();

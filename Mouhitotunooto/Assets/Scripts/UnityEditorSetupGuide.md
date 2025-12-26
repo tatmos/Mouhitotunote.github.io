@@ -36,6 +36,18 @@
    - **Anchor Presets**: Alt+Shift+クリックで「Stretch Stretch」を選択
    - **Left, Top, Right, Bottom**: すべて0
 
+### 3.1.1 SelectionScreenの背景画像
+1. SelectionScreenの子として`UI > Image`を作成（最初の子要素として）
+2. 名前を「BackgroundImage」に変更
+3. RectTransformの設定：
+   - **Anchor Presets**: Stretch Stretch
+   - **Left, Top, Right, Bottom**: すべて0
+4. Imageの設定：
+   - **Source Image**: 選択画面用の背景画像をドラッグ
+   - **Color**: 白（Alpha: 255）
+   - **Image Type**: Simple
+   - **Preserve Aspect**: ✓
+
 ### 3.2 TitleTextの作成
 1. SelectionScreenの子として`UI > Text - TextMeshPro`を作成
 2. 名前を「TitleText」に変更
@@ -243,6 +255,18 @@
    - **Left, Top, Right, Bottom**: すべて0
 4. **初期状態**: 無効（Inactive）に設定
 
+### 6.1.1 ProfileScreenの背景画像
+1. ProfileScreenの子として`UI > Image`を作成（最初の子要素として）
+2. 名前を「BackgroundImage」に変更
+3. RectTransformの設定：
+   - **Anchor Presets**: Stretch Stretch
+   - **Left, Top, Right, Bottom**: すべて0
+4. Imageの設定：
+   - **Source Image**: プロフィール画面用の背景画像をドラッグ
+   - **Color**: 白（Alpha: 255）
+   - **Image Type**: Simple
+   - **Preserve Aspect**: ✓
+
 ### 6.2 ProfileSectionTitleの作成
 1. ProfileScreenの子として`UI > Text - TextMeshPro`を作成
 2. 名前を「ProfileSectionTitle」に変更
@@ -388,6 +412,15 @@
 - **Profile Card Prefab**: 作成したProfileCardPrefabプレハブをドラッグ
 - **Profile Section Title**: ProfileSectionTitleをドラッグ
 - **Back To Selection Button From Profile**: BackToSelectionButtonFromProfileをドラッグ
+
+**Background Images:**
+- **Scenario Backgrounds**: 6つのシナリオ背景画像を順番にアサイン
+- **Selection Screen Background**: 選択画面用の背景画像をアサイン
+- **Selection Background Image**: SelectionScreen内のBackgroundImageをアサイン
+- **Profile Screen Background**: プロフィール画面用の背景画像をアサイン
+- **Profile Background Image**: ProfileScreen内のBackgroundImageをアサイン
+- **Scenario Background Image**: ScenarioScreen内のBackgroundImageをアサイン
+- **Result Background Image**: ResultScreen内のBackgroundImageをアサイン
 
 ## 8. 初期状態の確認
 

@@ -1,6 +1,6 @@
 # 背景画像の設定ガイド
 
-各シナリオに背景画像を追加するためのガイドです。
+各シナリオと画面に背景画像を追加するためのガイドです。
 
 ## 1. 画像生成AI用プロンプト
 
@@ -94,6 +94,36 @@ Ancient mysterious door, space with light streaming in, mysterious atmosphere, e
 
 ---
 
+### 選択画面用背景
+**プロンプト（日本語）:**
+```
+ゲームのメインメニュー画面、エレガントなデザイン、温かい照明、ノスタルジックな雰囲気、選択肢が表示される画面、詳細な背景、高品質
+```
+
+**プロンプト（英語）:**
+```
+Game main menu screen, elegant design, warm lighting, nostalgic atmosphere, screen with selection options, detailed background, high quality
+```
+
+**ファイル名:** `Background_SelectionScreen.png`
+
+---
+
+### プロフィール画面用背景
+**プロンプト（日本語）:**
+```
+プロフィール表示画面、カードが並ぶ画面、エレガントなデザイン、柔らかい照明、落ち着いた雰囲気、詳細な背景、高品質
+```
+
+**プロンプト（英語）:**
+```
+Profile display screen, screen with cards arranged, elegant design, soft lighting, calm atmosphere, detailed background, high quality
+```
+
+**ファイル名:** `Background_ProfileScreen.png`
+
+---
+
 ## 2. 画像の仕様
 
 - **解像度**: 1920x1080（推奨）または 16:9のアスペクト比
@@ -108,6 +138,8 @@ Mouhitotunooto/
 └── Assets/
     └── Images/
         └── Backgrounds/
+            ├── Background_SelectionScreen.png
+            ├── Background_ProfileScreen.png
             ├── Background_Scenario01_MysteryRequest.png
             ├── Background_Scenario02_MysteriousRestaurant.png
             ├── Background_Scenario03_TimeCapsule.png
@@ -133,7 +165,33 @@ Mouhitotunooto/
    - **Apply**をクリック
 
 ### 4.2 背景画像用のGameObject作成
-各画面（ScenarioScreen、ResultScreen）に背景画像を表示するImageコンポーネントを追加します。
+各画面（SelectionScreen、ProfileScreen、ScenarioScreen、ResultScreen）に背景画像を表示するImageコンポーネントを追加します。
+
+#### SelectionScreenの背景
+1. SelectionScreenの子として`UI > Image`を作成
+2. 名前を「BackgroundImage」に変更
+3. RectTransformの設定：
+   - **Anchor Presets**: Stretch Stretch
+   - **Left, Top, Right, Bottom**: すべて0
+   - **注意**: 最背面に配置（Hierarchyで最初に配置）
+4. Imageの設定：
+   - **Source Image**: Background_SelectionScreen.pngをドラッグ
+   - **Color**: 白（Alpha: 255）
+   - **Image Type**: Simple
+   - **Preserve Aspect**: ✓（アスペクト比を維持）
+
+#### ProfileScreenの背景
+1. ProfileScreenの子として`UI > Image`を作成
+2. 名前を「BackgroundImage」に変更
+3. RectTransformの設定：
+   - **Anchor Presets**: Stretch Stretch
+   - **Left, Top, Right, Bottom**: すべて0
+   - **注意**: 最背面に配置（Hierarchyで最初に配置）
+4. Imageの設定：
+   - **Source Image**: Background_ProfileScreen.pngをドラッグ
+   - **Color**: 白（Alpha: 255）
+   - **Image Type**: Simple
+   - **Preserve Aspect**: ✓（アスペクト比を維持）
 
 #### ScenarioScreenの背景
 1. ScenarioScreenの子として`UI > Image`を作成
@@ -158,12 +216,16 @@ Mouhitotunooto/
 UIManagerスクリプトを拡張して、シナリオに応じて背景画像を切り替える機能を追加します。
 
 ### 5.1 背景画像の参照を追加
-UIManagerに以下のフィールドを追加：
+UIManagerに以下のフィールドが追加されています（既に実装済み）：
 ```csharp
 [Header("Background Images")]
 [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
 [SerializeField] private Image scenarioBackgroundImage;
 [SerializeField] private Image resultBackgroundImage;
+[SerializeField] private Sprite selectionScreenBackground;
+[SerializeField] private Image selectionBackgroundImage;
+[SerializeField] private Sprite profileScreenBackground;
+[SerializeField] private Image profileBackgroundImage;
 ```
 
 ### 5.2 背景画像の設定
@@ -175,6 +237,10 @@ Inspectorで以下を設定：
   - Element 3: Scenario04の背景
   - Element 4: Scenario05の背景
   - Element 5: Scenario06の背景
+- **Selection Screen Background**: 選択画面用の背景画像をアサイン
+- **Selection Background Image**: SelectionScreen内のBackgroundImageをアサイン
+- **Profile Screen Background**: プロフィール画面用の背景画像をアサイン
+- **Profile Background Image**: ProfileScreen内のBackgroundImageをアサイン
 - **Scenario Background Image**: ScenarioScreen内のBackgroundImageをアサイン
 - **Result Background Image**: ResultScreen内のBackgroundImageをアサイン
 

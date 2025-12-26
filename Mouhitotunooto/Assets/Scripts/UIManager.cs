@@ -41,6 +41,10 @@ namespace NovelGame
         [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
         [SerializeField] private Image scenarioBackgroundImage;
         [SerializeField] private Image resultBackgroundImage;
+        [SerializeField] private Sprite selectionScreenBackground;
+        [SerializeField] private Image selectionBackgroundImage;
+        [SerializeField] private Sprite profileScreenBackground;
+        [SerializeField] private Image profileBackgroundImage;
 
         private GameManager gameManager;
         private List<GameObject> currentButtons = new List<GameObject>();
@@ -78,6 +82,9 @@ namespace NovelGame
             // 選択画面全体のレイアウトを設定
             SetupSelectionScreenLayout();
 
+            // 選択画面の背景画像を設定
+            SetSelectionBackground();
+
             if (titleText != null)
             {
                 titleText.text = "ミニノベルゲーム";
@@ -100,6 +107,9 @@ namespace NovelGame
             scenarioScreen.SetActive(false);
             resultScreen.SetActive(false);
             if (profileScreen != null) profileScreen.SetActive(true);
+
+            // プロフィール画面の背景画像を設定
+            SetProfileBackground();
 
             CreateProfileCards();
 
@@ -797,11 +807,213 @@ namespace NovelGame
                 if (isScenarioScreen && scenarioBackgroundImage != null)
                 {
                     scenarioBackgroundImage.sprite = scenarioBackgrounds[backgroundIndex];
+                    scenarioBackgroundImage.enabled = true;
                 }
                 else if (!isScenarioScreen && resultBackgroundImage != null)
                 {
                     resultBackgroundImage.sprite = scenarioBackgrounds[backgroundIndex];
+                    resultBackgroundImage.enabled = true;
                 }
+            }
+        }
+
+        private void SetSelectionBackground()
+        {
+            if (selectionBackgroundImage == null)
+            {
+                Debug.LogWarning("SelectionBackgroundImageがアサインされていません！");
+                return;
+            }
+
+            if (selectionScreenBackground == null)
+            {
+                Debug.LogWarning("SelectionScreenBackgroundがアサインされていません！");
+                return;
+            }
+
+            // Canvasのサイズを取得
+            Canvas canvas = selectionBackgroundImage.canvas;
+            Vector2 canvasSize = canvas != null ? canvas.pixelRect.size : new Vector2(Screen.width, Screen.height);
+
+            // 親要素（SelectionScreen）のRectTransformを確認
+            if (selectionScreen != null)
+            {
+                var parentRect = selectionScreen.GetComponent<RectTransform>();
+                if (parentRect != null)
+                {
+                    parentRect.anchorMin = Vector2.zero;
+                    parentRect.anchorMax = Vector2.one;
+                    parentRect.sizeDelta = Vector2.zero;
+                    parentRect.anchoredPosition = Vector2.zero;
+                    
+                    // 親要素のサイズを強制的に設定
+                    if (parentRect.sizeDelta == Vector2.zero && canvasSize != Vector2.zero)
+                    {
+                        parentRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, canvasSize.x);
+                        parentRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, canvasSize.y);
+                    }
+                }
+            }
+
+            // RectTransformを設定（画面全体に表示）
+            var rectTransform = selectionBackgroundImage.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.sizeDelta = Vector2.zero;
+                
+                // LayoutElementを追加して、VerticalLayoutGroupの制御から除外
+                var layoutElement = selectionBackgroundImage.GetComponent<LayoutElement>();
+                if (layoutElement == null)
+                {
+                    layoutElement = selectionBackgroundImage.gameObject.AddComponent<LayoutElement>();
+                }
+                layoutElement.ignoreLayout = true; // VerticalLayoutGroupの制御を無視
+                
+                // サイズを強制的に設定
+                if (canvasSize != Vector2.zero)
+                {
+                    rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, canvasSize.x);
+                    rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, canvasSize.y);
+                }
+            }
+
+            // Imageコンポーネントを強制的に再設定
+            selectionBackgroundImage.enabled = false;
+            selectionBackgroundImage.enabled = true;
+            
+            selectionBackgroundImage.sprite = selectionScreenBackground;
+            selectionBackgroundImage.color = Color.white;
+            selectionBackgroundImage.raycastTarget = false;
+            selectionBackgroundImage.type = Image.Type.Simple;
+            selectionBackgroundImage.preserveAspect = false; // 画面全体に表示するため、アスペクト比を保持しない
+            
+            // GameObjectを一度無効化してから有効化（強制的に再描画）
+            bool wasActive = selectionBackgroundImage.gameObject.activeSelf;
+            if (wasActive)
+            {
+                selectionBackgroundImage.gameObject.SetActive(false);
+            }
+            
+            // BackgroundImageを最背面に移動（Hierarchyの最初に配置）
+            if (selectionScreen != null && selectionBackgroundImage.transform.parent == selectionScreen.transform)
+            {
+                selectionBackgroundImage.transform.SetAsFirstSibling();
+            }
+            
+            if (wasActive)
+            {
+                selectionBackgroundImage.gameObject.SetActive(true);
+            }
+            
+            // Canvasを強制的に更新
+            if (canvas != null)
+            {
+                Canvas.ForceUpdateCanvases();
+            }
+        }
+
+        private void SetProfileBackground()
+        {
+            if (profileBackgroundImage == null)
+            {
+                Debug.LogWarning("ProfileBackgroundImageがアサインされていません！");
+                return;
+            }
+
+            if (profileScreenBackground == null)
+            {
+                Debug.LogWarning("ProfileScreenBackgroundがアサインされていません！");
+                return;
+            }
+
+            // Canvasのサイズを取得
+            Canvas canvas = profileBackgroundImage.canvas;
+            Vector2 canvasSize = canvas != null ? canvas.pixelRect.size : new Vector2(Screen.width, Screen.height);
+
+            // 親要素（ProfileScreen）のRectTransformを確認
+            if (profileScreen != null)
+            {
+                var parentRect = profileScreen.GetComponent<RectTransform>();
+                if (parentRect != null)
+                {
+                    parentRect.anchorMin = Vector2.zero;
+                    parentRect.anchorMax = Vector2.one;
+                    parentRect.sizeDelta = Vector2.zero;
+                    parentRect.anchoredPosition = Vector2.zero;
+                    
+                    // 親要素のサイズを強制的に設定
+                    if (parentRect.sizeDelta == Vector2.zero && canvasSize != Vector2.zero)
+                    {
+                        parentRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, canvasSize.x);
+                        parentRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, canvasSize.y);
+                    }
+                }
+            }
+
+            // RectTransformを設定（画面全体に表示）
+            var rectTransform = profileBackgroundImage.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.sizeDelta = Vector2.zero;
+                
+                // LayoutElementを追加して、VerticalLayoutGroupの制御から除外
+                var layoutElement = profileBackgroundImage.GetComponent<LayoutElement>();
+                if (layoutElement == null)
+                {
+                    layoutElement = profileBackgroundImage.gameObject.AddComponent<LayoutElement>();
+                }
+                layoutElement.ignoreLayout = true; // VerticalLayoutGroupの制御を無視
+                
+                // サイズを強制的に設定
+                if (canvasSize != Vector2.zero)
+                {
+                    rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, canvasSize.x);
+                    rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, canvasSize.y);
+                }
+            }
+
+            // Imageコンポーネントを強制的に再設定
+            profileBackgroundImage.enabled = false;
+            profileBackgroundImage.enabled = true;
+            
+            profileBackgroundImage.sprite = profileScreenBackground;
+            profileBackgroundImage.color = Color.white;
+            profileBackgroundImage.raycastTarget = false;
+            profileBackgroundImage.type = Image.Type.Simple;
+            profileBackgroundImage.preserveAspect = false; // 画面全体に表示するため、アスペクト比を保持しない
+            
+            // GameObjectを一度無効化してから有効化（強制的に再描画）
+            bool wasActive = profileBackgroundImage.gameObject.activeSelf;
+            if (wasActive)
+            {
+                profileBackgroundImage.gameObject.SetActive(false);
+            }
+            
+            // BackgroundImageを最背面に移動（Hierarchyの最初に配置）
+            if (profileScreen != null && profileBackgroundImage.transform.parent == profileScreen.transform)
+            {
+                profileBackgroundImage.transform.SetAsFirstSibling();
+            }
+            
+            if (wasActive)
+            {
+                profileBackgroundImage.gameObject.SetActive(true);
+            }
+            
+            // Canvasを強制的に更新
+            if (canvas != null)
+            {
+                Canvas.ForceUpdateCanvases();
             }
         }
     }

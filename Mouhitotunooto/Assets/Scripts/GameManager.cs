@@ -47,7 +47,7 @@ namespace NovelGame
             else
             {
                 // gameDataが設定されていない場合、ScenarioDataLoaderから取得
-                var dataLoader = FindObjectOfType<ScenarioDataLoader>();
+                var dataLoader = FindFirstObjectByType<ScenarioDataLoader>();
                 if (dataLoader != null)
                 {
                     scenarios = dataLoader.GetScenarios();
