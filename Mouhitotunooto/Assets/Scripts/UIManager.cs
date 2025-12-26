@@ -37,6 +37,11 @@ namespace NovelGame
         [SerializeField] private TextMeshProUGUI profileSectionTitle;
         [SerializeField] private Button backToSelectionButtonFromProfile;
 
+        [Header("Background Images")]
+        [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
+        [SerializeField] private Image scenarioBackgroundImage;
+        [SerializeField] private Image resultBackgroundImage;
+
         private GameManager gameManager;
         private List<GameObject> currentButtons = new List<GameObject>();
         private HashSet<int> expandedProfiles = new HashSet<int>();
@@ -329,6 +334,9 @@ namespace NovelGame
                 setupText.text = scenario.setup;
             }
 
+            // 背景画像を設定
+            SetBackgroundImage(scenario.id, true);
+
             CreateChoiceButtons();
 
             // 選択画面に戻るボタンの設定
@@ -430,6 +438,9 @@ namespace NovelGame
 
             var result = gameManager.GetScenarioResult(scenario.id);
             if (result == null) return;
+
+            // 背景画像を設定
+            SetBackgroundImage(scenario.id, false);
 
             bool isDarkMode = gameManager.IsDarkMode() && scenario.id == 6;
 
@@ -757,6 +768,24 @@ namespace NovelGame
         private string GetDarkModeEpilogue2(int scenarioId)
         {
             return "【完全崩壊】\n" + CharacterProfileManager.GetProfile(scenarioId)?.name + "は完全にデータの欠片となって消えました。";
+        }
+
+        private void SetBackgroundImage(int scenarioId, bool isScenarioScreen)
+        {
+            // シナリオIDは1-6なので、配列のインデックスは0-5
+            int backgroundIndex = scenarioId - 1;
+            
+            if (backgroundIndex >= 0 && backgroundIndex < scenarioBackgrounds.Length && scenarioBackgrounds[backgroundIndex] != null)
+            {
+                if (isScenarioScreen && scenarioBackgroundImage != null)
+                {
+                    scenarioBackgroundImage.sprite = scenarioBackgrounds[backgroundIndex];
+                }
+                else if (!isScenarioScreen && resultBackgroundImage != null)
+                {
+                    resultBackgroundImage.sprite = scenarioBackgrounds[backgroundIndex];
+                }
+            }
         }
     }
 }
