@@ -247,10 +247,10 @@
 1. ProfileScreenの子として`UI > Text - TextMeshPro`を作成
 2. 名前を「ProfileSectionTitle」に変更
 3. RectTransformの設定：
-   - **Anchor Presets**: Top Center
-   - **Pos Y**: -50
+   - **Anchor Presets**: Center（VerticalLayoutGroupが配置を制御します）
    - **Width**: 600
    - **Height**: 60
+   - **注意**: Pos Yは設定しない（VerticalLayoutGroupが自動配置）
 4. TextMeshProUGUIの設定：
    - **Text**: 「登場人物プロフィール」
    - **Font Size**: 36
@@ -260,10 +260,12 @@
 1. ProfileScreenの子として空のGameObjectを作成
 2. 名前を「ProfileParent」に変更
 3. RectTransformの設定：
-   - **Anchor Presets**: Center
+   - **Anchor Presets**: Center（VerticalLayoutGroupが配置を制御します）
    - **Width**: 1000
    - **Height**: 600（自動調整されます）
-   - **注意**: GridLayoutGroupはスクリプトで自動追加されます
+   - **注意**: 
+     - GridLayoutGroupはスクリプトで自動追加されます
+     - Pos Yは設定しない（VerticalLayoutGroupが自動配置）
 
 ### 6.4 ProfileCardPrefabの作成
 1. ProfileScreenの子として`UI > Image`を作成
@@ -337,13 +339,17 @@
 1. ProfileScreenの子として`UI > Button - TextMeshPro`を作成
 2. 名前を「BackToSelectionButtonFromProfile」に変更
 3. RectTransformの設定：
-   - **Anchor Presets**: Bottom Center
-   - **Pos Y**: 50
+   - **Anchor Presets**: Center（VerticalLayoutGroupが配置を制御します）
    - **Width**: 200
    - **Height**: 50
+   - **注意**: Pos Yは設定しない（VerticalLayoutGroupが自動配置）
 4. Buttonの子要素（Text (TMP)）の設定：
    - **Text**: 「選択画面に戻る」
    - **Font Size**: 18
+5. **重要**: ProfileScreenの子要素の順番を確認
+   - ProfileSectionTitle（最初）
+   - ProfileParent（2番目）
+   - BackToSelectionButtonFromProfile（最後）
 
 ## 7. UIManagerの設定
 

@@ -203,12 +203,38 @@ namespace NovelGame
             verticalLayout.childControlHeight = false;
             verticalLayout.childForceExpandWidth = true;
             verticalLayout.childForceExpandHeight = false;
-            verticalLayout.childAlignment = TextAnchor.MiddleCenter; // 中央揃えに変更
+            verticalLayout.childAlignment = TextAnchor.UpperCenter; // 上部中央に変更
 
             // 各要素にLayoutElementを設定
             SetupLayoutElement(profileSectionTitle?.transform, preferredHeight: 60f);
-            SetupLayoutElement(profileParent, preferredHeight: -1); // 自動調整
-            SetupLayoutElement(backToSelectionButtonFromProfile?.transform, preferredHeight: 50f);
+            
+            // ProfileParentの設定
+            if (profileParent != null)
+            {
+                SetupLayoutElement(profileParent, preferredHeight: -1); // 自動調整
+                var profileParentRect = profileParent.GetComponent<RectTransform>();
+                if (profileParentRect != null)
+                {
+                    profileParentRect.anchorMin = new Vector2(0.5f, 0.5f);
+                    profileParentRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    profileParentRect.pivot = new Vector2(0.5f, 0.5f);
+                    profileParentRect.anchoredPosition = Vector2.zero;
+                }
+            }
+            
+            // 戻るボタンの設定
+            if (backToSelectionButtonFromProfile != null)
+            {
+                SetupLayoutElement(backToSelectionButtonFromProfile.transform, preferredHeight: 50f);
+                var buttonRect = backToSelectionButtonFromProfile.GetComponent<RectTransform>();
+                if (buttonRect != null)
+                {
+                    buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
+                    buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    buttonRect.pivot = new Vector2(0.5f, 0.5f);
+                    buttonRect.anchoredPosition = Vector2.zero;
+                }
+            }
         }
 
         private void UpdateScoreDisplay()
@@ -515,17 +541,8 @@ namespace NovelGame
             // プロフィール画面のレイアウトを設定
             SetupProfileScreenLayout();
 
-            // プロフィール親のRectTransformを設定
-            var profileParentRect = profileParent.GetComponent<RectTransform>();
-            if (profileParentRect != null)
-            {
-                // VerticalLayoutGroup内なので、中央基準で設定
-                profileParentRect.anchorMin = new Vector2(0.5f, 0.5f);
-                profileParentRect.anchorMax = new Vector2(0.5f, 0.5f);
-                profileParentRect.pivot = new Vector2(0.5f, 0.5f);
-                profileParentRect.anchoredPosition = Vector2.zero;
-                // サイズはGridLayoutGroupとContentSizeFitterで自動調整
-            }
+            // プロフィール親のRectTransformを設定（既にSetupProfileScreenLayoutで設定済み）
+            // ここではGridLayoutGroupとContentSizeFitterのみ設定
 
             // レイアウトコンポーネントを追加（GridLayoutGroup）
             var gridLayout = profileParent.GetComponent<GridLayoutGroup>();
