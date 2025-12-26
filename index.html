@@ -402,26 +402,11 @@
 
               {totalCompleted === scenarios.length && (
                 <div className="mt-8 text-center">
-                  {isDarkMode ? (
-                    <div className="bg-red-900 border-2 border-red-600 rounded-lg p-4 inline-block relative overflow-hidden">
-                      <div className="absolute inset-0 bg-red-500 opacity-20 animate-pulse"></div>
-                      <p className="text-red-200 font-bold text-lg relative z-10 transform rotate-1" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>
-                        ⚠️ 【エラー】全シナリオクリア...？ ⚠️
-                      </p>
-                      <p className="text-red-300 text-xs mt-2 relative z-10" style={{fontFamily: 'monospace'}}>
-                        [SYSTEM_ERROR] Completion status: CORRUPTED
-                      </p>
-                      <p className="text-red-400 text-xs mt-1 relative z-10 animate-pulse">
-                        ？全シナリオクリア！？全シナリオクリア！？全シナリオクリア！？
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 inline-block">
-                      <p className="text-yellow-800 font-bold text-lg">
-                        🎉 全シナリオクリア！ 🎉
-                      </p>
-                    </div>
-                  )}
+                  <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 inline-block">
+                    <p className="text-yellow-800 font-bold text-lg">
+                      🎉 全シナリオクリア！ 🎉
+                    </p>
+                  </div>
                 </div>
               )}
               
