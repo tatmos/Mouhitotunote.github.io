@@ -22,7 +22,11 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
 
 #### 選択画面（Selection Screen）の作成
 1. Canvasの子として空のGameObjectを作成し、「SelectionScreen」と命名
-2. SelectionScreenの子要素として以下を作成：
+   - RectTransformの設定:
+     - Anchor: Stretch-Stretch（全画面）
+     - サイズは自動調整されます
+   - **注意**: VerticalLayoutGroupは自動的に追加されます
+2. SelectionScreenの子要素として以下を作成（順番が重要）：
    - **TitleText** (TextMeshProUGUI): タイトル「ミニノベルゲーム」
      - 位置: 上部中央
      - フォントサイズ: 48
@@ -35,6 +39,23 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
        - Position: 適切な位置（例: X=0, Y=-200）
        - Width: 1000, Height: 600
      - **注意**: GridLayoutGroupは自動的に追加されます
+   - **ShowProfileButton** (Button): プロフィール画面を表示するボタン
+     - テキスト: "登場人物プロフィールを見る"
+     - 位置: ScenarioButtonParentの下
+     - サイズ: Width=320, Height=400
+     - 子要素として以下を作成:
+       - **NameText** (TextMeshProUGUI): 名前表示
+       - **RoleText** (TextMeshProUGUI): 役割表示（オプション）
+       - **InfoText** (TextMeshProUGUI): 職業・特徴表示
+       - **QuoteText** (TextMeshProUGUI): セリフ表示
+       - **EpilogueText** (TextMeshProUGUI): 後日談表示
+       - **ExpandButton** (Button): 後日談の後日談を展開するボタン
+       - **Epilogue2Text** (TextMeshProUGUI): 後日談の後日談表示
+       - **HintText** (TextMeshProUGUI): ヒント表示
+       - **LockedOverlay** (GameObject with Image): ロック時のオーバーレイ
+   - **ProfileSectionTitle** (TextMeshProUGUI): プロフィールセクションのタイトル
+     - 位置: ProfileParentの上
+     - テキスト: "登場人物プロフィール"
    - **ScenarioButtonPrefab** (Button):
      - サイズ: Width=300, Height=100
      - 子要素にTextMeshProUGUIを追加
@@ -62,6 +83,34 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
    - **BackToSelectionButton** (Button): 選択画面に戻るボタン
      - 位置: 下部中央または右上
 
+#### プロフィール画面（Profile Screen）の作成
+1. Canvasの子として空のGameObjectを作成し、「ProfileScreen」と命名
+2. ProfileScreenの子要素として以下を作成：
+   - **ProfileSectionTitle** (TextMeshProUGUI): プロフィールセクションのタイトル
+     - 位置: 上部中央
+     - テキスト: "登場人物プロフィール"
+   - **ProfileParent** (Empty GameObject): プロフィールカードの親
+     - RectTransformの設定:
+       - Anchor: Stretch-Stretch
+       - Width: 1000（推奨）
+       - Height: 自動調整されます
+     - **注意**: GridLayoutGroupは自動的に追加されます
+   - **ProfileCardPrefab** (GameObject with Image): プロフィールカードのプレハブ
+     - サイズ: Width=300, Height=380
+     - 子要素として以下を作成:
+       - **NameText** (TextMeshProUGUI): 名前表示
+       - **RoleText** (TextMeshProUGUI): 役割表示（オプション）
+       - **InfoText** (TextMeshProUGUI): 職業・特徴表示
+       - **QuoteText** (TextMeshProUGUI): セリフ表示
+       - **EpilogueText** (TextMeshProUGUI): 後日談表示
+       - **ExpandButton** (Button): 後日談の後日談を展開するボタン
+       - **Epilogue2Text** (TextMeshProUGUI): 後日談の後日談表示
+       - **HintText** (TextMeshProUGUI): ヒント表示
+       - **LockedOverlay** (GameObject with Image): ロック時のオーバーレイ
+   - **BackToSelectionButtonFromProfile** (Button): 選択画面に戻るボタン
+     - 位置: 下部中央
+     - テキスト: "選択画面に戻る"
+
 #### 結果画面（Result Screen）の作成
 1. Canvasの子として空のGameObjectを作成し、「ResultScreen」と命名
 2. ResultScreenの子要素として以下を作成：
@@ -86,10 +135,18 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
    - **Choice Button Prefab**: ChoiceButtonPrefabをアサイン
    - **Back To Selection Button From Scenario**: シナリオ画面の選択画面に戻るボタンをアサイン
    - **Result Screen**: ResultScreenオブジェクトをアサイン
+   - **Profile Screen**: ProfileScreenオブジェクトをアサイン
+   - **Profile Parent**: プロフィールカードの親オブジェクト（ProfileScreen内）をアサイン
+   - **Profile Card Prefab**: プロフィールカードのプレハブをアサイン
+   - **Profile Section Title**: プロフィールセクションのタイトルテキスト（ProfileScreen内）をアサイン
+   - **Back To Selection Button From Profile**: プロフィール画面の選択画面に戻るボタンをアサイン
    - **Result Text**: ResultTextをアサイン
    - **Word Get Text**: WordGetTextをアサイン
    - **Epilogue Text**: EpilogueTextをアサイン
    - **Back To Selection Button**: 結果画面の選択画面に戻るボタンをアサイン
+   - **Profile Parent**: プロフィールカードの親オブジェクト（Empty GameObject）をアサイン
+   - **Profile Card Prefab**: プロフィールカードのプレハブをアサイン
+   - **Profile Section Title**: プロフィールセクションのタイトルテキストをアサイン
 
 ### 4. TextMeshProのセットアップ
 
@@ -102,6 +159,7 @@ index.htmlで作成されたミニノベルゲームをUnityに移植したバ�
 - SelectionScreenは有効（Active）
 - ScenarioScreenは無効（Inactive）
 - ResultScreenは無効（Inactive）
+- ProfileScreenは無効（Inactive）
 
 ### 6. 実行
 
