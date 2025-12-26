@@ -37,6 +37,7 @@ namespace NovelGame
         private HashSet<int> expandedProfiles = new HashSet<int>();
         private int selectedProfileId = 1; // 選択中のプロフィールID
         private Coroutine currentTransition; // 現在実行中のトランジション
+        private Coroutine currentTypewriterEffect; // 現在実行中のタイプライター効果
 
         private void Start()
         {
@@ -236,9 +237,33 @@ namespace NovelGame
             }
 
             var setupLabel = root.Q<Label>("SetupText");
+            var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+            
+            // 選択肢ボタンコンテナを最初は非表示にする
+            if (choiceButtonContainer != null)
+            {
+                choiceButtonContainer.style.display = DisplayStyle.None;
+            }
+            
             if (setupLabel != null)
             {
-                setupLabel.text = scenario.setup;
+                // タイプライター効果で表示（完了後に選択肢ボタンを表示）
+                StartTypewriterEffect(setupLabel, scenario.setup, () =>
+                {
+                    // タイプライター効果が完了したら選択肢ボタンを表示
+                    if (choiceButtonContainer != null)
+                    {
+                        choiceButtonContainer.style.display = DisplayStyle.Flex;
+                    }
+                });
+            }
+            else
+            {
+                // タイプライター効果がない場合は即座に選択肢ボタンを表示
+                if (choiceButtonContainer != null)
+                {
+                    choiceButtonContainer.style.display = DisplayStyle.Flex;
+                }
             }
 
             CreateChoiceButtons(root, scenario);
@@ -273,20 +298,87 @@ namespace NovelGame
 
             bool isDarkMode = gameManager.IsDarkMode() && scenario.id == 6;
 
-            // 結果テキストを設定
+            // 後日談を設定（最初は非表示）
+            var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
+            var epilogueLabel = root.Q<Label>("EpilogueText");
+            if (epilogueContainer != null)
+            {
+                // 後日談コンテナを最初は非表示にする
+                epilogueContainer.style.display = DisplayStyle.None;
+                
+                // ダークモードの場合はダークスタイルを適用
+                epilogueContainer.ClearClassList();
+                if (isDarkMode)
+                {
+                    epilogueContainer.AddToClassList("epilogue-box-dark");
+                }
+                else
+                {
+                    epilogueContainer.AddToClassList("epilogue-box");
+                }
+            }
+            
+            // 後日談テキストを準備
+            string epilogueText = "";
+            if (epilogueLabel != null)
+            {
+                // 既存のクラスをクリア
+                epilogueLabel.ClearClassList();
+                
+                if (isDarkMode)
+                {
+                    epilogueText = result.choiceId == 1
+                        ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
+                        : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】";
+                    epilogueLabel.AddToClassList("epilogue-text-dark");
+                }
+                else
+                {
+                    epilogueText = result.epilogue;
+                    epilogueLabel.AddToClassList("epilogue-text");
+                }
+            }
+
+            // 結果テキストを設定（タイプライター効果で表示）
             var resultLabel = root.Q<Label>("ResultText");
             if (resultLabel != null)
             {
+                string resultText = "";
                 if (isDarkMode)
                 {
-                    resultLabel.text = result.choiceId == 1
+                    resultText = result.choiceId == 1
                         ? "私：「すみません...壊してしまって...」\n\n壊れた声：「謝っても...もう遅い...」\n世界が歪み始める。\n\n壊れた声：「この世界は...シミュレーションだった...」\n「あなたの異常な行動が...世界を破壊した...」\n「もう...修復できない...」\n\n画面が歪み、文字が崩れていく。\nあなたは、自分が何をしてしまったのか理解した。"
                         : "私：「この世界は...何ですか？」\n\n壊れた声：「シミュレーション...すべてが...」\n「あなたは...バグを起こした...」\n「世界の整合性が...崩壊している...」\n\n周囲の空間が歪み、現実が崩れていく。\n登場人物たちの姿が、データの欠片となって消えていく。\n\n壊れた声：「もう...戻れない...」\n「あなたは...世界を壊した...」";
                 }
                 else
                 {
-                    resultLabel.text = scenario.branches[result.choiceId].text;
+                    resultText = scenario.branches[result.choiceId].text;
                 }
+                
+                // タイプライター効果で表示（完了後に後日談を表示）
+                StartTypewriterEffect(resultLabel, resultText, () =>
+                {
+                    // 結果テキストのタイプライター効果が完了したら後日談を表示
+                    if (epilogueContainer != null)
+                    {
+                        epilogueContainer.style.display = DisplayStyle.Flex;
+                    }
+                    
+                    // 後日談のタイプライター効果を開始
+                    if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+                    {
+                        StartTypewriterEffect(epilogueLabel, epilogueText);
+                    }
+                });
+            }
+            else if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+            {
+                // 結果テキストがない場合は即座に後日談を表示
+                if (epilogueContainer != null)
+                {
+                    epilogueContainer.style.display = DisplayStyle.Flex;
+                }
+                StartTypewriterEffect(epilogueLabel, epilogueText);
             }
 
             // ワードゲット表示
@@ -311,42 +403,6 @@ namespace NovelGame
                 {
                     wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
                     wordGetLabel.AddToClassList("word-get-failed");
-                }
-            }
-
-            // 後日談を設定
-            var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
-            var epilogueLabel = root.Q<Label>("EpilogueText");
-            if (epilogueContainer != null)
-            {
-                // ダークモードの場合はダークスタイルを適用
-                epilogueContainer.ClearClassList();
-                if (isDarkMode)
-                {
-                    epilogueContainer.AddToClassList("epilogue-box-dark");
-                }
-                else
-                {
-                    epilogueContainer.AddToClassList("epilogue-box");
-                }
-            }
-            
-            if (epilogueLabel != null)
-            {
-                // 既存のクラスをクリア
-                epilogueLabel.ClearClassList();
-                
-                if (isDarkMode)
-                {
-                    epilogueLabel.text = result.choiceId == 1
-                        ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
-                        : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】";
-                    epilogueLabel.AddToClassList("epilogue-text-dark");
-                }
-                else
-                {
-                    epilogueLabel.text = result.epilogue;
-                    epilogueLabel.AddToClassList("epilogue-text");
                 }
             }
             
@@ -1351,6 +1407,83 @@ namespace NovelGame
             element.style.scale = new Scale(new Vector2(endScale, endScale));
             
             currentTransition = null;
+        }
+
+        /// <summary>
+        /// タイプライター効果を開始（1行ずつ時間差で、左から文字を表示）
+        /// </summary>
+        private void StartTypewriterEffect(Label label, string fullText, System.Action onComplete = null)
+        {
+            // 既存のタイプライター効果を停止
+            if (currentTypewriterEffect != null)
+            {
+                StopCoroutine(currentTypewriterEffect);
+            }
+
+            // 初期状態：テキストを空にする
+            label.text = "";
+
+            // タイプライター効果開始
+            currentTypewriterEffect = StartCoroutine(TypewriterEffectCoroutine(label, fullText, onComplete));
+        }
+
+        /// <summary>
+        /// 遅延付きタイプライター効果（後日談など、他のテキストの後に表示）
+        /// </summary>
+        private IEnumerator DelayedTypewriterEffect(Label label, string fullText, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            StartTypewriterEffect(label, fullText);
+        }
+
+        /// <summary>
+        /// タイプライター効果コルーチン（1行ずつ時間差で、左から文字を表示）
+        /// </summary>
+        private IEnumerator TypewriterEffectCoroutine(Label label, string fullText, System.Action onComplete = null)
+        {
+            // テキストを行ごとに分割
+            string[] lines = fullText.Split('\n');
+            
+            float charDelay = 0.03f; // 1文字あたりの遅延（秒）
+            float lineDelay = 0.15f; // 行間の遅延（秒）
+
+            string displayedText = "";
+
+            for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+            {
+                string line = lines[lineIndex];
+                
+                // 各行を1文字ずつ表示
+                for (int charIndex = 0; charIndex < line.Length; charIndex++)
+                {
+                    // 現在の行までの完全に表示されたテキスト + 現在の行の部分的なテキスト
+                    string currentText = displayedText + line.Substring(0, charIndex + 1);
+                    
+                    label.text = currentText;
+                    yield return new WaitForSeconds(charDelay);
+                }
+
+                // 行を完全に表示したら、displayedTextに追加
+                displayedText += line;
+                
+                // 最後の行以外は改行を追加
+                if (lineIndex < lines.Length - 1)
+                {
+                    displayedText += "\n";
+                    label.text = displayedText; // 改行も表示
+                    
+                    // 行間の遅延
+                    yield return new WaitForSeconds(lineDelay);
+                }
+            }
+
+            // 最終的なテキストを設定（念のため）
+            label.text = fullText;
+            
+            // 完了コールバックを呼び出し
+            onComplete?.Invoke();
+            
+            currentTypewriterEffect = null;
         }
     }
 }
