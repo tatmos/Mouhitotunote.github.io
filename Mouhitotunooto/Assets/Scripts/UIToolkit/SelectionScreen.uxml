@@ -7,6 +7,8 @@
             <ui:Label name="ScoreText" text="【もうひとつ】ワードゲット数: 0 / 6" style="font-size: 24px; margin-bottom: 20px;" />
             <ui:VisualElement name="ScenarioButtonContainer" class="scenario-grid-container" style="flex-grow: 1; flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 960px; gap: 20px;" />
             <ui:Button name="ShowProfileButton" text="登場人物プロフィールを見る" class="button-gradient" style="margin-top: 20px; min-width: 300px; min-height: 50px;" />
+            <ui:Button name="ShowCreditsButton" text="🎬 エンドクレジットを見る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 300px; min-height: 50px; display: none;" />
+            <ui:Button name="ShowAchievementsButton" text="🏆 実績一覧を見る" class="button-gradient" style="margin-top: 20px; min-width: 300px; min-height: 50px; display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

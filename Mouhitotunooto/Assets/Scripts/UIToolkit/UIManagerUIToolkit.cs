@@ -14,12 +14,16 @@ namespace NovelGame
         [SerializeField] private UIDocument scenarioScreenDocument;
         [SerializeField] private UIDocument resultScreenDocument;
         [SerializeField] private UIDocument profileScreenDocument;
+        [SerializeField] private UIDocument creditsScreenDocument;
+        [SerializeField] private UIDocument achievementsScreenDocument;
 
         [Header("UXML Files")]
         [SerializeField] private VisualTreeAsset selectionScreenUXML;
         [SerializeField] private VisualTreeAsset scenarioScreenUXML;
         [SerializeField] private VisualTreeAsset resultScreenUXML;
         [SerializeField] private VisualTreeAsset profileScreenUXML;
+        [SerializeField] private VisualTreeAsset creditsScreenUXML;
+        [SerializeField] private VisualTreeAsset achievementsScreenUXML;
 
         [Header("Background Images")]
         [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
@@ -92,6 +96,47 @@ namespace NovelGame
             if (showProfileButton != null)
             {
                 showProfileButton.clicked += ShowProfileScreen;
+            }
+
+            // エンドクレジットボタンの設定（真実の扉クリア後のみ表示）
+            var showCreditsButton = root.Q<Button>("ShowCreditsButton");
+            if (showCreditsButton != null)
+            {
+                var scenario6Result = gameManager.GetScenarioResult(6);
+                if (scenario6Result != null)
+                {
+                    showCreditsButton.style.display = DisplayStyle.Flex;
+                    showCreditsButton.clicked += ShowCreditsScreen;
+                }
+                else
+                {
+                    showCreditsButton.style.display = DisplayStyle.None;
+                }
+            }
+
+            // 実績ボタンの設定（全シナリオクリア後のみ表示）
+            var showAchievementsButton = root.Q<Button>("ShowAchievementsButton");
+            if (showAchievementsButton != null)
+            {
+                var scenarios = gameManager.GetScenarios();
+                int totalCompleted = 0;
+                foreach (var scenario in scenarios)
+                {
+                    if (gameManager.IsScenarioCompleted(scenario.id))
+                    {
+                        totalCompleted++;
+                    }
+                }
+                
+                if (totalCompleted >= scenarios.Count)
+                {
+                    showAchievementsButton.style.display = DisplayStyle.Flex;
+                    showAchievementsButton.clicked += ShowAchievementsScreen;
+                }
+                else
+                {
+                    showAchievementsButton.style.display = DisplayStyle.None;
+                }
             }
 
             UpdateScoreDisplay();
@@ -320,6 +365,8 @@ namespace NovelGame
             if (scenarioScreenDocument != null) scenarioScreenDocument.gameObject.SetActive(false);
             if (resultScreenDocument != null) resultScreenDocument.gameObject.SetActive(false);
             if (profileScreenDocument != null) profileScreenDocument.gameObject.SetActive(false);
+            if (creditsScreenDocument != null) creditsScreenDocument.gameObject.SetActive(false);
+            if (achievementsScreenDocument != null) achievementsScreenDocument.gameObject.SetActive(false);
         }
 
         private void UpdateScoreDisplay()
@@ -689,6 +736,9 @@ namespace NovelGame
             detailCard.style.paddingBottom = 20;
             detailCard.style.paddingLeft = 20;
             detailCard.style.paddingRight = 20;
+            detailCard.style.width = Length.Percent(100);
+            detailCard.style.maxWidth = Length.Percent(100);
+            detailCard.style.minWidth = 0;
             
             // ボーダー半径を各角に設定
             detailCard.style.borderTopLeftRadius = 8;
@@ -712,6 +762,8 @@ namespace NovelGame
             // 名前
             var nameLabel = new Label(isUnlocked ? $"{profile.name}（{profile.role}）" : $"???（{profile.role}）");
             nameLabel.AddToClassList("profile-name");
+            nameLabel.style.whiteSpace = WhiteSpace.Normal;
+            nameLabel.style.maxWidth = Length.Percent(100);
             detailCard.Add(nameLabel);
 
             if (isUnlocked)
@@ -732,6 +784,8 @@ namespace NovelGame
                 
                 infoLabel.text = info;
                 infoLabel.AddToClassList("profile-info");
+                infoLabel.style.whiteSpace = WhiteSpace.Normal;
+                infoLabel.style.maxWidth = Length.Percent(100);
                 detailCard.Add(infoLabel);
 
                 // セリフ
@@ -740,6 +794,8 @@ namespace NovelGame
                     var quoteLabel = new Label(isDarkMode ? profile.quoteDarkMode : profile.quote);
                     quoteLabel.AddToClassList("profile-quote");
                     quoteLabel.style.color = isDarkMode ? Color.red : profile.borderColor;
+                    quoteLabel.style.whiteSpace = WhiteSpace.Normal;
+                    quoteLabel.style.maxWidth = Length.Percent(100);
                     detailCard.Add(quoteLabel);
                 }
 
@@ -748,6 +804,8 @@ namespace NovelGame
                 {
                     var epilogueLabel = new Label(isDarkMode ? GetDarkModeEpilogue(profile.scenarioId, result.choiceId) : result.epilogue);
                     epilogueLabel.AddToClassList("profile-epilogue");
+                    epilogueLabel.style.whiteSpace = WhiteSpace.Normal;
+                    epilogueLabel.style.maxWidth = Length.Percent(100);
                     detailCard.Add(epilogueLabel);
 
                     // 後日談の後日談
@@ -768,6 +826,8 @@ namespace NovelGame
                             {
                                 var epilogue2Label = new Label(isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2);
                                 epilogue2Label.AddToClassList("profile-epilogue2");
+                                epilogue2Label.style.whiteSpace = WhiteSpace.Normal;
+                                epilogue2Label.style.maxWidth = Length.Percent(100);
                                 detailCard.Add(epilogue2Label);
                             }
                         }
@@ -782,6 +842,8 @@ namespace NovelGame
                         {
                             var hintLabel = new Label(scenario.branches[result.choiceId].hint);
                             hintLabel.AddToClassList("profile-hint");
+                            hintLabel.style.whiteSpace = WhiteSpace.Normal;
+                            hintLabel.style.maxWidth = Length.Percent(100);
                             detailCard.Add(hintLabel);
                         }
                     }
@@ -847,6 +909,355 @@ namespace NovelGame
                     backgroundImage.style.backgroundImage = new StyleBackground(scenarioBackgrounds[backgroundIndex]);
                 }
             }
+        }
+
+        public void ShowAchievementsScreen()
+        {
+            HideAllScreens();
+            
+            if (achievementsScreenDocument == null)
+            {
+                Debug.LogError("AchievementsScreenDocumentがアサインされていません！");
+                return;
+            }
+
+            achievementsScreenDocument.gameObject.SetActive(true);
+            currentDocument = achievementsScreenDocument;
+            
+            var root = achievementsScreenDocument.rootVisualElement;
+            if (root == null) return;
+
+            // 背景画像を設定（選択画面と同じ背景を使用）
+            if (selectionScreenBackground != null)
+            {
+                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                }
+            }
+
+            var achievementsContainer = root.Q<VisualElement>("AchievementsContainer");
+            if (achievementsContainer == null) return;
+
+            achievementsContainer.Clear();
+
+            var scenarios = gameManager.GetScenarios();
+            int totalCompleted = 0;
+            foreach (var scenario in scenarios)
+            {
+                if (gameManager.IsScenarioCompleted(scenario.id))
+                {
+                    totalCompleted++;
+                }
+            }
+
+            // 全シナリオクリア後のみ表示
+            if (totalCompleted < scenarios.Count)
+            {
+                return;
+            }
+
+            var gridContainer = new VisualElement();
+            gridContainer.style.flexDirection = FlexDirection.Row;
+            gridContainer.style.flexWrap = Wrap.Wrap;
+            gridContainer.style.justifyContent = Justify.Center;
+            gridContainer.AddToClassList("achievement-grid");
+            gridContainer.style.width = Length.Percent(100);
+
+            // シナリオ1-5のエンド
+            for (int i = 1; i <= 5; i++)
+            {
+                var scenario = scenarios.Find(s => s.id == i);
+                if (scenario == null) continue;
+
+                var result = gameManager.GetScenarioResult(i);
+                var trueChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && scenario.branches[c.id].hasWord)?.id ?? -1;
+                var falseChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && !scenario.branches[c.id].hasWord)?.id ?? -1;
+                
+                bool trueEndSeen = result != null && result.hasWord && result.choiceId == trueChoiceId;
+                bool falseEndSeen = result != null && !result.hasWord && result.choiceId == falseChoiceId;
+
+                var scenarioCard = CreateAchievementCard(scenario.title, trueEndSeen, falseEndSeen, true);
+                gridContainer.Add(scenarioCard);
+            }
+
+            // 真実の扉のエンド
+            var scenario6 = scenarios.Find(s => s.id == 6);
+            if (scenario6 != null)
+            {
+                var result6 = gameManager.GetScenarioResult(6);
+                bool wasDarkMode = result6 != null && result6.scoreAtCompletion > scenarios.Count;
+                bool trueEndSeen = result6 != null && result6.hasWord && result6.choiceId == 2 && !wasDarkMode;
+                bool falseEndSeen = result6 != null && !result6.hasWord && result6.choiceId == 1 && !wasDarkMode;
+                bool darkModeEnd1Seen = result6 != null && wasDarkMode && result6.choiceId == 1;
+                bool darkModeEnd2Seen = result6 != null && wasDarkMode && result6.choiceId == 2;
+
+                var scenario6Card = CreateAchievementCardForScenario6(trueEndSeen, falseEndSeen, darkModeEnd1Seen, darkModeEnd2Seen);
+                gridContainer.Add(scenario6Card);
+            }
+
+            achievementsContainer.Add(gridContainer);
+
+            // 戻るボタン
+            var backButton = root.Q<Button>("BackToSelectionButtonFromAchievements");
+            if (backButton != null)
+            {
+                backButton.clicked += ShowSelectionScreen;
+            }
+        }
+
+        private VisualElement CreateAchievementCard(string scenarioTitle, bool trueEndSeen, bool falseEndSeen, bool isNormalScenario)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("achievement-card");
+            card.style.width = 300;
+            card.style.marginBottom = 16;
+
+            var titleLabel = new Label(scenarioTitle);
+            titleLabel.style.fontSize = 18;
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.marginBottom = 12;
+            card.Add(titleLabel);
+
+            var endsContainer = new VisualElement();
+            endsContainer.style.flexDirection = FlexDirection.Column;
+            endsContainer.AddToClassList("achievement-ends-container");
+
+            // Trueエンド
+            var trueEndBox = new VisualElement();
+            trueEndBox.AddToClassList(trueEndSeen ? "achievement-end-unlocked" : "achievement-end-locked");
+            var trueEndLabel = new Label("✨ Trueエンド");
+            trueEndLabel.style.fontSize = 14;
+            trueEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            trueEndLabel.style.color = trueEndSeen ? new Color(0.13f, 0.4f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
+            trueEndBox.Add(trueEndLabel);
+            if (trueEndSeen)
+            {
+                var trueEndDesc = new Label("【もうひとつ】を獲得したエンド");
+                trueEndDesc.style.fontSize = 12;
+                trueEndDesc.style.marginTop = 4;
+                trueEndBox.Add(trueEndDesc);
+            }
+            endsContainer.Add(trueEndBox);
+
+            // Falseエンド
+            var falseEndBox = new VisualElement();
+            falseEndBox.AddToClassList(falseEndSeen ? "achievement-end-unlocked-false" : "achievement-end-locked");
+            var falseEndLabel = new Label("❌ Falseエンド");
+            falseEndLabel.style.fontSize = 14;
+            falseEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            falseEndLabel.style.color = falseEndSeen ? new Color(0.6f, 0.1f, 0.1f) : new Color(0.5f, 0.5f, 0.5f);
+            falseEndBox.Add(falseEndLabel);
+            if (falseEndSeen)
+            {
+                var falseEndDesc = new Label("【もうひとつ】を獲得できなかったエンド");
+                falseEndDesc.style.fontSize = 12;
+                falseEndDesc.style.marginTop = 4;
+                falseEndBox.Add(falseEndDesc);
+            }
+            endsContainer.Add(falseEndBox);
+
+            card.Add(endsContainer);
+            return card;
+        }
+
+        private VisualElement CreateAchievementCardForScenario6(bool trueEndSeen, bool falseEndSeen, bool darkModeEnd1Seen, bool darkModeEnd2Seen)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("achievement-card");
+            card.style.width = 300;
+            card.style.marginBottom = 16;
+
+            var titleLabel = new Label("真実の扉");
+            titleLabel.style.fontSize = 18;
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.marginBottom = 12;
+            card.Add(titleLabel);
+
+            var endsContainer = new VisualElement();
+            endsContainer.style.flexDirection = FlexDirection.Column;
+            endsContainer.AddToClassList("achievement-ends-container");
+
+            // Trueエンド
+            var trueEndBox = new VisualElement();
+            trueEndBox.AddToClassList(trueEndSeen ? "achievement-end-unlocked" : "achievement-end-locked");
+            var trueEndLabel = new Label("✨ Trueエンド");
+            trueEndLabel.style.fontSize = 14;
+            trueEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            trueEndLabel.style.color = trueEndSeen ? new Color(0.13f, 0.4f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
+            trueEndBox.Add(trueEndLabel);
+            if (trueEndSeen)
+            {
+                var trueEndDesc = new Label("「答えを知りたかった」を選んだエンド");
+                trueEndDesc.style.fontSize = 12;
+                trueEndDesc.style.marginTop = 4;
+                trueEndBox.Add(trueEndDesc);
+            }
+            endsContainer.Add(trueEndBox);
+
+            // Falseエンド
+            var falseEndBox = new VisualElement();
+            falseEndBox.AddToClassList(falseEndSeen ? "achievement-end-unlocked-false" : "achievement-end-locked");
+            var falseEndLabel = new Label("❌ Falseエンド");
+            falseEndLabel.style.fontSize = 14;
+            falseEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            falseEndLabel.style.color = falseEndSeen ? new Color(0.6f, 0.1f, 0.1f) : new Color(0.5f, 0.5f, 0.5f);
+            falseEndBox.Add(falseEndLabel);
+            if (falseEndSeen)
+            {
+                var falseEndDesc = new Label("「好奇心から」を選んだエンド");
+                falseEndDesc.style.fontSize = 12;
+                falseEndDesc.style.marginTop = 4;
+                falseEndBox.Add(falseEndDesc);
+            }
+            endsContainer.Add(falseEndBox);
+
+            // ダークエンド1
+            var darkEnd1Box = new VisualElement();
+            darkEnd1Box.AddToClassList(darkModeEnd1Seen ? "achievement-end-dark" : "achievement-end-locked");
+            var darkEnd1Label = new Label("⚠️ ダークエンド1");
+            darkEnd1Label.style.fontSize = 14;
+            darkEnd1Label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            darkEnd1Label.style.color = darkModeEnd1Seen ? new Color(1f, 0.8f, 0.8f) : new Color(0.5f, 0.5f, 0.5f);
+            darkEnd1Box.Add(darkEnd1Label);
+            if (darkModeEnd1Seen)
+            {
+                var darkEnd1Desc = new Label("「すみません...」と謝ったエンド");
+                darkEnd1Desc.style.fontSize = 12;
+                darkEnd1Desc.style.marginTop = 4;
+                darkEnd1Box.Add(darkEnd1Desc);
+            }
+            endsContainer.Add(darkEnd1Box);
+
+            // ダークエンド2
+            var darkEnd2Box = new VisualElement();
+            darkEnd2Box.AddToClassList(darkModeEnd2Seen ? "achievement-end-dark" : "achievement-end-locked");
+            var darkEnd2Label = new Label("⚠️ ダークエンド2");
+            darkEnd2Label.style.fontSize = 14;
+            darkEnd2Label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            darkEnd2Label.style.color = darkModeEnd2Seen ? new Color(1f, 0.8f, 0.8f) : new Color(0.5f, 0.5f, 0.5f);
+            darkEnd2Box.Add(darkEnd2Label);
+            if (darkModeEnd2Seen)
+            {
+                var darkEnd2Desc = new Label("「これは何ですか？」と問うたエンド");
+                darkEnd2Desc.style.fontSize = 12;
+                darkEnd2Desc.style.marginTop = 4;
+                darkEnd2Box.Add(darkEnd2Desc);
+            }
+            endsContainer.Add(darkEnd2Box);
+
+            card.Add(endsContainer);
+            return card;
+        }
+
+        public void ShowCreditsScreen()
+        {
+            HideAllScreens();
+            
+            if (creditsScreenDocument == null)
+            {
+                Debug.LogError("CreditsScreenDocumentがアサインされていません！");
+                return;
+            }
+
+            creditsScreenDocument.gameObject.SetActive(true);
+            currentDocument = creditsScreenDocument;
+            
+            var root = creditsScreenDocument.rootVisualElement;
+            if (root == null) return;
+
+            // 背景画像を設定（選択画面と同じ背景を使用）
+            if (selectionScreenBackground != null)
+            {
+                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                }
+            }
+
+            var creditsContent = root.Q<VisualElement>("CreditsContent");
+            if (creditsContent == null) return;
+
+            creditsContent.Clear();
+
+            // クレジット情報を追加
+            AddCreditItem(creditsContent, "ゲームデザイン", "tatmos");
+            AddCreditItem(creditsContent, "AIディレクション", "tatmos");
+            AddCreditItem(creditsContent, "シナリオ", "Claude sonnet 4.5");
+            AddCreditItem(creditsContent, "リードプログラマ", "Claude sonnet 4.5");
+            AddCreditItem(creditsContent, "プログラマ", "tatmos");
+            AddCreditItem(creditsContent, "音楽", "tatmos");
+            AddCreditItem(creditsContent, "効果音", "tatmos");
+            AddCreditItem(creditsContent, "グラフィック", "Chat GPT 5.2");
+
+            // エンドクレジット楽曲セクション
+            var musicSection = new VisualElement();
+            musicSection.style.marginTop = 48;
+            musicSection.style.paddingTop = 32;
+            musicSection.style.borderTopWidth = 1;
+            musicSection.style.borderTopColor = new Color(1f, 1f, 1f, 0.3f);
+            musicSection.style.width = Length.Percent(100);
+            musicSection.style.flexDirection = FlexDirection.Column;
+            musicSection.style.alignItems = Align.Center;
+
+            var musicTitle = new Label("エンドクレジット楽曲");
+            musicTitle.style.fontSize = 36;
+            musicTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+            musicTitle.style.marginBottom = 24;
+            musicTitle.style.color = new Color(1f, 0.84f, 0f); // yellow-300
+            musicSection.Add(musicTitle);
+
+            var songInfo = new Label("曲：「もうひとつ」 / 作曲：suno ai v5 / 作詞：Claude sonnet 4.5");
+            songInfo.style.fontSize = 24;
+            songInfo.style.unityFontStyleAndWeight = FontStyle.Bold;
+            songInfo.style.marginBottom = 16;
+            songInfo.style.whiteSpace = WhiteSpace.Normal;
+            songInfo.style.maxWidth = Length.Percent(100);
+            musicSection.Add(songInfo);
+
+            AddCreditItem(musicSection, "歌", "suno ai v5");
+            AddCreditItem(musicSection, "演奏", "suno ai v5");
+            AddCreditItem(musicSection, "ミキシング", "suno ai v5");
+            AddCreditItem(musicSection, "マスタリング", "suno ai v5");
+            AddCreditItem(musicSection, "サウンドエンジニア", "tatmos");
+
+            creditsContent.Add(musicSection);
+
+            // 戻るボタン
+            var backButton = root.Q<Button>("BackToSelectionButtonFromCredits");
+            if (backButton != null)
+            {
+                backButton.clicked += ShowSelectionScreen;
+            }
+        }
+
+        private void AddCreditItem(VisualElement container, string role, string name)
+        {
+            var item = new VisualElement();
+            item.AddToClassList("credits-content-item");
+            item.style.flexDirection = FlexDirection.Column;
+            item.style.alignItems = Align.Center;
+            item.style.marginBottom = 16;
+            item.style.width = Length.Percent(100);
+
+            var roleLabel = new Label(role);
+            roleLabel.style.fontSize = 24;
+            roleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            roleLabel.style.marginBottom = 8;
+            roleLabel.style.color = new Color(1f, 0.84f, 0f); // yellow-300
+            roleLabel.style.whiteSpace = WhiteSpace.Normal;
+            roleLabel.style.maxWidth = Length.Percent(100);
+            item.Add(roleLabel);
+
+            var nameLabel = new Label(name);
+            nameLabel.style.fontSize = 20;
+            nameLabel.style.whiteSpace = WhiteSpace.Normal;
+            nameLabel.style.maxWidth = Length.Percent(100);
+            item.Add(nameLabel);
+
+            container.Add(item);
         }
     }
 }
