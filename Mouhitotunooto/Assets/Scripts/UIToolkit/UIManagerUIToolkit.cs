@@ -34,14 +34,28 @@ namespace NovelGame
         private GameManager gameManager;
         private UIDocument currentDocument;
         private List<GameObject> currentButtons = new List<GameObject>();
-        private HashSet<int> expandedProfiles = new HashSet<int>();
+        
+        // マネージャークラスのインスタンス
+        private TypewriterEffectManager typewriterEffectManager;
+        private CountdownManager countdownManager;
+        private ScreenTransitionManager screenTransitionManager;
+        private ProfileScreenManager profileScreenManager;
+        private AchievementsScreenManager achievementsScreenManager;
+        private CreditsScreenManager creditsScreenManager;
+        
+        // プロフィール関連
         private int selectedProfileId = 1; // 選択中のプロフィールID
-        private Coroutine currentTransition; // 現在実行中のトランジション
-        private Coroutine currentTypewriterEffect; // 現在実行中のタイプライター効果
+        
+        // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
-        private Label clickableWordLabel = null; // クリッカブルな「もうひとつ」のLabel
-        private Coroutine countdownCoroutine = null; // カウントダウンコルーチン
-        private float countdownTime = 10f; // カウントダウン時間（秒）
+        
+        // 互換性のための変数（マネージャークラスに移行済みだが、古いメソッドで使用されている）
+        private Label clickableWordLabel = null; // クリッカブルな「もうひとつ」のLabel（TypewriterEffectManagerに移行済み）
+        private Coroutine countdownCoroutine = null; // カウントダウンコルーチン（CountdownManagerに移行済み）
+        private float countdownTime = 10f; // カウントダウン時間（秒）（CountdownManagerに移行済み）
+        private HashSet<int> expandedProfiles = new HashSet<int>(); // 展開されたプロフィール（ProfileScreenManagerに移行済み）
+        private Coroutine currentTransition; // 現在実行中のトランジション（ScreenTransitionManagerに移行済み）
+        private Coroutine currentTypewriterEffect; // 現在実行中のタイプライター効果（TypewriterEffectManagerに移行済み）
 
         private void Start()
         {
@@ -51,6 +65,14 @@ namespace NovelGame
                 Debug.LogError("GameManagerが見つかりません！");
                 return;
             }
+
+            // マネージャークラスのインスタンスを作成
+            typewriterEffectManager = gameObject.AddComponent<TypewriterEffectManager>();
+            countdownManager = gameObject.AddComponent<CountdownManager>();
+            screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
+            profileScreenManager = new ProfileScreenManager(gameManager);
+            achievementsScreenManager = new AchievementsScreenManager(gameManager);
+            creditsScreenManager = new CreditsScreenManager();
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
             ShowSelectionScreen();
@@ -150,7 +172,10 @@ namespace NovelGame
             CreateScenarioButtons(root);
             
             // トランジション開始
-            StartScreenTransition(root);
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
         }
 
         public void ShowProfileScreen()
@@ -194,12 +219,22 @@ namespace NovelGame
                 }
             }
 
-            CreateProfileCards(root);
+            if (profileScreenManager != null)
+            {
+                profileScreenManager.CreateProfileCards(root);
+            }
+            
+            // 戻るボタン
+            var backButton = root.Q<Button>("BackToSelectionButtonFromProfile");
+            if (backButton != null)
+            {
+                backButton.clicked += ShowSelectionScreen;
+            }
             
             // トランジション開始
-            if (root != null)
+            if (root != null && screenTransitionManager != null)
             {
-                StartScreenTransition(root);
+                screenTransitionManager.StartScreenTransition(root);
             }
         }
 
@@ -294,22 +329,30 @@ namespace NovelGame
                 setupContainer.Clear();
                 
                 // タイプライター効果で表示（完了後に選択肢ボタンを表示）
-                StartTypewriterEffectWithClickableWord(setupContainer, scenario.setup, () =>
+                if (typewriterEffectManager != null)
                 {
-                    // タイプライター効果が完了したら選択肢ボタンを表示
-                    Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを表示します。");
-                    // 再取得を試みる
-                    var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
-                    if (buttonContainer != null)
+                    typewriterEffectManager.StartTypewriterEffectWithClickableWord(setupContainer, scenario.setup, () =>
                     {
-                        buttonContainer.style.display = DisplayStyle.Flex;
-                        Debug.Log($"選択肢ボタンコンテナを表示: {buttonContainer.childCount}個のボタン");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("choiceButtonContainerが見つかりません");
-                    }
-                });
+                        // タイプライター効果が完了したら選択肢ボタンを表示
+                        Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを表示します。");
+                        // 再取得を試みる
+                        var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+                        if (buttonContainer != null)
+                        {
+                            buttonContainer.style.display = DisplayStyle.Flex;
+                            Debug.Log($"選択肢ボタンコンテナを表示: {buttonContainer.childCount}個のボタン");
+                        }
+                        else
+                        {
+                            Debug.LogWarning("choiceButtonContainerが見つかりません");
+                        }
+                    }, (found) => {
+                        if (found)
+                        {
+                            wordFoundInCurrentScenario = true;
+                        }
+                    });
+                }
             }
             else
             {
@@ -323,7 +366,10 @@ namespace NovelGame
             CreateChoiceButtons(root, scenario);
 
             // トランジション開始（シナリオ画面のみスケールアニメーションあり）
-            StartScreenTransition(root, withScale: true);
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root, withScale: true);
+            }
         }
 
         public void ShowResultScreen()
@@ -405,10 +451,9 @@ namespace NovelGame
             clickableWordLabel = null;
             
             // 既存のカウントダウンを停止
-            if (countdownCoroutine != null)
+            if (countdownManager != null)
             {
-                StopCoroutine(countdownCoroutine);
-                countdownCoroutine = null;
+                countdownManager.StopCountdown();
             }
             
             // カウントダウンコンテナを非表示にする
@@ -451,11 +496,58 @@ namespace NovelGame
                 resultLabel.parent.Insert(resultLabel.parent.IndexOf(resultLabel), resultContainer);
                 
                 // タイプライター効果で表示（完了後にカウントダウンを開始）
-                StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
+                if (typewriterEffectManager != null)
                 {
-                    // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
-                    StartCountdown(root, countdownContainer, countdownText, wordGetContainer, wordFailedMessageLabel, epilogueContainer, epilogueLabel, epilogueText);
-                });
+                    typewriterEffectManager.StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
+                    {
+                        // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
+                        if (countdownManager != null)
+                        {
+                            countdownManager.StartCountdown(
+                                countdownText,
+                                countdownContainer,
+                                wordGetContainer,
+                                wordFailedMessageLabel,
+                                () => {
+                                    // ワードが見つかった場合の処理
+                                    wordFoundInCurrentScenario = true;
+                                },
+                                () => {
+                                    // カウントダウン完了時の処理
+                                    if (wordFoundInCurrentScenario && epilogueContainer != null)
+                                    {
+                                        epilogueContainer.style.display = DisplayStyle.Flex;
+                                        if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText) && typewriterEffectManager != null)
+                                        {
+                                            typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                            {
+                                                ShowBackButton();
+                                            });
+                                        }
+                                        else
+                                        {
+                                            ShowBackButton();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ShowBackButton();
+                                    }
+                                },
+                                ShowBackButton
+                            );
+                        }
+                    }, (found) => {
+                        if (found)
+                        {
+                            wordFoundInCurrentScenario = true;
+                            if (countdownManager != null)
+                            {
+                                countdownManager.NotifyWordFound();
+                            }
+                        }
+                    });
+                }
             }
             else if (wordFoundInCurrentScenario && epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
             {
@@ -464,7 +556,10 @@ namespace NovelGame
                 {
                     epilogueContainer.style.display = DisplayStyle.Flex;
                 }
-                StartTypewriterEffect(epilogueLabel, epilogueText);
+                if (typewriterEffectManager != null)
+                {
+                    typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText);
+                }
             }
             if (wordGetContainer != null)
             {
@@ -518,7 +613,10 @@ namespace NovelGame
             }
 
             // トランジション開始
-            StartScreenTransition(root);
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
         }
 
         private void HideAllScreens()
@@ -978,6 +1076,7 @@ namespace NovelGame
                         if (scenario != null && scenario.branches.ContainsKey(result.choiceId) && 
                             !string.IsNullOrEmpty(scenario.branches[result.choiceId].epilogue2))
                         {
+                            // ProfileScreenManagerから展開状態を取得（一時的にexpandedProfilesを使用）
                             bool isExpanded = expandedProfiles.Contains(profile.scenarioId);
                             
                             var expandButton = new Button();
@@ -1030,15 +1129,24 @@ namespace NovelGame
 
         private void ToggleEpilogue2(int scenarioId)
         {
-            if (expandedProfiles.Contains(scenarioId))
+            if (profileScreenManager != null)
             {
-                expandedProfiles.Remove(scenarioId);
+                profileScreenManager.ToggleEpilogue2(scenarioId);
+                ShowProfileScreen(); // 再生成
             }
             else
             {
-                expandedProfiles.Add(scenarioId);
+                // フォールバック（profileScreenManagerがnullの場合）
+                if (expandedProfiles.Contains(scenarioId))
+                {
+                    expandedProfiles.Remove(scenarioId);
+                }
+                else
+                {
+                    expandedProfiles.Add(scenarioId);
+                }
+                ShowProfileScreen(); // 再生成
             }
-            ShowProfileScreen(); // 再生成
         }
 
         private string GetScenarioTitle(int scenarioId)
@@ -1103,64 +1211,10 @@ namespace NovelGame
             var achievementsContainer = root.Q<VisualElement>("AchievementsContainer");
             if (achievementsContainer == null) return;
 
-            achievementsContainer.Clear();
-
-            var scenarios = gameManager.GetScenarios();
-            int totalCompleted = 0;
-            foreach (var scenario in scenarios)
+            if (achievementsScreenManager != null)
             {
-                if (gameManager.IsScenarioCompleted(scenario.id))
-                {
-                    totalCompleted++;
-                }
+                achievementsScreenManager.CreateAchievements(achievementsContainer);
             }
-
-            // 全シナリオクリア後のみ表示
-            if (totalCompleted < scenarios.Count)
-            {
-                return;
-            }
-
-            var gridContainer = new VisualElement();
-            gridContainer.style.flexDirection = FlexDirection.Row;
-            gridContainer.style.flexWrap = Wrap.Wrap;
-            gridContainer.style.justifyContent = Justify.Center;
-            gridContainer.AddToClassList("achievement-grid");
-            gridContainer.style.width = Length.Percent(100);
-
-            // シナリオ1-5のエンド
-            for (int i = 1; i <= 5; i++)
-            {
-                var scenario = scenarios.Find(s => s.id == i);
-                if (scenario == null) continue;
-
-                var result = gameManager.GetScenarioResult(i);
-                var trueChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && scenario.branches[c.id].hasWord)?.id ?? -1;
-                var falseChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && !scenario.branches[c.id].hasWord)?.id ?? -1;
-                
-                bool trueEndSeen = result != null && result.hasWord && result.choiceId == trueChoiceId;
-                bool falseEndSeen = result != null && !result.hasWord && result.choiceId == falseChoiceId;
-
-                var scenarioCard = CreateAchievementCard(scenario.title, trueEndSeen, falseEndSeen, true);
-                gridContainer.Add(scenarioCard);
-            }
-
-            // 真実の扉のエンド
-            var scenario6 = scenarios.Find(s => s.id == 6);
-            if (scenario6 != null)
-            {
-                var result6 = gameManager.GetScenarioResult(6);
-                bool wasDarkMode = result6 != null && result6.scoreAtCompletion > scenarios.Count;
-                bool trueEndSeen = result6 != null && result6.hasWord && result6.choiceId == 2 && !wasDarkMode;
-                bool falseEndSeen = result6 != null && !result6.hasWord && result6.choiceId == 1 && !wasDarkMode;
-                bool darkModeEnd1Seen = result6 != null && wasDarkMode && result6.choiceId == 1;
-                bool darkModeEnd2Seen = result6 != null && wasDarkMode && result6.choiceId == 2;
-
-                var scenario6Card = CreateAchievementCardForScenario6(trueEndSeen, falseEndSeen, darkModeEnd1Seen, darkModeEnd2Seen);
-                gridContainer.Add(scenario6Card);
-            }
-
-            achievementsContainer.Add(gridContainer);
 
             // 戻るボタン
             var backButton = root.Q<Button>("BackToSelectionButtonFromAchievements");
@@ -1170,7 +1224,10 @@ namespace NovelGame
             }
 
             // トランジション開始
-            StartScreenTransition(root);
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
         }
 
         private VisualElement CreateAchievementCard(string scenarioTitle, bool trueEndSeen, bool falseEndSeen, bool isNormalScenario)
@@ -1346,50 +1403,10 @@ namespace NovelGame
             var creditsContent = root.Q<VisualElement>("CreditsContent");
             if (creditsContent == null) return;
 
-            creditsContent.Clear();
-
-            // クレジット情報を追加
-            AddCreditItem(creditsContent, "ゲームデザイン", "tatmos");
-            AddCreditItem(creditsContent, "AIディレクション", "tatmos");
-            AddCreditItem(creditsContent, "シナリオ", "Claude sonnet 4.5");
-            AddCreditItem(creditsContent, "リードプログラマ", "Claude sonnet 4.5");
-            AddCreditItem(creditsContent, "プログラマ", "tatmos");
-            AddCreditItem(creditsContent, "音楽", "tatmos");
-            AddCreditItem(creditsContent, "効果音", "tatmos");
-            AddCreditItem(creditsContent, "グラフィック", "Chat GPT 5.2");
-
-            // エンドクレジット楽曲セクション
-            var musicSection = new VisualElement();
-            musicSection.style.marginTop = 48;
-            musicSection.style.paddingTop = 32;
-            musicSection.style.borderTopWidth = 1;
-            musicSection.style.borderTopColor = new Color(1f, 1f, 1f, 0.3f);
-            musicSection.style.width = Length.Percent(100);
-            musicSection.style.flexDirection = FlexDirection.Column;
-            musicSection.style.alignItems = Align.Center;
-
-            var musicTitle = new Label("エンドクレジット楽曲");
-            musicTitle.style.fontSize = 36;
-            musicTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            musicTitle.style.marginBottom = 24;
-            musicTitle.style.color = new Color(1f, 0.84f, 0f); // yellow-300
-            musicSection.Add(musicTitle);
-
-            var songInfo = new Label("曲：「もうひとつ」 / 作曲：suno ai v5 / 作詞：Claude sonnet 4.5");
-            songInfo.style.fontSize = 24;
-            songInfo.style.unityFontStyleAndWeight = FontStyle.Bold;
-            songInfo.style.marginBottom = 16;
-            songInfo.style.whiteSpace = WhiteSpace.Normal;
-            songInfo.style.maxWidth = Length.Percent(100);
-            musicSection.Add(songInfo);
-
-            AddCreditItem(musicSection, "歌", "suno ai v5");
-            AddCreditItem(musicSection, "演奏", "suno ai v5");
-            AddCreditItem(musicSection, "ミキシング", "suno ai v5");
-            AddCreditItem(musicSection, "マスタリング", "suno ai v5");
-            AddCreditItem(musicSection, "サウンドエンジニア", "tatmos");
-
-            creditsContent.Add(musicSection);
+            if (creditsScreenManager != null)
+            {
+                creditsScreenManager.CreateCredits(creditsContent);
+            }
 
             // 戻るボタン
             var backButton = root.Q<Button>("BackToSelectionButtonFromCredits");
@@ -1399,7 +1416,10 @@ namespace NovelGame
             }
 
             // トランジション開始
-            StartScreenTransition(root);
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
         }
 
         private void AddCreditItem(VisualElement container, string role, string name)
@@ -1739,11 +1759,14 @@ namespace NovelGame
                 // 後日談のタイプライター効果を開始
                 if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
                 {
-                    StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                    if (typewriterEffectManager != null)
                     {
-                        // 後日談のタイプライター効果が完了したら戻るボタンを表示
-                        ShowBackButton();
-                    });
+                        typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                        {
+                            // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                            ShowBackButton();
+                        });
+                    }
                 }
                 else
                 {
