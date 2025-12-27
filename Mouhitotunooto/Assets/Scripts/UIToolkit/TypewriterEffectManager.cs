@@ -40,6 +40,23 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 記号や句読点かどうかを判定
+        /// </summary>
+        private bool IsPunctuationOrSymbol(char c)
+        {
+            // 句読点、感嘆符、疑問符、および一般的な日本語の記号
+            return char.IsPunctuation(c) || char.IsSymbol(c) || 
+                   c == 'ー' || 
+                   c == 'ぁ' || c == 'っ' || c == 'ゃ' || 
+                   c == 'ァ' || c == 'ッ' || c == 'ャ' || 
+                   c == '、' || c == '。' || c == '！' || c == '？' || 
+                   c == '!' || c == '?' || c == '.' || 
+                   c == '：' || c == ':' ||
+                   c == '…' || c == '・' || c == '「' || c == '」' || 
+                   c == '（' || c == '）' || c == '【' || c == '】';
+        }
+
+        /// <summary>
         /// タイプライター音を再生
         /// </summary>
         private void PlayTypewriterSound()
@@ -170,8 +187,12 @@ namespace NovelGame
                         
                         for (int i = 0; i < beforeWord.Length; i++)
                         {
+                            char c = beforeWord[i];
                             beforeLabel.text = beforeWord.Substring(0, i + 1);
-                            yield return new WaitForSeconds(charDelay);
+                            
+                            // 記号や句読点の場合は待機時間を長くする
+                            float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
+                            yield return new WaitForSeconds(delay);
                         }
                     }
                     
@@ -197,8 +218,12 @@ namespace NovelGame
                         
                         for (int i = 0; i < afterWord.Length; i++)
                         {
+                            char c = afterWord[i];
                             afterLabel.text = afterWord.Substring(0, i + 1);
-                            yield return new WaitForSeconds(charDelay);
+                            
+                            // 記号や句読点の場合は待機時間を長くする
+                            float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
+                            yield return new WaitForSeconds(delay);
                         }
                     }
                 }
@@ -215,13 +240,15 @@ namespace NovelGame
                         char c = line[charIndex];
                         textLabel.text = line.Substring(0, charIndex + 1);
                         
-                        // 空白文字以外の場合に音を鳴らす
-                        if (!char.IsWhiteSpace(c))
+                        // 空白文字および記号・句読点以外の場合に音を鳴らす
+                        if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                         {
                             PlayTypewriterSound();
                         }
                         
-                        yield return new WaitForSeconds(charDelay);
+                        // 記号や句読点の場合は待機時間を長くする
+                        float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
+                        yield return new WaitForSeconds(delay);
                     }
                 }
                 
@@ -289,13 +316,15 @@ namespace NovelGame
                     
                     label.text = currentText;
 
-                    // 空白文字以外の場合に音を鳴らす
-                    if (!char.IsWhiteSpace(c))
+                    // 空白文字および記号・句読点以外の場合に音を鳴らす
+                    if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                     {
                         PlayTypewriterSound();
                     }
 
-                    yield return new WaitForSeconds(charDelay);
+                    // 記号や句読点の場合は待機時間を長くする
+                    float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
+                    yield return new WaitForSeconds(delay);
                 }
 
                 // 行を完全に表示したら、displayedTextに追加
