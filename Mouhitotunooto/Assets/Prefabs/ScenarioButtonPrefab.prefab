@@ -188,8 +188,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u30B7\u30CA\u30EA\u30AA1"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 1bc022a6e6745cc49b7851d16d9f6de5, type: 2}
-  m_sharedMaterial: {fileID: 4915420035577482601, guid: 1bc022a6e6745cc49b7851d16d9f6de5, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 64f9da02a7f4b7d4587b57a1a8ea67e5, type: 2}
+  m_sharedMaterial: {fileID: -2143356284551698356, guid: 64f9da02a7f4b7d4587b57a1a8ea67e5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
