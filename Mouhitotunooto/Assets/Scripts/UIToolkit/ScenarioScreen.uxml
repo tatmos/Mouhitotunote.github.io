@@ -3,7 +3,7 @@
     <ui:VisualElement name="ScenarioScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
         <ui:VisualElement name="CountdownContainer" class="countdown-container" style="position: absolute; left: 20px; bottom: 20px; display: none;">
-            <ui:Label text="⏰" style="font-size: 24px; margin-right: 8px;" />
+            <ui:Image name="ClockIcon" style="width: 24px; height: 24px; margin-right: 8px;" />
             <ui:Label name="CountdownText" text="10" style="font-size: 32px; -unity-font-style: bold; color: rgb(239, 68, 68);" />
         </ui:VisualElement>
         <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; align-items: center; padding: 32px; max-width: 1000px; margin: 20px auto;">

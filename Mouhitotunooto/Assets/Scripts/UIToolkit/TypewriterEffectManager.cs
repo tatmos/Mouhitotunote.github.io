@@ -17,7 +17,11 @@ namespace NovelGame
         /// <summary>
         /// タイプライター効果を開始（1行ずつ時間差で、左から文字を表示）
         /// </summary>
-        public void StartTypewriterEffect(Label label, string fullText, System.Action onComplete = null)
+        /// <param name="label">表示するラベル</param>
+        /// <param name="fullText">表示するテキスト</param>
+        /// <param name="onComplete">完了時のコールバック</param>
+        /// <param name="speedMultiplier">速度の倍率（1.0が通常、2.0で2倍遅く）</param>
+        public void StartTypewriterEffect(Label label, string fullText, System.Action onComplete = null, float speedMultiplier = 1.0f)
         {
             // 既存のタイプライター効果を停止
             if (currentTypewriterEffect != null)
@@ -29,7 +33,7 @@ namespace NovelGame
             label.text = "";
 
             // タイプライター効果開始
-            currentTypewriterEffect = StartCoroutine(TypewriterEffectCoroutine(label, fullText, onComplete));
+            currentTypewriterEffect = StartCoroutine(TypewriterEffectCoroutine(label, fullText, onComplete, speedMultiplier));
         }
 
         /// <summary>
@@ -214,13 +218,13 @@ namespace NovelGame
         /// <summary>
         /// タイプライター効果コルーチン
         /// </summary>
-        private IEnumerator TypewriterEffectCoroutine(Label label, string fullText, System.Action onComplete = null)
+        private IEnumerator TypewriterEffectCoroutine(Label label, string fullText, System.Action onComplete = null, float speedMultiplier = 1.0f)
         {
             // テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
             
-            float charDelay = 0.03f; // 1文字あたりの遅延（秒）
-            float lineDelay = 0.15f; // 行間の遅延（秒）
+            float charDelay = 0.03f * speedMultiplier; // 1文字あたりの遅延（秒）
+            float lineDelay = 0.15f * speedMultiplier; // 行間の遅延（秒）
 
             string displayedText = "";
 

@@ -9,10 +9,19 @@ namespace NovelGame
     public class AchievementsScreenManager
     {
         private GameManager gameManager;
+        private Sprite sparkleIcon;
 
         public AchievementsScreenManager(GameManager gameManager)
         {
             this.gameManager = gameManager;
+        }
+        
+        /// <summary>
+        /// スパークルアイコンを設定
+        /// </summary>
+        public void SetSparkleIcon(Sprite icon)
+        {
+            this.sparkleIcon = icon;
         }
 
         /// <summary>
@@ -102,11 +111,29 @@ namespace NovelGame
             // Trueエンド
             var trueEndBox = new VisualElement();
             trueEndBox.AddToClassList(trueEndSeen ? "achievement-end-unlocked" : "achievement-end-locked");
-            var trueEndLabel = new Label("✨ Trueエンド");
+            
+            // 水平レイアウトコンテナを作成
+            var trueEndContainer = new VisualElement();
+            trueEndContainer.style.flexDirection = FlexDirection.Row;
+            trueEndContainer.style.alignItems = Align.Center;
+            
+            // スパークルアイコン（画像が設定されている場合）
+            if (sparkleIcon != null)
+            {
+                var sparkleImage = new Image();
+                sparkleImage.sprite = sparkleIcon;
+                sparkleImage.style.width = 16f;
+                sparkleImage.style.height = 16f;
+                sparkleImage.style.marginRight = 4f;
+                trueEndContainer.Add(sparkleImage);
+            }
+            
+            var trueEndLabel = new Label("Trueエンド");
             trueEndLabel.style.fontSize = 14;
             trueEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             trueEndLabel.style.color = trueEndSeen ? new Color(0.13f, 0.4f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
-            trueEndBox.Add(trueEndLabel);
+            trueEndContainer.Add(trueEndLabel);
+            trueEndBox.Add(trueEndContainer);
             if (trueEndSeen)
             {
                 var trueEndDesc = new Label("【もうひとつ】を獲得したエンド");
@@ -160,11 +187,29 @@ namespace NovelGame
             // Trueエンド
             var trueEndBox = new VisualElement();
             trueEndBox.AddToClassList(trueEndSeen ? "achievement-end-unlocked" : "achievement-end-locked");
-            var trueEndLabel = new Label("✨ Trueエンド");
+            
+            // 水平レイアウトコンテナを作成
+            var trueEndContainer = new VisualElement();
+            trueEndContainer.style.flexDirection = FlexDirection.Row;
+            trueEndContainer.style.alignItems = Align.Center;
+            
+            // スパークルアイコン（画像が設定されている場合）
+            if (sparkleIcon != null)
+            {
+                var sparkleImage = new Image();
+                sparkleImage.sprite = sparkleIcon;
+                sparkleImage.style.width = 16f;
+                sparkleImage.style.height = 16f;
+                sparkleImage.style.marginRight = 4f;
+                trueEndContainer.Add(sparkleImage);
+            }
+            
+            var trueEndLabel = new Label("Trueエンド");
             trueEndLabel.style.fontSize = 14;
             trueEndLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             trueEndLabel.style.color = trueEndSeen ? new Color(0.13f, 0.4f, 0.2f) : new Color(0.5f, 0.5f, 0.5f);
-            trueEndBox.Add(trueEndLabel);
+            trueEndContainer.Add(trueEndLabel);
+            trueEndBox.Add(trueEndContainer);
             if (trueEndSeen)
             {
                 var trueEndDesc = new Label("「答えを知りたかった」を選んだエンド");

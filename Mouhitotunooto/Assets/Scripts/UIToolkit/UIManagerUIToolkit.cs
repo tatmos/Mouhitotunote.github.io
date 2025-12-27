@@ -11,6 +11,7 @@ namespace NovelGame
     public class UIManagerUIToolkit : MonoBehaviour
     {
         [Header("UI Documents")]
+        [SerializeField] private UIDocument titleScreenDocument;
         [SerializeField] private UIDocument selectionScreenDocument;
         [SerializeField] private UIDocument scenarioScreenDocument;
         [SerializeField] private UIDocument resultScreenDocument;
@@ -40,6 +41,8 @@ namespace NovelGame
         [Header("Emoji Icons (for Web compatibility)")]
         [SerializeField] private Sprite creditsIcon; // エンドクレジット用のアイコン（🎬の代替）
         [SerializeField] private Sprite achievementsIcon; // 実績用のアイコン（🏆の代替）
+        [SerializeField] private Sprite clockIcon; // カウントダウン用のアイコン（⏰の代替）
+        [SerializeField] private Sprite sparkleIcon; // スパークル用のアイコン（✨の代替）
 
         private GameManager gameManager;
         private UIDocument currentDocument;
@@ -70,6 +73,8 @@ namespace NovelGame
         private float selectionBGMPausedTime = 0f; // シナリオ選択BGMの一時停止時刻
         private bool isSelectionBGMPlaying = false; // シナリオ選択BGMが再生中かどうか
         private int currentAmbientScenarioId = -1; // 現在再生中の環境音のシナリオID
+        private float selectionBGMNormalVolume = 1.0f; // シナリオ選択BGMの通常音量
+        private float selectionBGMLoweredVolume = 0.5f; // プロフィール/実績画面でのBGM音量（通常の50%）
 
         private void Start()
         {
@@ -125,7 +130,7 @@ namespace NovelGame
             ambientAudioSource.loop = true; // 環境音はループ再生
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
-            ShowSelectionScreen();
+            ShowTitleScreen();
         }
 
         private void OnDestroy()
@@ -133,6 +138,255 @@ namespace NovelGame
             if (gameManager != null)
             {
                 gameManager.OnScoreChanged -= UpdateScoreDisplay;
+            }
+        }
+
+        /// <summary>
+        /// タイトル画面を表示
+        /// </summary>
+        public void ShowTitleScreen()
+        {
+            FadeOutAudioOnSceneChange();
+            HideAllScreens();
+            
+            if (titleScreenDocument == null)
+            {
+                Debug.LogError("TitleScreenDocumentがアサインされていません！");
+                return;
+            }
+
+            titleScreenDocument.gameObject.SetActive(true);
+            currentDocument = titleScreenDocument;
+            
+            var root = titleScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // 背景画像を設定（シナリオ選択背景を使用）
+            if (selectionScreenBackground != null)
+            {
+                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                }
+            }
+            
+            // スタートボタンの設定
+            var startButton = root.Q<Button>("StartButton");
+            if (startButton != null)
+            {
+                startButton.clicked += OnStartButtonClicked;
+            }
+            
+            // 謎の声テキストを非表示に設定
+            var mysteryVoiceText = root.Q<Label>("MysteryVoiceText");
+            if (mysteryVoiceText != null)
+            {
+                mysteryVoiceText.style.display = DisplayStyle.None;
+            }
+            
+            // トランジション開始
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
+        }
+        
+        /// <summary>
+        /// スタートボタンがクリックされた時の処理
+        /// </summary>
+        private void OnStartButtonClicked()
+        {
+            if (titleScreenDocument == null) return;
+            
+            var root = titleScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // スタートボタンを非表示
+            var startButton = root.Q<Button>("StartButton");
+            if (startButton != null)
+            {
+                startButton.style.display = DisplayStyle.None;
+            }
+            
+            // 謎の声テキストを表示
+            var mysteryVoiceText = root.Q<Label>("MysteryVoiceText");
+            if (mysteryVoiceText != null && typewriterEffectManager != null)
+            {
+                mysteryVoiceText.style.display = DisplayStyle.Flex;
+                
+                // タイプライター効果でテキストを表示（速度を2倍遅く）
+                string mysteryText = "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
+                typewriterEffectManager.StartTypewriterEffect(mysteryVoiceText, mysteryText, () =>
+                {
+                    // タイプライター効果完了後、テキストを3秒かけてフェードアウト
+                    StartCoroutine(FadeOutTitleTextAndShowSelection(mysteryVoiceText));
+                }, speedMultiplier: 2.0f);
+            }
+            else
+            {
+                // タイプライター効果が使えない場合は即座に遷移
+                StartCoroutine(DelayedShowSelectionScreen(1.5f));
+            }
+        }
+        
+        /// <summary>
+        /// タイトルテキストをフェードアウトしてからシナリオ選択画面を表示
+        /// </summary>
+        private IEnumerator FadeOutTitleTextAndShowSelection(Label titleText)
+        {
+            if (titleText == null) yield break;
+            
+            // 初期opacityを取得（設定されていない場合は1.0）
+            float startOpacity = 1.0f;
+            if (titleText.style.opacity.value >= 0f)
+            {
+                startOpacity = titleText.style.opacity.value;
+            }
+            else
+            {
+                titleText.style.opacity = startOpacity;
+            }
+            
+            // 3秒かけてフェードアウト
+            float fadeDuration = 3.0f;
+            float elapsed = 0f;
+            
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / fadeDuration;
+                float opacity = Mathf.Lerp(startOpacity, 0f, t);
+                titleText.style.opacity = opacity;
+                yield return null;
+            }
+            
+            // 完全に透明になったことを確認
+            titleText.style.opacity = 0f;
+            
+            // シナリオ選択画面をフェードインで表示
+            ShowSelectionScreenWithFadeIn();
+        }
+        
+        /// <summary>
+        /// 遅延してシナリオ選択画面を表示
+        /// </summary>
+        private IEnumerator DelayedShowSelectionScreen(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            ShowSelectionScreen();
+        }
+
+        /// <summary>
+        /// シナリオ選択画面をフェードインで表示（タイトル画面からの遷移用）
+        /// </summary>
+        private void ShowSelectionScreenWithFadeIn()
+        {
+            FadeOutAudioOnSceneChange();
+            HideAllScreens();
+            
+            if (selectionScreenDocument == null)
+            {
+                Debug.LogError("SelectionScreenDocumentがアサインされていません！");
+                return;
+            }
+
+            selectionScreenDocument.gameObject.SetActive(true);
+            currentDocument = selectionScreenDocument;
+            
+            // シナリオ選択BGMをフェードインして再生
+            StartSelectionBGM();
+            
+            var root = selectionScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // 背景画像を設定
+            if (selectionScreenBackground != null)
+            {
+                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                }
+            }
+            
+            // タイトルを設定
+            var titleLabel = root.Q<Label>("TitleText");
+            if (titleLabel != null)
+            {
+                titleLabel.text = "ミニノベルゲーム";
+                titleLabel.AddToClassList("title-text");
+            }
+
+            // プロフィールボタンの設定
+            var showProfileButton = root.Q<Button>("ShowProfileButton");
+            if (showProfileButton != null)
+            {
+                showProfileButton.clicked += ShowProfileScreen;
+            }
+
+            // エンドクレジットボタンの設定（真実の扉クリア後のみ表示）
+            var showCreditsButton = root.Q<Button>("ShowCreditsButton");
+            if (showCreditsButton != null)
+            {
+                // 絵文字を画像に置き換え
+                SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
+                
+                var scenario6Result = gameManager.GetScenarioResult(6);
+                if (scenario6Result != null)
+                {
+                    showCreditsButton.style.display = DisplayStyle.Flex;
+                    showCreditsButton.clicked += ShowCreditsScreen;
+                }
+                else
+                {
+                    showCreditsButton.style.display = DisplayStyle.None;
+                }
+            }
+
+            // 実績ボタンの設定（全シナリオクリア後のみ表示）
+            var showAchievementsButton = root.Q<Button>("ShowAchievementsButton");
+            if (showAchievementsButton != null)
+            {
+                // 絵文字を画像に置き換え
+                SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
+                
+                var scenarios = gameManager.GetScenarios();
+                int totalCompleted = 0;
+                foreach (var scenario in scenarios)
+                {
+                    if (gameManager.IsScenarioCompleted(scenario.id))
+                    {
+                        totalCompleted++;
+                    }
+                }
+                
+                if (totalCompleted >= scenarios.Count)
+                {
+                    showAchievementsButton.style.display = DisplayStyle.Flex;
+                    showAchievementsButton.clicked += ShowAchievementsScreen;
+                }
+                else
+                {
+                    showAchievementsButton.style.display = DisplayStyle.None;
+                }
+            }
+
+            // スコア表示を更新
+            UpdateScoreDisplay();
+
+            // シナリオボタンを作成
+            var scenarioButtonContainer = root.Q<VisualElement>("ScenarioButtonContainer");
+            if (scenarioButtonContainer != null)
+            {
+                scenarioButtonContainer.Clear();
+                CreateScenarioButtons(scenarioButtonContainer);
+            }
+            
+            // トランジション開始（フェードイン）
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
             }
         }
 
@@ -241,6 +495,8 @@ namespace NovelGame
         public void ShowProfileScreen()
         {
             FadeOutAudioOnSceneChange();
+            // シナリオ選択BGMの音量を下げる（流したまま）
+            LowerSelectionBGMVolume();
             HideAllScreens();
             
             if (profileScreenDocument == null)
@@ -349,6 +605,13 @@ namespace NovelGame
             var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
             var countdownContainer = root.Q<VisualElement>("CountdownContainer");
             var countdownText = root.Q<Label>("CountdownText");
+            
+            // 時計アイコンを設定
+            var clockIcon = root.Q<Image>("ClockIcon");
+            if (clockIcon != null && this.clockIcon != null)
+            {
+                clockIcon.sprite = this.clockIcon;
+            }
             
             Debug.Log($"ShowScenarioScreen: choiceButtonContainer={(choiceButtonContainer != null ? "見つかった" : "見つからない")}");
             
@@ -534,6 +797,13 @@ namespace NovelGame
             var countdownContainer = root.Q<VisualElement>("CountdownContainer");
             var countdownText = root.Q<Label>("CountdownText");
             
+            // 時計アイコンを設定
+            var clockIcon = root.Q<Image>("ClockIcon");
+            if (clockIcon != null && this.clockIcon != null)
+            {
+                clockIcon.sprite = this.clockIcon;
+            }
+            
             // フラグをリセット（結果画面で「もうひとつ」を探すため）
             // ただし、すでにHandleChoiceでhasWord=trueになっている場合は、そのまま保持
             if (result != null && !result.hasWord)
@@ -622,7 +892,8 @@ namespace NovelGame
                                             }
                                             else if (wordFoundInCurrentScenario)
                                             {
-                                                wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
+                                                // ✨を画像で置き換え
+                                                SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, "【もうひとつ】ワードゲット!");
                                                 wordGetLabel.AddToClassList("word-get-success");
                                             }
                                             else
@@ -675,80 +946,8 @@ namespace NovelGame
                                 countdownContainer.style.display = DisplayStyle.None;
                             }
                             
-                            // メッセージを表示
-                            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
-                            if (wordFoundMessageLabel != null)
-                            {
-                                wordFoundMessageLabel.text = "あなたは何かをみつけた気がした";
-                                wordFoundMessageLabel.style.display = DisplayStyle.Flex;
-                                StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
-                            }
-                            
-                            // ワードゲット表示を表示
-                            if (wordGetContainer != null)
-                            {
-                                wordGetContainer.style.display = DisplayStyle.Flex;
-                            }
-                            
-                            // wordGetLabelのテキストを設定
-                            if (wordGetLabel != null)
-                            {
-                                wordGetLabel.ClearClassList();
-                                if (isDarkMode)
-                                {
-                                    wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
-                                    wordGetLabel.AddToClassList("word-get-dark");
-                                }
-                                else
-                                {
-                                    wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
-                                    wordGetLabel.AddToClassList("word-get-success");
-                                }
-                            }
-                            
-                            // HandleChoiceを再度呼び出して、hasWordをtrueに更新
-                            if (scenario != null && result != null)
-                            {
-                                gameManager.HandleChoice(result.choiceId, true);
-                                // resultを再取得
-                                result = gameManager.GetScenarioResult(scenario.id);
-                                // 後日談テキストを再取得
-                                if (result != null && !isDarkMode)
-                                {
-                                    epilogueText = result.epilogue;
-                                }
-                            }
-                            
-                            // 後日談を表示
-                            if (epilogueContainer != null)
-                            {
-                                epilogueContainer.style.display = DisplayStyle.Flex;
-                                
-                                // 後日談のタイプライター効果を開始
-                                if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
-                                {
-                                    if (typewriterEffectManager != null)
-                                    {
-                                        typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
-                                        {
-                                            // 後日談のタイプライター効果が完了したら戻るボタンを表示
-                                            ShowBackButton();
-                                        });
-                                    }
-                                    else
-                                    {
-                                        ShowBackButton();
-                                    }
-                                }
-                                else
-                                {
-                                    ShowBackButton();
-                                }
-                            }
-                            else
-                            {
-                                ShowBackButton();
-                            }
+                            // 綺麗な演出とともに一呼吸してから表示
+                            StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel));
                         }
                     });
                     }
@@ -827,6 +1026,7 @@ namespace NovelGame
 
         private void HideAllScreens()
         {
+            if (titleScreenDocument != null) titleScreenDocument.gameObject.SetActive(false);
             if (selectionScreenDocument != null) selectionScreenDocument.gameObject.SetActive(false);
             if (scenarioScreenDocument != null)
             {
@@ -1115,6 +1315,9 @@ namespace NovelGame
 
         public void ShowAchievementsScreen()
         {
+            FadeOutAudioOnSceneChange();
+            // シナリオ選択BGMの音量を下げる（流したまま）
+            LowerSelectionBGMVolume();
             HideAllScreens();
             
             if (achievementsScreenDocument == null)
@@ -1137,6 +1340,12 @@ namespace NovelGame
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
                 }
+            }
+            
+            // スパークルアイコンを設定
+            if (achievementsScreenManager != null && sparkleIcon != null)
+            {
+                achievementsScreenManager.SetSparkleIcon(sparkleIcon);
             }
 
             var achievementsContainer = root.Q<VisualElement>("AchievementsContainer");
@@ -1266,6 +1475,176 @@ namespace NovelGame
             
             // 元の位置に戻す
             label.style.translate = new Translate(0, 0, 0);
+        }
+        
+        /// <summary>
+        /// ワードゲット時の綺麗な演出を表示
+        /// </summary>
+        private IEnumerator ShowWordGetWithEffect(VisualElement root, bool isDarkMode, Scenario scenario, ScenarioResult result, VisualElement epilogueContainer, Label epilogueLabel)
+        {
+            // 演出用のオーバーレイを作成
+            var effectOverlay = new VisualElement();
+            effectOverlay.style.position = Position.Absolute;
+            effectOverlay.style.left = 0;
+            effectOverlay.style.top = 0;
+            effectOverlay.style.right = 0;
+            effectOverlay.style.bottom = 0;
+            effectOverlay.style.backgroundColor = new Color(1f, 1f, 1f, 0f);
+            effectOverlay.style.justifyContent = Justify.Center;
+            effectOverlay.style.alignItems = Align.Center;
+            root.Add(effectOverlay);
+            
+            // 光るエフェクト（円形のグラデーション風）
+            var glowEffect = new VisualElement();
+            glowEffect.style.width = 200f;
+            glowEffect.style.height = 200f;
+            // 円形にするため、すべての角に同じ値を設定
+            float borderRadius = 100f;
+            glowEffect.style.borderTopLeftRadius = borderRadius;
+            glowEffect.style.borderTopRightRadius = borderRadius;
+            glowEffect.style.borderBottomLeftRadius = borderRadius;
+            glowEffect.style.borderBottomRightRadius = borderRadius;
+            glowEffect.style.backgroundColor = new Color(1f, 0.84f, 0f, 0f); // 黄色
+            glowEffect.style.position = Position.Absolute;
+            effectOverlay.Add(glowEffect);
+            
+            // エフェクトアニメーション（拡大してフェードアウト）
+            float effectDuration = 1.0f;
+            float elapsed = 0f;
+            float startScale = 0.5f;
+            float endScale = 2.0f;
+            
+            while (elapsed < effectDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / effectDuration;
+                
+                // スケールアニメーション
+                float currentScale = Mathf.Lerp(startScale, endScale, t);
+                glowEffect.style.width = 200f * currentScale;
+                glowEffect.style.height = 200f * currentScale;
+                // 円形を維持するため、すべての角に同じ値を設定
+                float currentBorderRadius = 100f * currentScale;
+                glowEffect.style.borderTopLeftRadius = currentBorderRadius;
+                glowEffect.style.borderTopRightRadius = currentBorderRadius;
+                glowEffect.style.borderBottomLeftRadius = currentBorderRadius;
+                glowEffect.style.borderBottomRightRadius = currentBorderRadius;
+                
+                // フェードアウト
+                float alpha = Mathf.Lerp(0.8f, 0f, t);
+                glowEffect.style.backgroundColor = new Color(1f, 0.84f, 0f, alpha);
+                
+                // 背景も少し明るく
+                float bgAlpha = Mathf.Lerp(0f, 0.3f, Mathf.Sin(t * Mathf.PI));
+                effectOverlay.style.backgroundColor = new Color(1f, 1f, 1f, bgAlpha);
+                
+                yield return null;
+            }
+            
+            // エフェクトを削除
+            root.Remove(effectOverlay);
+            
+            // 一呼吸（0.5秒待つ）
+            yield return new WaitForSeconds(0.5f);
+            
+            // ワードゲット表示を表示
+            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
+            if (wordGetContainer != null)
+            {
+                wordGetContainer.style.display = DisplayStyle.Flex;
+            }
+            
+            // wordGetLabelのテキストを設定
+            var wordGetLabel = root.Q<Label>("WordGetText");
+            if (wordGetLabel != null)
+            {
+                wordGetLabel.ClearClassList();
+                if (isDarkMode)
+                {
+                    wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
+                    wordGetLabel.AddToClassList("word-get-dark");
+                }
+                else
+                {
+                    // ✨を画像で置き換え
+                    SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, "【もうひとつ】ワードゲット!");
+                    wordGetLabel.AddToClassList("word-get-success");
+                }
+                
+                // フェードインとスケールアニメーション
+                wordGetLabel.style.opacity = 0f;
+                wordGetLabel.style.scale = new Scale(new Vector2(0.8f, 0.8f));
+                
+                float fadeDuration = 0.5f;
+                elapsed = 0f;
+                while (elapsed < fadeDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = elapsed / fadeDuration;
+                    wordGetLabel.style.opacity = t;
+                    float scale = Mathf.Lerp(0.8f, 1f, t);
+                    wordGetLabel.style.scale = new Scale(new Vector2(scale, scale));
+                    yield return null;
+                }
+                
+                wordGetLabel.style.opacity = 1f;
+                wordGetLabel.style.scale = new Scale(new Vector2(1f, 1f));
+            }
+            
+            // HandleChoiceを再度呼び出して、hasWordをtrueに更新
+            if (scenario != null && result != null)
+            {
+                gameManager.HandleChoice(result.choiceId, true);
+                // resultを再取得
+                result = gameManager.GetScenarioResult(scenario.id);
+            }
+            
+            // 後日談を表示
+            if (epilogueContainer != null)
+            {
+                epilogueContainer.style.display = DisplayStyle.Flex;
+                
+                // 後日談テキストを取得
+                string epilogueText = "";
+                if (result != null)
+                {
+                    if (isDarkMode)
+                    {
+                        epilogueText = result.choiceId == 1
+                            ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
+                            : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】";
+                    }
+                    else
+                    {
+                        epilogueText = result.epilogue;
+                    }
+                }
+                
+                // 後日談のタイプライター効果を開始
+                if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+                {
+                    if (typewriterEffectManager != null)
+                    {
+                        typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                        {
+                            // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                            ShowBackButton();
+                        });
+                    }
+                    else
+                    {
+                        ShowBackButton();
+                    }
+                }
+                else
+                {
+                    ShowBackButton();
+                }
+            }
+            else
+            {
+                ShowBackButton();
+            }
         }
 
         /// <summary>
@@ -1421,18 +1800,23 @@ namespace NovelGame
             }
             else if (bgmAudioSource.isPlaying && bgmAudioSource.clip == selectionBGM)
             {
-                // 既に再生中の場合は、現在の音量からフェードイン（カットアウトを防ぐ）
-                // 音量が既に高い場合は、そのまま維持
-                if (bgmAudioSource.volume < 0.1f)
+                // 既に再生中の場合は、現在の音量から通常音量にフェードイン
+                // 音量が既に通常音量に近い場合は、そのまま維持
+                if (bgmAudioSource.volume < selectionBGMNormalVolume - 0.1f)
                 {
-                    // 音量が低い場合のみフェードイン
-                    fadeInCoroutine = StartCoroutine(FadeInAudio(3f));
+                    // 音量が低い場合のみフェードインして通常音量に戻す
+                    fadeInCoroutine = StartCoroutine(FadeInAudioToNormalVolume(3f));
+                }
+                else if (bgmAudioSource.volume < selectionBGMNormalVolume)
+                {
+                    // 少し低い場合は即座に通常音量に戻す
+                    bgmAudioSource.volume = selectionBGMNormalVolume;
                 }
                 return;
             }
             
-            // フェードイン
-            fadeInCoroutine = StartCoroutine(FadeInAudio(3f));
+            // フェードイン（音量を通常音量に戻す）
+            fadeInCoroutine = StartCoroutine(FadeInAudioToNormalVolume(3f));
         }
         
         /// <summary>
@@ -1491,6 +1875,85 @@ namespace NovelGame
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
                 bgmAudioSource.volume = Mathf.Lerp(0f, targetVolume, t);
+                yield return null;
+            }
+            
+            bgmAudioSource.volume = targetVolume;
+            fadeInCoroutine = null;
+        }
+        
+        /// <summary>
+        /// シナリオ選択BGMの音量を下げる（プロフィール/実績画面用）
+        /// </summary>
+        private void LowerSelectionBGMVolume()
+        {
+            if (bgmAudioSource == null || bgmAudioSource.clip != selectionBGM || !bgmAudioSource.isPlaying) return;
+            
+            // 既存のフェードイン/フェードアウトコルーチンを停止
+            if (fadeInCoroutine != null)
+            {
+                StopCoroutine(fadeInCoroutine);
+                fadeInCoroutine = null;
+            }
+            if (fadeOutCoroutine != null)
+            {
+                StopCoroutine(fadeOutCoroutine);
+                fadeOutCoroutine = null;
+            }
+            
+            // 音量を下げる（0.5秒でフェードアウト）
+            StartCoroutine(FadeSelectionBGMVolume(selectionBGMNormalVolume, selectionBGMLoweredVolume, 0.5f));
+        }
+        
+        /// <summary>
+        /// シナリオ選択BGMの音量をフェードで変更
+        /// </summary>
+        private IEnumerator FadeSelectionBGMVolume(float fromVolume, float toVolume, float duration)
+        {
+            if (bgmAudioSource == null || bgmAudioSource.clip != selectionBGM) yield break;
+            
+            float elapsed = 0f;
+            float startVolume = bgmAudioSource.volume;
+            
+            while (elapsed < duration)
+            {
+                if (bgmAudioSource == null || bgmAudioSource.clip != selectionBGM) yield break;
+                
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.volume = Mathf.Lerp(startVolume, toVolume, t);
+                yield return null;
+            }
+            
+            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM)
+            {
+                bgmAudioSource.volume = toVolume;
+            }
+        }
+        
+        /// <summary>
+        /// オーディオをフェードインして通常音量に戻す（BGM用）
+        /// </summary>
+        private IEnumerator FadeInAudioToNormalVolume(float duration)
+        {
+            if (bgmAudioSource == null) yield break;
+            
+            float targetVolume = selectionBGMNormalVolume; // 通常音量
+            float startVolume = bgmAudioSource.volume;
+            float elapsed = 0f;
+            
+            // 最初の音量を0に設定（新規再生の場合）
+            if (startVolume < 0.01f)
+            {
+                bgmAudioSource.volume = 0f;
+                startVolume = 0f;
+            }
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.volume = Mathf.Lerp(startVolume, targetVolume, t);
                 yield return null;
             }
             
@@ -1786,7 +2249,52 @@ namespace NovelGame
             // コンテナをボタンに追加
             button.Add(container);
         }
-
+        
+        /// <summary>
+        /// ワードゲットラベルにスパークルアイコンを追加
+        /// </summary>
+        private void SetupWordGetLabelWithSparkle(VisualElement container, Label label, string text)
+        {
+            if (container == null || label == null) return;
+            
+            // コンテナをクリア
+            container.Clear();
+            
+            // 水平レイアウトコンテナを作成
+            var horizontalContainer = new VisualElement();
+            horizontalContainer.style.flexDirection = FlexDirection.Row;
+            horizontalContainer.style.alignItems = Align.Center;
+            horizontalContainer.style.justifyContent = Justify.Center;
+            horizontalContainer.style.width = Length.Percent(100);
+            
+            // 左側のスパークルアイコン
+            if (sparkleIcon != null)
+            {
+                var leftSparkle = new Image();
+                leftSparkle.sprite = sparkleIcon;
+                leftSparkle.style.width = 24f;
+                leftSparkle.style.height = 24f;
+                leftSparkle.style.marginRight = 8f;
+                horizontalContainer.Add(leftSparkle);
+            }
+            
+            // テキストラベル
+            label.text = text;
+            horizontalContainer.Add(label);
+            
+            // 右側のスパークルアイコン
+            if (sparkleIcon != null)
+            {
+                var rightSparkle = new Image();
+                rightSparkle.sprite = sparkleIcon;
+                rightSparkle.style.width = 24f;
+                rightSparkle.style.height = 24f;
+                rightSparkle.style.marginLeft = 8f;
+                horizontalContainer.Add(rightSparkle);
+            }
+            
+            container.Add(horizontalContainer);
+        }
     }
 }
 
