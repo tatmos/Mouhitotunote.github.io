@@ -85,10 +85,10 @@ namespace NovelGame
             if (!wordFound)
             {
                 // 失敗メッセージを表示
-                if (wordFailedMessageLabel != null)
-                {
-                    wordFailedMessageLabel.style.display = DisplayStyle.Flex;
-                }
+                // if (wordFailedMessageLabel != null)
+                // {
+                //     wordFailedMessageLabel.style.display = DisplayStyle.Flex;
+                // }
             }
             else
             {

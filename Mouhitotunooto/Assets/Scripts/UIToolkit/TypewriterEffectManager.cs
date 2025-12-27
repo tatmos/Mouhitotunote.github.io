@@ -10,9 +10,49 @@ namespace NovelGame
     /// </summary>
     public class TypewriterEffectManager : MonoBehaviour
     {
+        [Header("Audio Settings")]
+        [SerializeField] private AudioClip typewriterSound;
+        [SerializeField] private float soundInterval = 0.06f; // 音を鳴らす最小間隔（秒）
+
+        private AudioSource audioSource;
+        private float lastSoundTime;
         private Coroutine currentTypewriterEffect;
         private Label clickableWordLabel = null;
         private System.Action<bool> onWordFoundCallback; // ワードが見つかった時のコールバック（bool: 見つかったかどうか）
+
+        private void Awake()
+        {
+            // AudioSourceの設定
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            audioSource.playOnAwake = false;
+        }
+
+        /// <summary>
+        /// タイプライター音のクリップを設定
+        /// </summary>
+        public void SetTypewriterSound(AudioClip clip)
+        {
+            typewriterSound = clip;
+        }
+
+        /// <summary>
+        /// タイプライター音を再生
+        /// </summary>
+        private void PlayTypewriterSound()
+        {
+            if (typewriterSound == null || audioSource == null) return;
+
+            // 短い間隔で連続して鳴りすぎないように調整
+            if (Time.time - lastSoundTime >= soundInterval)
+            {
+                audioSource.PlayOneShot(typewriterSound);
+                lastSoundTime = Time.time;
+            }
+        }
 
         /// <summary>
         /// タイプライター効果を開始（1行ずつ時間差で、左から文字を表示）
@@ -172,7 +212,15 @@ namespace NovelGame
                     
                     for (int charIndex = 0; charIndex < line.Length; charIndex++)
                     {
+                        char c = line[charIndex];
                         textLabel.text = line.Substring(0, charIndex + 1);
+                        
+                        // 空白文字以外の場合に音を鳴らす
+                        if (!char.IsWhiteSpace(c))
+                        {
+                            PlayTypewriterSound();
+                        }
+                        
                         yield return new WaitForSeconds(charDelay);
                     }
                 }
@@ -235,10 +283,18 @@ namespace NovelGame
                 // 各行を1文字ずつ表示
                 for (int charIndex = 0; charIndex < line.Length; charIndex++)
                 {
+                    char c = line[charIndex];
                     // 現在の行までの完全に表示されたテキスト + 現在の行の部分的なテキスト
                     string currentText = displayedText + line.Substring(0, charIndex + 1);
                     
                     label.text = currentText;
+
+                    // 空白文字以外の場合に音を鳴らす
+                    if (!char.IsWhiteSpace(c))
+                    {
+                        PlayTypewriterSound();
+                    }
+
                     yield return new WaitForSeconds(charDelay);
                 }
 

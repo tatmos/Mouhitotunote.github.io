@@ -36,6 +36,7 @@ namespace NovelGame
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
         [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
+        [SerializeField] private AudioClip typewriterSound; // タイプライター文字表示時の効果音
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         [Header("Emoji Icons (for Web compatibility)")]
@@ -87,6 +88,10 @@ namespace NovelGame
 
             // マネージャークラスのインスタンスを作成
             typewriterEffectManager = gameObject.AddComponent<TypewriterEffectManager>();
+            if (typewriterSound != null)
+            {
+                typewriterEffectManager.SetTypewriterSound(typewriterSound);
+            }
             countdownManager = gameObject.AddComponent<CountdownManager>();
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
             profileScreenManager = new ProfileScreenManager(gameManager);
@@ -898,30 +903,30 @@ namespace NovelGame
                                             }
                                             else
                                             {
-                                                wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
-                                                wordGetLabel.AddToClassList("word-get-failed");
+                                                // wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
+                                                // wordGetLabel.AddToClassList("word-get-failed");
                                             }
                                         }
                                         
-                                        if (wordFoundInCurrentScenario && epilogueContainer != null)
-                                        {
-                                            epilogueContainer.style.display = DisplayStyle.Flex;
-                                            if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText) && typewriterEffectManager != null)
-                                            {
-                                                typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
-                                                {
-                                                    ShowBackButton();
-                                                });
-                                            }
-                                            else
-                                            {
-                                                ShowBackButton();
-                                            }
-                                        }
-                                        else
-                                        {
-                                            ShowBackButton();
-                                        }
+                                        // if (wordFoundInCurrentScenario && epilogueContainer != null)
+                                        // {
+                                        //     epilogueContainer.style.display = DisplayStyle.Flex;
+                                        //     if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText) && typewriterEffectManager != null)
+                                        //     {
+                                        //         typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                        //         {
+                                        //             ShowBackButton();
+                                        //         });
+                                        //     }
+                                        //     else
+                                        //     {
+                                        //         ShowBackButton();
+                                        //     }
+                                        // }
+                                        // else
+                                        // {
+                                        //     ShowBackButton();
+                                        // }
                                     },
                                     ShowBackButton
                                 );
@@ -1780,8 +1785,6 @@ namespace NovelGame
             {
                 StopCoroutine(fadeOutCoroutine);
             }
-            
-            Debug.Log($"isSelectionBGMPlaying {isSelectionBGMPlaying}");
             
             // BGMが既に再生中でない場合、または別のBGMが再生中の場合は開始
             if (!isSelectionBGMPlaying || bgmAudioSource.clip != selectionBGM)
