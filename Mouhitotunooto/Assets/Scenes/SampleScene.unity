@@ -779,6 +779,13 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8b75610aa8c3b734d8806e90eaf0c676, type: 3}
   creditsBGM: {fileID: 8300000, guid: a48efce50e11fac449c33dd731373f08, type: 3}
   selectionBGM: {fileID: 8300000, guid: e5fe1fc23fd7a7e4a950c9fd4d2f0200, type: 3}
+  ambientSounds:
+  - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
+  - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}
+  - {fileID: 8300000, guid: e87c8f14f3638a442828d86790c6e9b2, type: 3}
+  - {fileID: 8300000, guid: 47ba95424ebe1cd468452ec7b54bb4b0, type: 3}
+  - {fileID: 8300000, guid: a33cafce7abe4e74d98fe5f04baab6a6, type: 3}
+  - {fileID: 8300000, guid: ce1f971c50baebd409d6a1c3bb1ac5be, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0
