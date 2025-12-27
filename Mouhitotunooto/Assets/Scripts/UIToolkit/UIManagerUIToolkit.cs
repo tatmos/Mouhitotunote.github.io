@@ -341,6 +341,22 @@ namespace NovelGame
                         if (found)
                         {
                             wordFoundInCurrentScenario = true;
+                            
+                            // メッセージを表示
+                            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
+                            if (wordFoundMessageLabel != null)
+                            {
+                                wordFoundMessageLabel.text = "あなたは何かをみつけた気がした";
+                                wordFoundMessageLabel.style.display = DisplayStyle.Flex;
+                                StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
+                            }
+                            
+                            // 選択肢ボタンを表示
+                            var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+                            if (choiceButtonContainer != null)
+                            {
+                                choiceButtonContainer.style.display = DisplayStyle.Flex;
+                            }
                         }
                     });
                 }
@@ -438,7 +454,11 @@ namespace NovelGame
             var countdownText = root.Q<Label>("CountdownText");
             
             // フラグをリセット（結果画面で「もうひとつ」を探すため）
-            wordFoundInCurrentScenario = false;
+            // ただし、すでにHandleChoiceでhasWord=trueになっている場合は、そのまま保持
+            if (result != null && !result.hasWord)
+            {
+                wordFoundInCurrentScenario = false;
+            }
             
             // 既存のカウントダウンを停止
             if (countdownManager != null)
@@ -485,58 +505,185 @@ namespace NovelGame
                 resultLabel.style.display = DisplayStyle.None;
                 resultLabel.parent.Insert(resultLabel.parent.IndexOf(resultLabel), resultContainer);
                 
-                // タイプライター効果で表示（完了後にカウントダウンを開始）
+                // 結果テキストに「【もうひとつ】」が含まれているか確認
+                bool hasMouhitotsu = resultText.Contains("【もうひとつ】");
+                
+                // タイプライター効果で表示
                 if (typewriterEffectManager != null)
                 {
-                    typewriterEffectManager.StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
+                    if (hasMouhitotsu)
                     {
-                        // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
-                        if (countdownManager != null)
+                        // 「もうひとつ」が含まれている場合：クリッカブルワード付きタイプライター効果
+                        typewriterEffectManager.StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
                         {
-                            countdownManager.StartCountdown(
-                                countdownText,
-                                countdownContainer,
-                                wordGetContainer,
-                                wordFailedMessageLabel,
-                                () => {
-                                    // ワードが見つかった場合の処理
-                                    wordFoundInCurrentScenario = true;
-                                },
-                                () => {
-                                    // カウントダウン完了時の処理
-                                    if (wordFoundInCurrentScenario && epilogueContainer != null)
-                                    {
-                                        epilogueContainer.style.display = DisplayStyle.Flex;
-                                        if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText) && typewriterEffectManager != null)
+                            // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
+                            if (countdownManager != null)
+                            {
+                                countdownManager.StartCountdown(
+                                    countdownText,
+                                    countdownContainer,
+                                    wordGetContainer,
+                                    wordFailedMessageLabel,
+                                    () => {
+                                        // ワードが見つかった場合の処理
+                                        wordFoundInCurrentScenario = true;
+                                    },
+                                    () => {
+                                        // カウントダウン完了時の処理
+                                        // wordGetLabelのテキストを設定
+                                        if (wordGetLabel != null)
                                         {
-                                            typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                            wordGetLabel.ClearClassList();
+                                            if (isDarkMode)
+                                            {
+                                                wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
+                                                wordGetLabel.AddToClassList("word-get-dark");
+                                            }
+                                            else if (wordFoundInCurrentScenario)
+                                            {
+                                                wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
+                                                wordGetLabel.AddToClassList("word-get-success");
+                                            }
+                                            else
+                                            {
+                                                wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
+                                                wordGetLabel.AddToClassList("word-get-failed");
+                                            }
+                                        }
+                                        
+                                        if (wordFoundInCurrentScenario && epilogueContainer != null)
+                                        {
+                                            epilogueContainer.style.display = DisplayStyle.Flex;
+                                            if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText) && typewriterEffectManager != null)
+                                            {
+                                                typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                                {
+                                                    ShowBackButton();
+                                                });
+                                            }
+                                            else
                                             {
                                                 ShowBackButton();
-                                            });
+                                            }
                                         }
                                         else
                                         {
                                             ShowBackButton();
                                         }
+                                    },
+                                    ShowBackButton
+                                );
+                            }
+                        }, (found) => {
+                        if (found)
+                        {
+                            wordFoundInCurrentScenario = true;
+                            
+                            // カウントダウンを停止
+                            if (countdownManager != null)
+                            {
+                                countdownManager.NotifyWordFound();
+                            }
+                            
+                            // カウントダウンコンテナを非表示にする
+                            if (countdownContainer != null)
+                            {
+                                countdownContainer.style.display = DisplayStyle.None;
+                            }
+                            
+                            // メッセージを表示
+                            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
+                            if (wordFoundMessageLabel != null)
+                            {
+                                wordFoundMessageLabel.text = "あなたは何かをみつけた気がした";
+                                wordFoundMessageLabel.style.display = DisplayStyle.Flex;
+                                StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
+                            }
+                            
+                            // ワードゲット表示を表示
+                            if (wordGetContainer != null)
+                            {
+                                wordGetContainer.style.display = DisplayStyle.Flex;
+                            }
+                            
+                            // wordGetLabelのテキストを設定
+                            if (wordGetLabel != null)
+                            {
+                                wordGetLabel.ClearClassList();
+                                if (isDarkMode)
+                                {
+                                    wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
+                                    wordGetLabel.AddToClassList("word-get-dark");
+                                }
+                                else
+                                {
+                                    wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
+                                    wordGetLabel.AddToClassList("word-get-success");
+                                }
+                            }
+                            
+                            // HandleChoiceを再度呼び出して、hasWordをtrueに更新
+                            if (scenario != null && result != null)
+                            {
+                                gameManager.HandleChoice(result.choiceId, true);
+                                // resultを再取得
+                                result = gameManager.GetScenarioResult(scenario.id);
+                                // 後日談テキストを再取得
+                                if (result != null && !isDarkMode)
+                                {
+                                    epilogueText = result.epilogue;
+                                }
+                            }
+                            
+                            // 後日談を表示
+                            if (epilogueContainer != null)
+                            {
+                                epilogueContainer.style.display = DisplayStyle.Flex;
+                                
+                                // 後日談のタイプライター効果を開始
+                                if (epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+                                {
+                                    if (typewriterEffectManager != null)
+                                    {
+                                        typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                        {
+                                            // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                                            ShowBackButton();
+                                        });
                                     }
                                     else
                                     {
                                         ShowBackButton();
                                     }
-                                },
-                                ShowBackButton
-                            );
-                        }
-                    }, (found) => {
-                        if (found)
-                        {
-                            wordFoundInCurrentScenario = true;
-                            if (countdownManager != null)
+                                }
+                                else
+                                {
+                                    ShowBackButton();
+                                }
+                            }
+                            else
                             {
-                                countdownManager.NotifyWordFound();
+                                ShowBackButton();
                             }
                         }
                     });
+                    }
+                    else
+                    {
+                        // 「もうひとつ」が含まれていない場合：通常のタイプライター効果
+                        var resultLabelForTypewriter = new Label();
+                        resultLabelForTypewriter.style.fontSize = 18;
+                        resultLabelForTypewriter.style.whiteSpace = WhiteSpace.Normal;
+                        resultLabelForTypewriter.style.maxWidth = 800;
+                        resultLabelForTypewriter.style.marginBottom = 20;
+                        resultContainer.Add(resultLabelForTypewriter);
+                        
+                        typewriterEffectManager.StartTypewriterEffect(resultLabelForTypewriter, resultText, () =>
+                        {
+                            // タイプライター効果が完了したら、即座に戻るボタンを表示
+                            ShowBackButton();
+                        });
+                    }
                 }
             }
             else if (wordFoundInCurrentScenario && epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
@@ -556,27 +703,12 @@ namespace NovelGame
                 wordGetContainer.style.display = DisplayStyle.None;
             }
             
+            // wordGetLabelのテキストは、カウントダウンが終了した時、または「もうひとつ」をクリックした時に設定する
+            // ここでは初期化のみ（クラスをクリア）
             if (wordGetLabel != null)
             {
-                // 既存のクラスをクリア
                 wordGetLabel.ClearClassList();
-                
-                if (isDarkMode)
-                {
-                    wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
-                    wordGetLabel.AddToClassList("word-get-dark");
-                }
-                else if (wordFoundInCurrentScenario)
-                {
-                    wordGetLabel.text = "✨ 【もうひとつ】ワードゲット! ✨";
-                    wordGetLabel.AddToClassList("word-get-success");
-                }
-                else
-                {
-                    // カウントダウンが終了するまで表示しない（カウントダウン終了時に表示される）
-                    wordGetLabel.text = "残念...【もうひとつ】は出ませんでした";
-                    wordGetLabel.AddToClassList("word-get-failed");
-                }
+                wordGetLabel.text = ""; // テキストは後で設定
             }
             
             // 後日談のタイトルも更新
@@ -989,6 +1121,30 @@ namespace NovelGame
                     backButton.style.display = DisplayStyle.Flex;
                 }
             }
+        }
+
+        /// <summary>
+        /// シェイクアニメーション
+        /// </summary>
+        private IEnumerator ShakeAnimation(Label label)
+        {
+            float duration = 0.5f;
+            float shakeIntensity = 10f;
+            float elapsed = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float offsetX = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
+                float offsetY = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
+                
+                label.style.translate = new Translate(offsetX, offsetY, 0);
+                
+                yield return null;
+            }
+            
+            // 元の位置に戻す
+            label.style.translate = new Translate(0, 0, 0);
         }
 
     }
