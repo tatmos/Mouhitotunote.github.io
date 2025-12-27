@@ -29,6 +29,10 @@ namespace NovelGame
                 scrollCoroutine = null;
             }
 
+            // コンテナの上下に余白を追加
+            container.style.paddingTop = 100f; // 上部余白
+            container.style.paddingBottom = 100f; // 下部余白
+
             // クレジット情報を追加
             AddCreditItem(container, "ゲームデザイン", "tatmos");
             AddCreditItem(container, "AIディレクション", "tatmos");
@@ -88,17 +92,11 @@ namespace NovelGame
         {
             yield return new WaitForSeconds(0.5f);
             
-            // 初期スクロール位置を最下部に設定（下から最初の項目が見えてくるように）
+            // 初期スクロール位置を最上部（0）に設定
             if (creditsScrollView != null)
             {
-                var content = creditsScrollView.contentContainer;
-                float contentHeight = content.layout.height;
-                float viewportHeight = creditsScrollView.contentViewport.layout.height;
-                float maxScroll = Mathf.Max(0, contentHeight - viewportHeight);
-                
-                // 最下部にスクロール（ただし、最初の項目が見える位置まで）
-                // ビューポートの高さ分だけ上にスクロールして、最初の項目が見えるようにする
-                creditsScrollView.verticalScroller.value = maxScroll;
+                creditsScrollView.verticalScroller.value = 0f;
+                yield return null;
             }
             
             StartAutoScroll();
@@ -139,6 +137,8 @@ namespace NovelGame
         {
             if (creditsScrollView == null) yield break;
             
+            float currentScroll = 0f;
+            
             while (true)
             {
                 // スクロールビューのコンテンツの高さを取得
@@ -146,22 +146,18 @@ namespace NovelGame
                 float contentHeight = content.layout.height;
                 float viewportHeight = creditsScrollView.contentViewport.layout.height;
                 
-                // スクロール可能な距離（最後の文字が上に消えるまで）
-                // コンテンツ全体がビューポートから消えるまでスクロール = contentHeight - viewportHeight
+                // スクロール可能な距離
                 float maxScroll = Mathf.Max(0, contentHeight - viewportHeight);
                 
                 if (maxScroll > 0)
                 {
                     // スクロールを進める
-                    float currentScroll = creditsScrollView.verticalScroller.value;
                     currentScroll += scrollSpeed * Time.deltaTime;
                     
-                    // 最後までスクロールしたら最初に戻る（最下部から開始位置に戻る）
-                    if (currentScroll >= maxScroll)
+                    // 最後までスクロールしたら先頭に戻す
+                    if (currentScroll > maxScroll)
                     {
-                        // 最下部の位置に戻る（下から最初の項目が見える位置）
-                        // ビューポートの高さ分だけ上にスクロールして、最初の項目が見えるようにする
-                        currentScroll = maxScroll;
+                        currentScroll = 0f;
                     }
                     
                     creditsScrollView.verticalScroller.value = currentScroll;

@@ -783,9 +783,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
   - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}
   - {fileID: 8300000, guid: e87c8f14f3638a442828d86790c6e9b2, type: 3}
-  - {fileID: 8300000, guid: 47ba95424ebe1cd468452ec7b54bb4b0, type: 3}
   - {fileID: 8300000, guid: a33cafce7abe4e74d98fe5f04baab6a6, type: 3}
+  - {fileID: 8300000, guid: 47ba95424ebe1cd468452ec7b54bb4b0, type: 3}
   - {fileID: 8300000, guid: ce1f971c50baebd409d6a1c3bb1ac5be, type: 3}
+  creditsIcon: {fileID: 0}
+  achievementsIcon: {fileID: 0}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0

@@ -36,6 +36,10 @@ namespace NovelGame
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
         [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
+        
+        [Header("Emoji Icons (for Web compatibility)")]
+        [SerializeField] private Sprite creditsIcon; // エンドクレジット用のアイコン（🎬の代替）
+        [SerializeField] private Sprite achievementsIcon; // 実績用のアイコン（🏆の代替）
 
         private GameManager gameManager;
         private UIDocument currentDocument;
@@ -181,6 +185,9 @@ namespace NovelGame
             var showCreditsButton = root.Q<Button>("ShowCreditsButton");
             if (showCreditsButton != null)
             {
+                // 絵文字を画像に置き換え
+                SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
+                
                 var scenario6Result = gameManager.GetScenarioResult(6);
                 if (scenario6Result != null)
                 {
@@ -197,6 +204,9 @@ namespace NovelGame
             var showAchievementsButton = root.Q<Button>("ShowAchievementsButton");
             if (showAchievementsButton != null)
             {
+                // 絵文字を画像に置き換え
+                SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
+                
                 var scenarios = gameManager.GetScenarios();
                 int totalCompleted = 0;
                 foreach (var scenario in scenarios)
@@ -1709,6 +1719,47 @@ namespace NovelGame
             {
                 ambientFadeInCoroutine = StartCoroutine(FadeInAmbientSound(1f));
             }
+        }
+        
+        /// <summary>
+        /// ボタンにアイコンとテキストを設定（絵文字の代替）
+        /// </summary>
+        private void SetupButtonWithIcon(Button button, Sprite icon, string text)
+        {
+            if (button == null) return;
+            
+            // 既存の内容をクリア
+            button.Clear();
+            
+            // ボタンのテキストを空にする
+            button.text = "";
+            
+            // 水平レイアウトコンテナを作成
+            var container = new VisualElement();
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.justifyContent = Justify.Center;
+            container.style.flexGrow = 1;
+            
+            // アイコンを追加（画像が設定されている場合）
+            if (icon != null)
+            {
+                var iconImage = new Image();
+                iconImage.sprite = icon;
+                iconImage.style.width = 24f;
+                iconImage.style.height = 24f;
+                iconImage.style.marginRight = 8f;
+                container.Add(iconImage);
+            }
+            
+            // テキストラベルを追加
+            var label = new Label(text);
+            label.style.fontSize = 16f;
+            label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            container.Add(label);
+            
+            // コンテナをボタンに追加
+            button.Add(container);
         }
 
     }
