@@ -65,12 +65,56 @@ namespace NovelGame
             {
                 string line = lines[lineIndex];
                 
-                // 行を解析して「【もうひとつ】」の位置を検出
+                // 行を解析して「【もうひとつ】」または「もうひとつ」の位置を検出
                 int wordStartIndex = line.IndexOf("【もうひとつ】");
+                int wordLength = 0;
+                string clickableText = "";
                 
                 if (wordStartIndex >= 0)
                 {
                     // 「【もうひとつ】」が見つかった場合
+                    wordLength = "【もうひとつ】".Length;
+                    clickableText = "もうひとつ";
+                }
+                else
+                {
+                    // 「もうひとつ」を検索（【】なし）
+                    // ただし、「もうひとつ」が他の単語の一部でないことを確認
+                    wordStartIndex = line.IndexOf("もうひとつ");
+                    if (wordStartIndex >= 0)
+                    {
+                        // 前後の文字を確認して、単語の境界であることを確認
+                        bool isValidWord = true;
+                        if (wordStartIndex > 0)
+                        {
+                            char beforeChar = line[wordStartIndex - 1];
+                            // ひらがな、カタカナ、漢字、英数字の場合は単語の一部の可能性がある
+                            if (char.IsLetterOrDigit(beforeChar) || beforeChar == '【' || beforeChar == '「' || beforeChar == '『')
+                            {
+                                isValidWord = false;
+                            }
+                        }
+                        if (wordStartIndex + "もうひとつ".Length < line.Length)
+                        {
+                            char afterChar = line[wordStartIndex + "もうひとつ".Length];
+                            // ひらがな、カタカナ、漢字、英数字の場合は単語の一部の可能性がある
+                            if (char.IsLetterOrDigit(afterChar) || afterChar == '】' || afterChar == '」' || afterChar == '』')
+                            {
+                                isValidWord = false;
+                            }
+                        }
+                        
+                        if (isValidWord)
+                        {
+                            wordLength = "もうひとつ".Length;
+                            clickableText = "もうひとつ";
+                        }
+                    }
+                }
+                
+                if (wordStartIndex >= 0 && wordLength > 0)
+                {
+                    // 「もうひとつ」または「【もうひとつ】」が見つかった場合
                     // 前の部分を通常のLabelとして表示
                     if (wordStartIndex > 0)
                     {
@@ -88,7 +132,7 @@ namespace NovelGame
                     }
                     
                     // 「もうひとつ」をクリッカブルなLabelとして表示
-                    Label clickableLabel = new Label("もうひとつ");
+                    Label clickableLabel = new Label(clickableText);
                     clickableLabel.style.fontSize = 20;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
                     clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
@@ -98,7 +142,7 @@ namespace NovelGame
                     container.Add(clickableLabel);
                     
                     // 後の部分を通常のLabelとして表示
-                    int wordEndIndex = wordStartIndex + "【もうひとつ】".Length;
+                    int wordEndIndex = wordStartIndex + wordLength;
                     if (wordEndIndex < line.Length)
                     {
                         string afterWord = line.Substring(wordEndIndex);
@@ -116,7 +160,7 @@ namespace NovelGame
                 }
                 else
                 {
-                    // 「【もうひとつ】」が見つからない場合、通常のタイプライター効果
+                    // 「もうひとつ」が見つからない場合、通常のタイプライター効果
                     Label textLabel = new Label();
                     textLabel.style.fontSize = 20;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
