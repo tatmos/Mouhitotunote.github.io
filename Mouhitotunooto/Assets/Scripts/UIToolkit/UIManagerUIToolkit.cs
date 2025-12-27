@@ -2182,15 +2182,10 @@ namespace NovelGame
         }
         
         /// <summary>
-        /// 効果音やBGMが再生中かどうかをチェック
+        /// 効果音が再生中かどうかをチェック
         /// </summary>
         private bool IsAnyAudioPlaying()
         {
-            // BGMが再生中かチェック
-            // if (bgmAudioSource != null && bgmAudioSource.isPlaying && bgmAudioSource.volume > 0.01f)
-            // {
-            //     return true;
-            // }
             
             // 効果音が再生中かチェック
             if (sfxAudioSource != null && sfxAudioSource.isPlaying && sfxAudioSource.volume > 0.01f)
