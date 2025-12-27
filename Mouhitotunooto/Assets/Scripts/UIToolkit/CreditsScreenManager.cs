@@ -30,8 +30,8 @@ namespace NovelGame
             }
 
             // コンテナの上下に余白を追加
-            container.style.paddingTop = 100f; // 上部余白
-            container.style.paddingBottom = 100f; // 下部余白
+            container.style.paddingTop = 200f; // 上部余白
+            container.style.paddingBottom = 200f; // 下部余白
 
             // クレジット情報を追加
             AddCreditItem(container, "ゲームデザイン", "tatmos");

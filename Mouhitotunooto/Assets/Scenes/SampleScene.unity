@@ -786,8 +786,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a33cafce7abe4e74d98fe5f04baab6a6, type: 3}
   - {fileID: 8300000, guid: 47ba95424ebe1cd468452ec7b54bb4b0, type: 3}
   - {fileID: 8300000, guid: ce1f971c50baebd409d6a1c3bb1ac5be, type: 3}
-  creditsIcon: {fileID: 0}
-  achievementsIcon: {fileID: 0}
+  creditsIcon: {fileID: 21300000, guid: 4b9dee69d0e75f746b00834db382c67b, type: 3}
+  achievementsIcon: {fileID: 21300000, guid: 80fbfb6d006b1ee4bb78bdf29d3596df, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0

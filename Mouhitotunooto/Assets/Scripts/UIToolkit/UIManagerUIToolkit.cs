@@ -460,6 +460,8 @@ namespace NovelGame
         public void ShowResultScreen()
         {
             FadeOutAudioOnSceneChange();
+            // 環境音を長めにフェードアウト（結果画面に移行）
+            FadeOutAmbientSoundForResult();
             HideAllScreens();
             
             if (resultScreenDocument == null)
@@ -1634,6 +1636,29 @@ namespace NovelGame
             }
             
             ambientFadeOutCoroutine = StartCoroutine(FadeOutAmbientSoundCoroutine(0.5f));
+        }
+        
+        /// <summary>
+        /// 環境音を結果画面用に長めにフェードアウト
+        /// </summary>
+        private void FadeOutAmbientSoundForResult()
+        {
+            if (ambientAudioSource == null || !ambientAudioSource.isPlaying) return;
+            
+            // 既存のフェードインコルーチンを停止
+            if (ambientFadeInCoroutine != null)
+            {
+                StopCoroutine(ambientFadeInCoroutine);
+            }
+            
+            // 既存のフェードアウトコルーチンを停止
+            if (ambientFadeOutCoroutine != null)
+            {
+                StopCoroutine(ambientFadeOutCoroutine);
+            }
+            
+            // 結果画面に移行する時は長めにフェードアウト（2秒）
+            ambientFadeOutCoroutine = StartCoroutine(FadeOutAmbientSoundCoroutine(2f));
         }
         
         /// <summary>
