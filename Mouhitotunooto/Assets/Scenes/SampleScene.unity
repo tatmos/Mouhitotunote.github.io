@@ -777,6 +777,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 41ff584278f4c79438f38c27f0cd69ad, type: 3}
   - {fileID: 8300000, guid: 48a8251c1efc0d8469a74bd45d8b9be0, type: 3}
   - {fileID: 8300000, guid: 8b75610aa8c3b734d8806e90eaf0c676, type: 3}
+  creditsBGM: {fileID: 8300000, guid: a48efce50e11fac449c33dd731373f08, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0

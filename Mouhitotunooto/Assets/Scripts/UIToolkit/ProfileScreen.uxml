@@ -9,7 +9,7 @@
                     <ui:VisualElement name="ProfileList" style="flex-direction: column; gap: 10px; padding: 10px;" />
                 </ui:ScrollView>
                 <ui:ScrollView name="ProfileDetailContainer" class="profile-detail-container" style="flex-grow: 1; min-width: 0;">
-                    <ui:VisualElement name="ProfileDetail" style="flex-direction: column; padding: 20px; width: 100%;" />
+                    <ui:VisualElement name="ProfileDetail" style="flex-direction: column; padding: 20px; width: 100%; min-width: 0; max-width: 100%;" />
                 </ui:ScrollView>
             </ui:VisualElement>
             <ui:Button name="BackToSelectionButtonFromProfile" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center;" />

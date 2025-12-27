@@ -12,10 +12,19 @@ namespace NovelGame
         private GameManager gameManager;
         private HashSet<int> expandedProfiles = new HashSet<int>();
         private int selectedProfileId = 1;
+        private System.Action onProfileSelected; // プロフィール選択時のコールバック
 
         public ProfileScreenManager(GameManager gameManager)
         {
             this.gameManager = gameManager;
+        }
+        
+        /// <summary>
+        /// プロフィール選択時のコールバックを設定
+        /// </summary>
+        public void SetOnProfileSelectedCallback(System.Action callback)
+        {
+            onProfileSelected = callback;
         }
 
         /// <summary>
@@ -112,7 +121,8 @@ namespace NovelGame
                     if (isUnlocked)
                     {
                         selectedProfileId = currentProfileId;
-                        // コールバックで再生成を通知（UIManagerUIToolkitで処理）
+                        // コールバックで再生成を通知
+                        onProfileSelected?.Invoke();
                     }
                 };
 
@@ -179,6 +189,7 @@ namespace NovelGame
             detailCard.style.width = Length.Percent(100);
             detailCard.style.maxWidth = Length.Percent(100);
             detailCard.style.minWidth = 0;
+            detailCard.style.overflow = Overflow.Hidden; // はみ出しを防ぐ
 
             // ボーダー半径を各角に設定
             detailCard.style.borderTopLeftRadius = 8;
@@ -204,6 +215,7 @@ namespace NovelGame
             nameLabel.AddToClassList("profile-name");
             nameLabel.style.whiteSpace = WhiteSpace.Normal;
             nameLabel.style.maxWidth = Length.Percent(100);
+            nameLabel.style.overflow = Overflow.Hidden;
             detailCard.Add(nameLabel);
 
             if (isUnlocked)
@@ -226,6 +238,7 @@ namespace NovelGame
                 infoLabel.AddToClassList("profile-info");
                 infoLabel.style.whiteSpace = WhiteSpace.Normal;
                 infoLabel.style.maxWidth = Length.Percent(100);
+                infoLabel.style.overflow = Overflow.Hidden;
                 detailCard.Add(infoLabel);
 
                 // セリフ
@@ -236,6 +249,7 @@ namespace NovelGame
                     quoteLabel.style.color = isDarkMode ? Color.red : profile.borderColor;
                     quoteLabel.style.whiteSpace = WhiteSpace.Normal;
                     quoteLabel.style.maxWidth = Length.Percent(100);
+                    quoteLabel.style.overflow = Overflow.Hidden;
                     detailCard.Add(quoteLabel);
                 }
 
@@ -246,6 +260,7 @@ namespace NovelGame
                     epilogueLabel.AddToClassList("profile-epilogue");
                     epilogueLabel.style.whiteSpace = WhiteSpace.Normal;
                     epilogueLabel.style.maxWidth = Length.Percent(100);
+                    epilogueLabel.style.overflow = Overflow.Hidden;
                     detailCard.Add(epilogueLabel);
 
                     // 後日談の後日談
@@ -268,6 +283,7 @@ namespace NovelGame
                                 epilogue2Label.AddToClassList("profile-epilogue2");
                                 epilogue2Label.style.whiteSpace = WhiteSpace.Normal;
                                 epilogue2Label.style.maxWidth = Length.Percent(100);
+                                epilogue2Label.style.overflow = Overflow.Hidden;
                                 detailCard.Add(epilogue2Label);
                             }
                         }
@@ -284,6 +300,7 @@ namespace NovelGame
                             hintLabel.AddToClassList("profile-hint");
                             hintLabel.style.whiteSpace = WhiteSpace.Normal;
                             hintLabel.style.maxWidth = Length.Percent(100);
+                            hintLabel.style.overflow = Overflow.Hidden;
                             detailCard.Add(hintLabel);
                         }
                     }
@@ -304,13 +321,56 @@ namespace NovelGame
         /// </summary>
         public void ToggleEpilogue2(int scenarioId)
         {
-            if (expandedProfiles.Contains(scenarioId))
+            bool wasExpanded = expandedProfiles.Contains(scenarioId);
+            if (wasExpanded)
             {
                 expandedProfiles.Remove(scenarioId);
             }
             else
             {
                 expandedProfiles.Add(scenarioId);
+            }
+            
+            // プロフィール詳細のみを再生成してUIを更新
+            onProfileDetailUpdate?.Invoke();
+        }
+        
+        /// <summary>
+        /// プロフィール詳細更新時のコールバック
+        /// </summary>
+        private System.Action onProfileDetailUpdate;
+        
+        /// <summary>
+        /// プロフィール詳細更新時のコールバックを設定
+        /// </summary>
+        public void SetOnProfileDetailUpdateCallback(System.Action callback)
+        {
+            onProfileDetailUpdate = callback;
+        }
+        
+        /// <summary>
+        /// プロフィール詳細のみを再生成（リストは再生成しない）
+        /// </summary>
+        public void RefreshProfileDetail(VisualElement root)
+        {
+            var profileDetail = root.Q<VisualElement>("ProfileDetail");
+            if (profileDetail == null) return;
+            
+            profileDetail.Clear();
+            
+            if (selectedProfileId > 0)
+            {
+                var selectedProfile = CharacterProfileManager.GetProfile(selectedProfileId);
+                if (selectedProfile != null)
+                {
+                    var scenarios = gameManager.GetScenarios();
+                    bool isDarkMode = gameManager.IsDarkMode();
+                    bool scenario6Completed = gameManager.IsScenarioCompleted(6);
+                    var result = gameManager.GetScenarioResult(selectedProfileId);
+                    bool isUnlocked = result != null;
+                    
+                    CreateProfileDetail(profileDetail, selectedProfile, result, isUnlocked, isDarkMode, scenario6Completed);
+                }
             }
         }
 

@@ -33,6 +33,7 @@ namespace NovelGame
         
         [Header("Audio")]
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
+        [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
 
         private GameManager gameManager;
         private UIDocument currentDocument;
@@ -54,6 +55,7 @@ namespace NovelGame
         
         // オーディオ関連
         private AudioSource audioSource; // 効果音再生用のAudioSource
+        private Coroutine fadeOutCoroutine; // フェードアウト用のコルーチン
 
         private void Start()
         {
@@ -69,8 +71,30 @@ namespace NovelGame
             countdownManager = gameObject.AddComponent<CountdownManager>();
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
             profileScreenManager = new ProfileScreenManager(gameManager);
+            profileScreenManager.SetOnProfileSelectedCallback(() => {
+                // プロフィールが選択されたら、プロフィール画面を再生成
+                if (profileScreenDocument != null && profileScreenDocument.gameObject.activeSelf)
+                {
+                    var root = profileScreenDocument.rootVisualElement;
+                    if (root != null)
+                    {
+                        profileScreenManager.CreateProfileCards(root);
+                    }
+                }
+            });
+            profileScreenManager.SetOnProfileDetailUpdateCallback(() => {
+                // プロフィール詳細のみを更新（リストは再生成しない）
+                if (profileScreenDocument != null && profileScreenDocument.gameObject.activeSelf)
+                {
+                    var root = profileScreenDocument.rootVisualElement;
+                    if (root != null)
+                    {
+                        profileScreenManager.RefreshProfileDetail(root);
+                    }
+                }
+            });
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
-            creditsScreenManager = new CreditsScreenManager();
+            creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
             
             // AudioSourceを追加（効果音再生用）
             audioSource = gameObject.AddComponent<AudioSource>();
@@ -90,6 +114,7 @@ namespace NovelGame
 
         public void ShowSelectionScreen()
         {
+            FadeOutAudioOnSceneChange();
             HideAllScreens();
             
             if (selectionScreenDocument == null)
@@ -182,6 +207,7 @@ namespace NovelGame
 
         public void ShowProfileScreen()
         {
+            FadeOutAudioOnSceneChange();
             HideAllScreens();
             
             if (profileScreenDocument == null)
@@ -242,6 +268,7 @@ namespace NovelGame
 
         public void ShowScenarioScreen()
         {
+            FadeOutAudioOnSceneChange();
             HideAllScreens();
             
             if (scenarioScreenDocument == null)
@@ -393,6 +420,7 @@ namespace NovelGame
 
         public void ShowResultScreen()
         {
+            FadeOutAudioOnSceneChange();
             HideAllScreens();
             
             if (resultScreenDocument == null)
@@ -762,7 +790,20 @@ namespace NovelGame
             if (scenarioScreenDocument != null) scenarioScreenDocument.gameObject.SetActive(false);
             if (resultScreenDocument != null) resultScreenDocument.gameObject.SetActive(false);
             if (profileScreenDocument != null) profileScreenDocument.gameObject.SetActive(false);
-            if (creditsScreenDocument != null) creditsScreenDocument.gameObject.SetActive(false);
+            if (creditsScreenDocument != null)
+            {
+                // エンドクレジット画面を閉じる時にスクロールとBGMを停止
+                if (creditsScreenManager != null)
+                {
+                    creditsScreenManager.StopAutoScroll();
+                }
+                if (audioSource != null && audioSource.clip == creditsBGM)
+                {
+                    // BGMをフェードアウト
+                    StartCoroutine(FadeOutAudio(2f));
+                }
+                creditsScreenDocument.gameObject.SetActive(false);
+            }
             if (achievementsScreenDocument != null) achievementsScreenDocument.gameObject.SetActive(false);
         }
 
@@ -1095,11 +1136,20 @@ namespace NovelGame
             }
 
             var creditsContent = root.Q<VisualElement>("CreditsContent");
-            if (creditsContent == null) return;
+            var creditsScrollView = root.Q<ScrollView>("CreditsScrollView");
+            if (creditsContent == null || creditsScrollView == null) return;
 
             if (creditsScreenManager != null)
             {
-                creditsScreenManager.CreateCredits(creditsContent);
+                creditsScreenManager.CreateCredits(creditsContent, creditsScrollView);
+            }
+            
+            // BGMを再生
+            if (creditsBGM != null && audioSource != null)
+            {
+                audioSource.clip = creditsBGM;
+                audioSource.loop = true;
+                audioSource.Play();
             }
 
             // 戻るボタン
@@ -1177,6 +1227,48 @@ namespace NovelGame
                 {
                     audioSource.PlayOneShot(selectedSound);
                 }
+            }
+        }
+        
+        /// <summary>
+        /// オーディオをフェードアウト
+        /// </summary>
+        private IEnumerator FadeOutAudio(float duration)
+        {
+            if (audioSource == null) yield break;
+            
+            // 既存のフェードアウトコルーチンを停止
+            if (fadeOutCoroutine != null)
+            {
+                StopCoroutine(fadeOutCoroutine);
+            }
+            
+            float startVolume = audioSource.volume;
+            float elapsed = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                audioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                yield return null;
+            }
+            
+            // フェードアウト完了後、停止して音量をリセット
+            audioSource.Stop();
+            audioSource.volume = startVolume;
+            fadeOutCoroutine = null;
+        }
+        
+        /// <summary>
+        /// シーン切り替え時にオーディオをフェードアウト（効果音用）
+        /// </summary>
+        private void FadeOutAudioOnSceneChange()
+        {
+            if (audioSource != null && audioSource.isPlaying && audioSource.clip != creditsBGM)
+            {
+                // 効果音が再生中の場合はフェードアウト（短めの時間）
+                fadeOutCoroutine = StartCoroutine(FadeOutAudio(0.5f));
             }
         }
 

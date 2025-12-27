@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,14 +7,27 @@ namespace NovelGame
     /// <summary>
     /// エンドクレジット画面の表示を管理するクラス
     /// </summary>
-    public class CreditsScreenManager
+    public class CreditsScreenManager : MonoBehaviour
     {
+        private Coroutine scrollCoroutine;
+        private ScrollView creditsScrollView;
+        private float scrollSpeed = 30f; // スクロール速度（ピクセル/秒）
         /// <summary>
         /// クレジット情報を作成
         /// </summary>
-        public void CreateCredits(VisualElement container)
+        public void CreateCredits(VisualElement container, ScrollView scrollView)
         {
             container.Clear();
+            
+            // スクロールビューを保存
+            creditsScrollView = scrollView;
+            
+            // 既存のスクロールコルーチンを停止
+            if (scrollCoroutine != null)
+            {
+                StopCoroutine(scrollCoroutine);
+                scrollCoroutine = null;
+            }
 
             // クレジット情報を追加
             AddCreditItem(container, "ゲームデザイン", "tatmos");
@@ -57,6 +71,105 @@ namespace NovelGame
             AddCreditItem(musicSection, "サウンドエンジニア", "tatmos");
 
             container.Add(musicSection);
+
+
+            // スクロールを開始
+            if (scrollView != null)
+            {
+                // 少し待ってからスクロール位置を設定（レイアウトが確定するまで）
+                StartCoroutine(DelayedStartScroll());
+            }
+        }
+        
+        /// <summary>
+        /// スクロール開始を遅延させる
+        /// </summary>
+        private IEnumerator DelayedStartScroll()
+        {
+            yield return new WaitForSeconds(0.5f);
+            
+            // 初期スクロール位置を最下部に設定（下から最初の項目が見えてくるように）
+            if (creditsScrollView != null)
+            {
+                var content = creditsScrollView.contentContainer;
+                float contentHeight = content.layout.height;
+                float viewportHeight = creditsScrollView.contentViewport.layout.height;
+                float maxScroll = Mathf.Max(0, contentHeight - viewportHeight);
+                
+                // 最下部にスクロール（ただし、最初の項目が見える位置まで）
+                // ビューポートの高さ分だけ上にスクロールして、最初の項目が見えるようにする
+                creditsScrollView.verticalScroller.value = maxScroll;
+            }
+            
+            StartAutoScroll();
+        }
+        
+        /// <summary>
+        /// 自動スクロールを開始
+        /// </summary>
+        public void StartAutoScroll()
+        {
+            if (creditsScrollView == null) return;
+            
+            // 既存のスクロールコルーチンを停止
+            if (scrollCoroutine != null)
+            {
+                StopCoroutine(scrollCoroutine);
+            }
+            
+            scrollCoroutine = StartCoroutine(AutoScrollCoroutine());
+        }
+        
+        /// <summary>
+        /// 自動スクロールを停止
+        /// </summary>
+        public void StopAutoScroll()
+        {
+            if (scrollCoroutine != null)
+            {
+                StopCoroutine(scrollCoroutine);
+                scrollCoroutine = null;
+            }
+        }
+        
+        /// <summary>
+        /// 自動スクロールのコルーチン（無限ループ）
+        /// </summary>
+        private IEnumerator AutoScrollCoroutine()
+        {
+            if (creditsScrollView == null) yield break;
+            
+            while (true)
+            {
+                // スクロールビューのコンテンツの高さを取得
+                var content = creditsScrollView.contentContainer;
+                float contentHeight = content.layout.height;
+                float viewportHeight = creditsScrollView.contentViewport.layout.height;
+                
+                // スクロール可能な距離（最後の文字が上に消えるまで）
+                // コンテンツ全体がビューポートから消えるまでスクロール = コンテンツの高さまで
+                float maxScroll = contentHeight;
+                
+                if (maxScroll > 0)
+                {
+                    // スクロールを進める
+                    float currentScroll = creditsScrollView.verticalScroller.value;
+                    currentScroll += scrollSpeed * Time.deltaTime;
+                    
+                    // 最後までスクロールしたら最初に戻る（最下部から開始位置に戻る）
+                    if (currentScroll >= maxScroll)
+                    {
+                        // 最下部の位置に戻る（下から最初の項目が見える位置）
+                        // ビューポートの高さ分だけ上にスクロールして、最初の項目が見えるようにする
+                        float scrollRange = Mathf.Max(0, contentHeight - viewportHeight);
+                        currentScroll = scrollRange;
+                    }
+                    
+                    creditsScrollView.verticalScroller.value = currentScroll;
+                }
+                
+                yield return null;
+            }
         }
 
         /// <summary>
