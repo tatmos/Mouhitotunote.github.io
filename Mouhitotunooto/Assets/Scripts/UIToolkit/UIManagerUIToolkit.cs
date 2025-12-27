@@ -239,7 +239,7 @@ namespace NovelGame
             
             // 初期opacityを取得（設定されていない場合は1.0）
             float startOpacity = 1.0f;
-            if (titleText.style.opacity.value >= 0f)
+            if (titleText.style.opacity.value > 0f)
             {
                 startOpacity = titleText.style.opacity.value;
             }
@@ -1052,8 +1052,8 @@ namespace NovelGame
                 if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
                 {
                     selectionBGMPausedTime = bgmAudioSource.time;
-                    bgmAudioSource.Pause();
-                    isSelectionBGMPlaying = false;
+                    // bgmAudioSource.Pause();
+                    // isSelectionBGMPlaying = false;
                 }
                 creditsScreenDocument.gameObject.SetActive(false);
             }
@@ -1781,6 +1781,8 @@ namespace NovelGame
                 StopCoroutine(fadeOutCoroutine);
             }
             
+            Debug.Log($"isSelectionBGMPlaying {isSelectionBGMPlaying}");
+            
             // BGMが既に再生中でない場合、または別のBGMが再生中の場合は開始
             if (!isSelectionBGMPlaying || bgmAudioSource.clip != selectionBGM)
             {
@@ -1901,8 +1903,8 @@ namespace NovelGame
                 fadeOutCoroutine = null;
             }
             
-            // 音量を下げる（0.5秒でフェードアウト）
-            StartCoroutine(FadeSelectionBGMVolume(selectionBGMNormalVolume, selectionBGMLoweredVolume, 0.5f));
+            // 音量を下げる（3.0秒でフェードアウト）
+            StartCoroutine(FadeSelectionBGMVolume(selectionBGMNormalVolume, selectionBGMLoweredVolume, 3.0f));
         }
         
         /// <summary>
@@ -2007,7 +2009,7 @@ namespace NovelGame
             if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
             {
                 selectionBGMPausedTime = bgmAudioSource.time;
-                bgmAudioSource.Pause(); // 停止ではなく一時停止（再生時刻を保持）
+                // bgmAudioSource.Pause(); // 停止ではなく一時停止（再生時刻を保持）
                 isSelectionBGMPlaying = false;
             }
             
@@ -2039,6 +2041,7 @@ namespace NovelGame
             {
                 StopCoroutine(ambientFadeInCoroutine);
             }
+            // 開始時にまだフェードアウトしているものがあれば停止
             if (ambientFadeOutCoroutine != null)
             {
                 StopCoroutine(ambientFadeOutCoroutine);
@@ -2070,12 +2073,13 @@ namespace NovelGame
             {
                 StopCoroutine(ambientFadeInCoroutine);
             }
-            if (ambientFadeOutCoroutine != null)
-            {
-                StopCoroutine(ambientFadeOutCoroutine);
-            }
+            // フェードアウト中のものは止めない（フェードアウトを続行させる）
+            // if (ambientFadeOutCoroutine != null)
+            // {
+            //     StopCoroutine(ambientFadeOutCoroutine);
+            // }
             
-            ambientAudioSource.Stop();
+            // 
             currentAmbientScenarioId = -1;
         }
         
@@ -2171,6 +2175,9 @@ namespace NovelGame
             }
             
             ambientAudioSource.volume = 0f;
+
+            // ボリュームが0になったら停止する
+            ambientAudioSource.Stop();
             ambientFadeOutCoroutine = null;
         }
         
@@ -2180,10 +2187,10 @@ namespace NovelGame
         private bool IsAnyAudioPlaying()
         {
             // BGMが再生中かチェック
-            if (bgmAudioSource != null && bgmAudioSource.isPlaying && bgmAudioSource.volume > 0.01f)
-            {
-                return true;
-            }
+            // if (bgmAudioSource != null && bgmAudioSource.isPlaying && bgmAudioSource.volume > 0.01f)
+            // {
+            //     return true;
+            // }
             
             // 効果音が再生中かチェック
             if (sfxAudioSource != null && sfxAudioSource.isPlaying && sfxAudioSource.volume > 0.01f)
