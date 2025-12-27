@@ -34,6 +34,7 @@ namespace NovelGame
         [Header("Audio")]
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
+        [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
 
         private GameManager gameManager;
         private UIDocument currentDocument;
@@ -47,15 +48,19 @@ namespace NovelGame
         private AchievementsScreenManager achievementsScreenManager;
         private CreditsScreenManager creditsScreenManager;
         
-        // プロフィール関連
-        private int selectedProfileId = 1; // 選択中のプロフィールID
+        // プロフィール関連（ProfileScreenManagerで管理されているため、ここでは使用しない）
         
         // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
         
         // オーディオ関連
-        private AudioSource audioSource; // 効果音再生用のAudioSource
-        private Coroutine fadeOutCoroutine; // フェードアウト用のコルーチン
+        private AudioSource bgmAudioSource; // BGM再生用のAudioSource
+        private AudioSource sfxAudioSource; // 効果音再生用のAudioSource
+        private Coroutine fadeOutCoroutine; // BGMフェードアウト用のコルーチン
+        private Coroutine fadeInCoroutine; // フェードイン用のコルーチン
+        private Coroutine sfxFadeOutCoroutine; // 効果音フェードアウト用のコルーチン
+        private float selectionBGMPausedTime = 0f; // シナリオ選択BGMの一時停止時刻
+        private bool isSelectionBGMPlaying = false; // シナリオ選択BGMが再生中かどうか
 
         private void Start()
         {
@@ -96,9 +101,14 @@ namespace NovelGame
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
             creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
             
-            // AudioSourceを追加（効果音再生用）
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
+            // AudioSourceを追加（BGM用と効果音用を分ける）
+            bgmAudioSource = gameObject.AddComponent<AudioSource>();
+            bgmAudioSource.playOnAwake = false;
+            bgmAudioSource.volume = 1f; // BGMの初期音量
+            
+            sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            sfxAudioSource.playOnAwake = false;
+            sfxAudioSource.volume = 1f; // 効果音の初期音量（必要に応じて調整可能）
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
             ShowSelectionScreen();
@@ -125,6 +135,9 @@ namespace NovelGame
 
             selectionScreenDocument.gameObject.SetActive(true);
             currentDocument = selectionScreenDocument;
+            
+            // シナリオ選択BGMをフェードインして再生
+            StartSelectionBGM();
             
             var root = selectionScreenDocument.rootVisualElement;
             if (root == null) return;
@@ -269,6 +282,9 @@ namespace NovelGame
         public void ShowScenarioScreen()
         {
             FadeOutAudioOnSceneChange();
+            // シナリオ選択BGMをフェードアウトして時刻を記録（先に実行）
+            PauseSelectionBGM();
+            // HideAllScreens()は後で実行（フェードアウトが開始されるまで待つ）
             HideAllScreens();
             
             if (scenarioScreenDocument == null)
@@ -797,10 +813,17 @@ namespace NovelGame
                 {
                     creditsScreenManager.StopAutoScroll();
                 }
-                if (audioSource != null && audioSource.clip == creditsBGM)
+                if (bgmAudioSource != null && bgmAudioSource.clip == creditsBGM)
                 {
                     // BGMをフェードアウト
-                    StartCoroutine(FadeOutAudio(2f));
+                    fadeOutCoroutine = StartCoroutine(FadeOutAudio(2f));
+                }
+                // シナリオ選択BGMが再生中の場合は一時停止時刻を記録
+                if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+                {
+                    selectionBGMPausedTime = bgmAudioSource.time;
+                    bgmAudioSource.Pause();
+                    isSelectionBGMPlaying = false;
                 }
                 creditsScreenDocument.gameObject.SetActive(false);
             }
@@ -1145,11 +1168,11 @@ namespace NovelGame
             }
             
             // BGMを再生
-            if (creditsBGM != null && audioSource != null)
+            if (creditsBGM != null && bgmAudioSource != null)
             {
-                audioSource.clip = creditsBGM;
-                audioSource.loop = true;
-                audioSource.Play();
+                bgmAudioSource.clip = creditsBGM;
+                bgmAudioSource.loop = true;
+                bgmAudioSource.Play();
             }
 
             // 戻るボタン
@@ -1217,7 +1240,7 @@ namespace NovelGame
         /// </summary>
         private void PlayWordGetSound()
         {
-            if (wordGetSounds != null && wordGetSounds.Length > 0 && audioSource != null)
+            if (wordGetSounds != null && wordGetSounds.Length > 0 && sfxAudioSource != null)
             {
                 // 配列からランダムに1つ選択
                 int randomIndex = Random.Range(0, wordGetSounds.Length);
@@ -1225,17 +1248,17 @@ namespace NovelGame
                 
                 if (selectedSound != null)
                 {
-                    audioSource.PlayOneShot(selectedSound);
+                    sfxAudioSource.PlayOneShot(selectedSound);
                 }
             }
         }
         
         /// <summary>
-        /// オーディオをフェードアウト
+        /// オーディオをフェードアウト（BGM用）
         /// </summary>
         private IEnumerator FadeOutAudio(float duration)
         {
-            if (audioSource == null) yield break;
+            if (bgmAudioSource == null) yield break;
             
             // 既存のフェードアウトコルーチンを停止
             if (fadeOutCoroutine != null)
@@ -1243,20 +1266,20 @@ namespace NovelGame
                 StopCoroutine(fadeOutCoroutine);
             }
             
-            float startVolume = audioSource.volume;
+            float startVolume = bgmAudioSource.volume;
             float elapsed = 0f;
             
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                audioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
                 yield return null;
             }
             
             // フェードアウト完了後、停止して音量をリセット
-            audioSource.Stop();
-            audioSource.volume = startVolume;
+            bgmAudioSource.Stop();
+            bgmAudioSource.volume = startVolume;
             fadeOutCoroutine = null;
         }
         
@@ -1265,11 +1288,208 @@ namespace NovelGame
         /// </summary>
         private void FadeOutAudioOnSceneChange()
         {
-            if (audioSource != null && audioSource.isPlaying && audioSource.clip != creditsBGM)
+            // 効果音が再生中の場合はフェードアウト（0.5秒）
+            if (sfxAudioSource != null && sfxAudioSource.isPlaying)
             {
-                // 効果音が再生中の場合はフェードアウト（短めの時間）
-                fadeOutCoroutine = StartCoroutine(FadeOutAudio(0.5f));
+                // 既存の効果音フェードアウトコルーチンを停止
+                if (sfxFadeOutCoroutine != null)
+                {
+                    StopCoroutine(sfxFadeOutCoroutine);
+                }
+                sfxFadeOutCoroutine = StartCoroutine(FadeOutSfxAudio(0.5f));
             }
+        }
+        
+        /// <summary>
+        /// 効果音をフェードアウト
+        /// </summary>
+        private IEnumerator FadeOutSfxAudio(float duration)
+        {
+            if (sfxAudioSource == null) yield break;
+            
+            float startVolume = sfxAudioSource.volume;
+            float elapsed = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                sfxAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                yield return null;
+            }
+            
+            // フェードアウト完了後、停止して音量をリセット
+            sfxAudioSource.Stop();
+            sfxAudioSource.volume = startVolume;
+            sfxFadeOutCoroutine = null;
+        }
+        
+        /// <summary>
+        /// シナリオ選択BGMを開始（フェードイン）
+        /// </summary>
+        private void StartSelectionBGM()
+        {
+            if (selectionBGM == null || bgmAudioSource == null) return;
+            
+            // 既存のフェードインコルーチンを停止
+            if (fadeInCoroutine != null)
+            {
+                StopCoroutine(fadeInCoroutine);
+            }
+            
+            // 既存のフェードアウトコルーチンを停止
+            if (fadeOutCoroutine != null)
+            {
+                StopCoroutine(fadeOutCoroutine);
+            }
+            
+            // BGMが既に再生中でない場合、または別のBGMが再生中の場合は開始
+            if (!isSelectionBGMPlaying || bgmAudioSource.clip != selectionBGM)
+            {
+                bgmAudioSource.clip = selectionBGM;
+                bgmAudioSource.loop = true;
+                bgmAudioSource.time = selectionBGMPausedTime; // 一時停止した時刻から再生
+                bgmAudioSource.volume = 0f; // フェードイン開始前に音量を0に設定
+                bgmAudioSource.Play();
+                isSelectionBGMPlaying = true;
+            }
+            else if (!bgmAudioSource.isPlaying && bgmAudioSource.clip == selectionBGM)
+            {
+                // 一時停止中の場合は再開（isPlayingがfalseで、clipがselectionBGMの場合）
+                bgmAudioSource.time = selectionBGMPausedTime; // 一時停止した時刻から再生
+                bgmAudioSource.volume = 0f; // フェードイン開始前に音量を0に設定
+                bgmAudioSource.Play();
+            }
+            else if (bgmAudioSource.isPlaying && bgmAudioSource.clip == selectionBGM)
+            {
+                // 既に再生中の場合は、現在の音量からフェードイン（カットアウトを防ぐ）
+                // 音量が既に高い場合は、そのまま維持
+                if (bgmAudioSource.volume < 0.1f)
+                {
+                    // 音量が低い場合のみフェードイン
+                    fadeInCoroutine = StartCoroutine(FadeInAudio(3f));
+                }
+                return;
+            }
+            
+            // フェードイン
+            fadeInCoroutine = StartCoroutine(FadeInAudio(3f));
+        }
+        
+        /// <summary>
+        /// シナリオ選択BGMを一時停止（フェードアウトして時刻を記録）
+        /// </summary>
+        private void PauseSelectionBGM()
+        {
+            if (bgmAudioSource == null || bgmAudioSource.clip != selectionBGM) return;
+            
+            // 既存のフェードインコルーチンを停止
+            if (fadeInCoroutine != null)
+            {
+                StopCoroutine(fadeInCoroutine);
+                fadeInCoroutine = null;
+            }
+            
+            // 既存のフェードアウトコルーチンを停止（念のため）
+            if (fadeOutCoroutine != null)
+            {
+                StopCoroutine(fadeOutCoroutine);
+            }
+            
+            // 再生中でない場合は、現在の時刻を記録して終了
+            if (!bgmAudioSource.isPlaying)
+            {
+                // フェードイン中に停止された場合など、再生時刻を記録
+                if (bgmAudioSource.clip == selectionBGM)
+                {
+                    selectionBGMPausedTime = bgmAudioSource.time;
+                    isSelectionBGMPlaying = false;
+                }
+                return;
+            }
+            
+            // フェードアウトして時刻を記録（1.5秒）
+            // 重要：フェードアウトが完了してからPause()を呼ぶ
+            fadeOutCoroutine = StartCoroutine(FadeOutAndPauseSelectionBGM(1.5f));
+        }
+        
+        /// <summary>
+        /// オーディオをフェードイン（BGM用）
+        /// </summary>
+        private IEnumerator FadeInAudio(float duration)
+        {
+            if (bgmAudioSource == null) yield break;
+            
+            float targetVolume = 1f; // 目標音量（必要に応じて調整可能）
+            float startVolume = bgmAudioSource.volume;
+            float elapsed = 0f;
+            
+            // 最初の音量を0に設定
+            bgmAudioSource.volume = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.volume = Mathf.Lerp(0f, targetVolume, t);
+                yield return null;
+            }
+            
+            bgmAudioSource.volume = targetVolume;
+            fadeInCoroutine = null;
+        }
+        
+        /// <summary>
+        /// シナリオ選択BGMをフェードアウトして一時停止時刻を記録
+        /// </summary>
+        private IEnumerator FadeOutAndPauseSelectionBGM(float duration)
+        {
+            if (bgmAudioSource == null) yield break;
+            
+            float startVolume = bgmAudioSource.volume;
+            float elapsed = 0f;
+            
+            // フェードアウト中は再生を続ける（音量を下げるだけ）
+            while (elapsed < duration)
+            {
+                // bgmAudioSourceが破棄された場合は終了
+                if (bgmAudioSource == null)
+                {
+                    yield break;
+                }
+                
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                
+                // clipが変更されても、フェードアウトは続行（音量を0にする）
+                if (bgmAudioSource.clip == selectionBGM)
+                {
+                    bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                }
+                else
+                {
+                    // clipが変更された場合は、現在の音量を0に向かって下げる
+                    bgmAudioSource.volume = Mathf.Lerp(bgmAudioSource.volume, 0f, t);
+                }
+                
+                yield return null;
+            }
+            
+            // フェードアウト完了後、音量を0に設定
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.volume = 0f;
+            }
+            
+            // フェードアウト完了後、現在の再生時刻を記録して一時停止
+            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+            {
+                selectionBGMPausedTime = bgmAudioSource.time;
+                bgmAudioSource.Pause(); // 停止ではなく一時停止（再生時刻を保持）
+                isSelectionBGMPlaying = false;
+            }
+            
+            fadeOutCoroutine = null;
         }
 
     }
