@@ -16,6 +16,9 @@ namespace NovelGame
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
         private HashSet<char> collectedLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
+        
+        // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
+        private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
 
         public event Action OnScoreChanged;
         public event Action OnScenarioCompleted;
@@ -133,6 +136,8 @@ namespace NovelGame
                 OnScoreChanged?.Invoke();
             }
 
+            bool wasDarkMode = IsDarkMode() && scenarioId == 6;
+            
             scenarioResults[scenarioId] = new ScenarioResult
             {
                 hasWord = hasWord,
@@ -141,8 +146,78 @@ namespace NovelGame
                 epilogue2 = branch.epilogue2,
                 scoreAtCompletion = score
             };
+            
+            // 見たエンドを記録（通常モード/ダークモードを区別）
+            if (!seenEndsByMode.ContainsKey(scenarioId))
+            {
+                seenEndsByMode[scenarioId] = new Dictionary<bool, HashSet<int>>();
+            }
+            if (!seenEndsByMode[scenarioId].ContainsKey(wasDarkMode))
+            {
+                seenEndsByMode[scenarioId][wasDarkMode] = new HashSet<int>();
+            }
+            seenEndsByMode[scenarioId][wasDarkMode].Add(choiceId);
 
             OnScenarioCompleted?.Invoke();
+        }
+        
+        /// <summary>
+        /// 指定されたシナリオの指定されたchoiceIdのエンドを見たかどうかを取得（通常モード/ダークモードを区別）
+        /// </summary>
+        public bool HasSeenEnd(int scenarioId, int choiceId, bool? isDarkMode = null)
+        {
+            if (!seenEndsByMode.ContainsKey(scenarioId))
+            {
+                return false;
+            }
+            
+            // isDarkModeが指定されている場合は、そのモードのみチェック
+            if (isDarkMode.HasValue)
+            {
+                if (seenEndsByMode[scenarioId].ContainsKey(isDarkMode.Value))
+                {
+                    return seenEndsByMode[scenarioId][isDarkMode.Value].Contains(choiceId);
+                }
+                return false;
+            }
+            
+            // isDarkModeが指定されていない場合は、どちらかで見ていればtrue
+            foreach (var modeSet in seenEndsByMode[scenarioId].Values)
+            {
+                if (modeSet.Contains(choiceId))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// 指定されたシナリオのTrueエンドを見たかどうかを取得
+        /// </summary>
+        public bool HasSeenTrueEnd(int scenarioId)
+        {
+            var scenario = GetScenarios().Find(s => s.id == scenarioId);
+            if (scenario == null) return false;
+            
+            var trueChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && scenario.branches[c.id].hasWord)?.id ?? -1;
+            if (trueChoiceId == -1) return false;
+            
+            return HasSeenEnd(scenarioId, trueChoiceId);
+        }
+        
+        /// <summary>
+        /// 指定されたシナリオのFalseエンドを見たかどうかを取得
+        /// </summary>
+        public bool HasSeenFalseEnd(int scenarioId)
+        {
+            var scenario = GetScenarios().Find(s => s.id == scenarioId);
+            if (scenario == null) return false;
+            
+            var falseChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && !scenario.branches[c.id].hasWord)?.id ?? -1;
+            if (falseChoiceId == -1) return false;
+            
+            return HasSeenEnd(scenarioId, falseChoiceId);
         }
 
         public bool CanAccessScenario(int scenarioId)
@@ -172,6 +247,7 @@ namespace NovelGame
             completedScenarios.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
+            seenEndsByMode.Clear();
             currentScenarioIndex = -1;
             OnScoreChanged?.Invoke();
         }

@@ -51,12 +51,12 @@ namespace NovelGame
                 var scenario = scenarios.Find(s => s.id == i);
                 if (scenario == null) continue;
 
-                var result = gameManager.GetScenarioResult(i);
                 var trueChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && scenario.branches[c.id].hasWord)?.id ?? -1;
                 var falseChoiceId = scenario.choices.Find(c => scenario.branches.ContainsKey(c.id) && !scenario.branches[c.id].hasWord)?.id ?? -1;
 
-                bool trueEndSeen = result != null && result.hasWord && result.choiceId == trueChoiceId;
-                bool falseEndSeen = result != null && !result.hasWord && result.choiceId == falseChoiceId;
+                // 見たエンドを記録から取得
+                bool trueEndSeen = trueChoiceId != -1 && gameManager.HasSeenEnd(i, trueChoiceId);
+                bool falseEndSeen = falseChoiceId != -1 && gameManager.HasSeenEnd(i, falseChoiceId);
 
                 var scenarioCard = CreateAchievementCard(scenario.title, trueEndSeen, falseEndSeen, true);
                 gridContainer.Add(scenarioCard);
@@ -66,12 +66,11 @@ namespace NovelGame
             var scenario6 = scenarios.Find(s => s.id == 6);
             if (scenario6 != null)
             {
-                var result6 = gameManager.GetScenarioResult(6);
-                bool wasDarkMode = result6 != null && result6.scoreAtCompletion > scenarios.Count;
-                bool trueEndSeen = result6 != null && result6.hasWord && result6.choiceId == 2 && !wasDarkMode;
-                bool falseEndSeen = result6 != null && !result6.hasWord && result6.choiceId == 1 && !wasDarkMode;
-                bool darkModeEnd1Seen = result6 != null && wasDarkMode && result6.choiceId == 1;
-                bool darkModeEnd2Seen = result6 != null && wasDarkMode && result6.choiceId == 2;
+                // 見たエンドを記録から取得（通常モード/ダークモードを区別）
+                bool trueEndSeen = gameManager.HasSeenEnd(6, 2, false); // choiceId 2 はTrueエンド（通常モード）
+                bool falseEndSeen = gameManager.HasSeenEnd(6, 1, false); // choiceId 1 はFalseエンド（通常モード）
+                bool darkModeEnd1Seen = gameManager.HasSeenEnd(6, 1, true); // choiceId 1 はダークエンド1（ダークモード）
+                bool darkModeEnd2Seen = gameManager.HasSeenEnd(6, 2, true); // choiceId 2 はダークエンド2（ダークモード）
 
                 var scenario6Card = CreateAchievementCardForScenario6(trueEndSeen, falseEndSeen, darkModeEnd1Seen, darkModeEnd2Seen);
                 gridContainer.Add(scenario6Card);

@@ -30,6 +30,9 @@ namespace NovelGame
         [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
         [SerializeField] private Sprite selectionScreenBackground;
         [SerializeField] private Sprite profileScreenBackground;
+        
+        [Header("Audio")]
+        [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
 
         private GameManager gameManager;
         private UIDocument currentDocument;
@@ -49,6 +52,8 @@ namespace NovelGame
         // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
         
+        // オーディオ関連
+        private AudioSource audioSource; // 効果音再生用のAudioSource
 
         private void Start()
         {
@@ -66,6 +71,10 @@ namespace NovelGame
             profileScreenManager = new ProfileScreenManager(gameManager);
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
             creditsScreenManager = new CreditsScreenManager();
+            
+            // AudioSourceを追加（効果音再生用）
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
             ShowSelectionScreen();
@@ -342,6 +351,9 @@ namespace NovelGame
                         {
                             wordFoundInCurrentScenario = true;
                             
+                            // 効果音を再生
+                            PlayWordGetSound();
+                            
                             // メッセージを表示
                             var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
                             if (wordFoundMessageLabel != null)
@@ -578,6 +590,9 @@ namespace NovelGame
                         if (found)
                         {
                             wordFoundInCurrentScenario = true;
+                            
+                            // 効果音を再生
+                            PlayWordGetSound();
                             
                             // カウントダウンを停止
                             if (countdownManager != null)
@@ -1145,6 +1160,24 @@ namespace NovelGame
             
             // 元の位置に戻す
             label.style.translate = new Translate(0, 0, 0);
+        }
+
+        /// <summary>
+        /// 「もうひとつ」をゲットした時の効果音を再生（複数からランダムに選択）
+        /// </summary>
+        private void PlayWordGetSound()
+        {
+            if (wordGetSounds != null && wordGetSounds.Length > 0 && audioSource != null)
+            {
+                // 配列からランダムに1つ選択
+                int randomIndex = Random.Range(0, wordGetSounds.Length);
+                AudioClip selectedSound = wordGetSounds[randomIndex];
+                
+                if (selectedSound != null)
+                {
+                    audioSource.PlayOneShot(selectedSound);
+                }
+            }
         }
 
     }

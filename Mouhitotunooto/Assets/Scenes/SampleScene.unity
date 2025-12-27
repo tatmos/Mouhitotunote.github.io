@@ -770,6 +770,13 @@ MonoBehaviour:
   - {fileID: 21300000, guid: c82dbf72459299d4aa43bc89edd8b8ba, type: 3}
   selectionScreenBackground: {fileID: 21300000, guid: 177f5023fb09abd4ca114c81d8d80700, type: 3}
   profileScreenBackground: {fileID: 21300000, guid: beed6f7a533820243bde9f559d996f6e, type: 3}
+  wordGetSounds:
+  - {fileID: 8300000, guid: 535f6fa8017f39448bb8998a895b79ac, type: 3}
+  - {fileID: 8300000, guid: 1d2b407ea1ec6fe4f8ce52b11430c355, type: 3}
+  - {fileID: 8300000, guid: 48013087de66cc94c8266f8cae13e9c1, type: 3}
+  - {fileID: 8300000, guid: 41ff584278f4c79438f38c27f0cd69ad, type: 3}
+  - {fileID: 8300000, guid: 48a8251c1efc0d8469a74bd45d8b9be0, type: 3}
+  - {fileID: 8300000, guid: 8b75610aa8c3b734d8806e90eaf0c676, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0
