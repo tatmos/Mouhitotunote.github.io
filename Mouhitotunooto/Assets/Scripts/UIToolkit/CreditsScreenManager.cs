@@ -147,8 +147,8 @@ namespace NovelGame
                 float viewportHeight = creditsScrollView.contentViewport.layout.height;
                 
                 // スクロール可能な距離（最後の文字が上に消えるまで）
-                // コンテンツ全体がビューポートから消えるまでスクロール = コンテンツの高さまで
-                float maxScroll = contentHeight;
+                // コンテンツ全体がビューポートから消えるまでスクロール = contentHeight - viewportHeight
+                float maxScroll = Mathf.Max(0, contentHeight - viewportHeight);
                 
                 if (maxScroll > 0)
                 {
@@ -161,11 +161,15 @@ namespace NovelGame
                     {
                         // 最下部の位置に戻る（下から最初の項目が見える位置）
                         // ビューポートの高さ分だけ上にスクロールして、最初の項目が見えるようにする
-                        float scrollRange = Mathf.Max(0, contentHeight - viewportHeight);
-                        currentScroll = scrollRange;
+                        currentScroll = maxScroll;
                     }
                     
                     creditsScrollView.verticalScroller.value = currentScroll;
+                }
+                else
+                {
+                    // スクロールできない場合は少し待つ
+                    yield return new WaitForSeconds(0.1f);
                 }
                 
                 yield return null;
