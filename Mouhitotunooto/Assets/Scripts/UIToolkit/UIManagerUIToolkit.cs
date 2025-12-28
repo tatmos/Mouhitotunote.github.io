@@ -377,7 +377,11 @@ namespace NovelGame
                         showSpecialCreditsButton.style.minHeight = 40;
                         showSpecialCreditsButton.style.marginTop = 10;
                         showSpecialCreditsButton.text = "特別エンドクレジット";
-                        showSpecialCreditsButton.clicked += () => StartCoroutine(ShowSpecialCreditsTransition());
+                        showSpecialCreditsButton.clicked += () => {
+                            ShowConfirmationDialog("ここから先に進むともう戻れませんがよろしいですか？", () => {
+                                StartCoroutine(ShowSpecialCreditsTransition());
+                            });
+                        };
                         showSpecialCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                         menuButtonContainer.Add(showSpecialCreditsButton);
                     }
@@ -555,7 +559,9 @@ namespace NovelGame
                         // 3周目の場合は特別版エンドクレジットを表示
                         if (gameManager.IsThirdLoop())
                         {
-                            StartCoroutine(ShowSpecialCreditsTransition());
+                            ShowConfirmationDialog("ここから先に進むともう戻れませんがよろしいですか？", () => {
+                                StartCoroutine(ShowSpecialCreditsTransition());
+                            });
                         }
                         else
                         {
@@ -1057,7 +1063,9 @@ namespace NovelGame
                         // 3周目の場合は特別版エンドクレジットを表示
                         if (gameManager.IsThirdLoop())
                         {
-                            StartCoroutine(ShowSpecialCreditsTransition());
+                            ShowConfirmationDialog("ここから先に進むともう戻れませんがよろしいですか？", () => {
+                                StartCoroutine(ShowSpecialCreditsTransition());
+                            });
                         }
                         else
                         {
