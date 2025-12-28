@@ -84,6 +84,11 @@ namespace NovelGame
         private Coroutine lowPassFadeCoroutine; // ローパスフィルターのフェード用コルーチン
         private const float LowPassNormalCutoff = 22000f; // 通常時のカットオフ周波数
         private const float LowPassMuffledCutoff = 1000f; // モヤがかった時のカットオフ周波数
+        
+        // ピッチ関連
+        private Coroutine pitchFadeCoroutine; // ピッチのフェード用コルーチン
+        private const float NormalPitch = 1.0f; // 通常時のピッチ
+        private const float LoweredPitch = 0.5f; // ダークモード時の下げたピッチ
 
         private void Start()
         {
@@ -1828,6 +1833,17 @@ namespace NovelGame
 
             // 効果音が停止したら環境音をフェードイン
             StartCoroutine(CheckAndFadeInAmbientAfterSfx());
+            
+            // ピッチをリセット（通常の状態に戻す）
+            if (bgmAudioSource != null)
+            {
+                if (pitchFadeCoroutine != null)
+                {
+                    StopCoroutine(pitchFadeCoroutine);
+                    pitchFadeCoroutine = null;
+                }
+                bgmAudioSource.pitch = NormalPitch;
+            }
         }
         
         /// <summary>
@@ -1921,12 +1937,20 @@ namespace NovelGame
             // フェードイン（音量を通常音量に戻す）
             fadeInCoroutine = StartCoroutine(FadeInAudioToNormalVolume(3f));
 
-            // ローパスフィルターを解除（通常の状態に戻す）
+            // ローパスフィルターとピッチを解除（通常の状態に戻す）
+            bool isDarkMode = gameManager.IsDarkMode();
+            
             if (lowPassFadeCoroutine != null)
             {
                 StopCoroutine(lowPassFadeCoroutine);
             }
             lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 2.0f));
+
+            if (pitchFadeCoroutine != null)
+            {
+                StopCoroutine(pitchFadeCoroutine);
+            }
+            pitchFadeCoroutine = StartCoroutine(FadePitch(NormalPitch, 2.0f));
         }
         
         /// <summary>
@@ -1994,7 +2018,7 @@ namespace NovelGame
         
         /// <summary>
         /// シナリオ選択BGMの音量を下げる（プロフィール/実績画面用）
-        /// 現在は音量の代わりにローパスフィルターを適用する
+        /// 通常時はローパスフィルターを適用し、ダークモード時はピッチを下げる
         /// </summary>
         private void LowerSelectionBGMVolume()
         {
@@ -2012,16 +2036,24 @@ namespace NovelGame
                 fadeOutCoroutine = null;
             }
             
-            // ローパスフィルターを適用（音量はそのままにするか、わずかに下げる）
-            if (lowPassFadeCoroutine != null)
+            if (gameManager.IsDarkMode())
             {
-                StopCoroutine(lowPassFadeCoroutine);
+                // ダークモード時はピッチを下げる
+                if (pitchFadeCoroutine != null)
+                {
+                    StopCoroutine(pitchFadeCoroutine);
+                }
+                pitchFadeCoroutine = StartCoroutine(FadePitch(LoweredPitch, 2.0f));
             }
-            lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 2.0f));
-            
-            // 音量も少し下げておくとより効果的（ユーザーの要望通り「音量を下げる」から「LPF」への変更だが、併用してもよい）
-            // ひとまずLPFのみに変更するが、必要ならここでも音量を調整できる
-            // bgmAudioSource.volume = selectionBGMLoweredVolume;
+            else
+            {
+                // 通常時はローパスフィルターを適用
+                if (lowPassFadeCoroutine != null)
+                {
+                    StopCoroutine(lowPassFadeCoroutine);
+                }
+                lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 2.0f));
+            }
         }
 
         /// <summary>
@@ -2046,6 +2078,28 @@ namespace NovelGame
 
             bgmLowPassFilter.cutoffFrequency = targetCutoff;
             lowPassFadeCoroutine = null;
+        }
+
+        /// <summary>
+        /// BGMのピッチをフェードさせる
+        /// </summary>
+        private IEnumerator FadePitch(float targetPitch, float duration)
+        {
+            if (bgmAudioSource == null) yield break;
+
+            float startPitch = bgmAudioSource.pitch;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.pitch = Mathf.Lerp(startPitch, targetPitch, t);
+                yield return null;
+            }
+
+            bgmAudioSource.pitch = targetPitch;
+            pitchFadeCoroutine = null;
         }
         
         /// <summary>
