@@ -366,6 +366,21 @@ namespace NovelGame
                     showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
                     showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                     menuButtonContainer.Add(showMouhitotsuButton);
+
+                    // 3周目の場合は特別版エンドクレジットボタンも表示
+                    if (gameManager.IsThirdLoop() && gameManager.GetScenarioResult(6) != null)
+                    {
+                        Button showSpecialCreditsButton = new Button();
+                        showSpecialCreditsButton.name = "ShowSpecialCreditsButton";
+                        showSpecialCreditsButton.AddToClassList("button-gradient-dark");
+                        showSpecialCreditsButton.style.minWidth = 200;
+                        showSpecialCreditsButton.style.minHeight = 40;
+                        showSpecialCreditsButton.style.marginTop = 10;
+                        showSpecialCreditsButton.text = "特別エンドクレジット";
+                        showSpecialCreditsButton.clicked += () => StartCoroutine(ShowSpecialCreditsTransition());
+                        showSpecialCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                        menuButtonContainer.Add(showSpecialCreditsButton);
+                    }
                 }
             }
             
@@ -536,7 +551,17 @@ namespace NovelGame
                 if (scenario6Result != null)
                 {
                     showCreditsButton.style.display = DisplayStyle.Flex;
-                    showCreditsButton.clicked += () => ShowCreditsScreen(false);
+                    showCreditsButton.clicked += () => {
+                        // 3周目の場合は特別版エンドクレジットを表示
+                        if (gameManager.IsThirdLoop())
+                        {
+                            StartCoroutine(ShowSpecialCreditsTransition());
+                        }
+                        else
+                        {
+                            ShowCreditsScreen(false);
+                        }
+                    };
                 }
                 else
                 {
@@ -1028,7 +1053,17 @@ namespace NovelGame
                 if (scenario6Result != null)
                 {
                     showCreditsButton.style.display = DisplayStyle.Flex;
-                    showCreditsButton.clicked += () => ShowCreditsScreen(false);
+                    showCreditsButton.clicked += () => {
+                        // 3周目の場合は特別版エンドクレジットを表示
+                        if (gameManager.IsThirdLoop())
+                        {
+                            StartCoroutine(ShowSpecialCreditsTransition());
+                        }
+                        else
+                        {
+                            ShowCreditsScreen(false);
+                        }
+                    };
                 }
                 else
                 {
