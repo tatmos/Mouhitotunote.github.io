@@ -249,7 +249,7 @@ namespace NovelGame
             }
             
             // 謎の声テキストを非表示に設定
-            var mysteryVoiceText = root.Q<Label>("MysteryVoiceText");
+            var mysteryVoiceText = root.Q<VisualElement>("MysteryVoiceText");
             if (mysteryVoiceText != null)
             {
                 mysteryVoiceText.style.display = DisplayStyle.None;
@@ -280,7 +280,7 @@ namespace NovelGame
             }
             
             // 謎の声テキストを表示
-            var mysteryVoiceText = root.Q<Label>("MysteryVoiceText");
+            var mysteryVoiceText = root.Q<VisualElement>("MysteryVoiceText");
             if (mysteryVoiceText != null && typewriterEffectManager != null)
             {
                 mysteryVoiceText.style.display = DisplayStyle.Flex;
@@ -300,12 +300,14 @@ namespace NovelGame
                     }
                 }
 
-                // タイプライター効果でテキストを表示（速度を2倍遅く）
-                typewriterEffectManager.StartTypewriterEffect(mysteryVoiceText, mysteryText, () =>
+                // 強調ワードを含むタイプライター効果でテキストを表示（フォントサイズ24、クリック不可、速度を考慮）
+                // StartTypewriterEffectWithClickableWord 内部で speedMultiplier はまだサポートしていないが、
+                // 既に強調（10倍遅延）が入っているので十分印象的になるはず。
+                typewriterEffectManager.StartTypewriterEffectWithClickableWord(mysteryVoiceText, mysteryText, () =>
                 {
                     // タイプライター効果完了後、テキストを3秒かけてフェードアウト
                     StartCoroutine(FadeOutTitleTextAndShowSelection(mysteryVoiceText));
-                }, speedMultiplier: 2.0f);
+                }, fontSize: 24, isClickable: false);
             }
             else
             {
@@ -317,19 +319,19 @@ namespace NovelGame
         /// <summary>
         /// タイトルテキストをフェードアウトしてからシナリオ選択画面を表示
         /// </summary>
-        private IEnumerator FadeOutTitleTextAndShowSelection(Label titleText)
+        private IEnumerator FadeOutTitleTextAndShowSelection(VisualElement titleElement)
         {
-            if (titleText == null) yield break;
+            if (titleElement == null) yield break;
             
             // 初期opacityを取得（設定されていない場合は1.0）
             float startOpacity = 1.0f;
-            if (titleText.style.opacity.value > 0f)
+            if (titleElement.style.opacity.value > 0f)
             {
-                startOpacity = titleText.style.opacity.value;
+                startOpacity = titleElement.style.opacity.value;
             }
             else
             {
-                titleText.style.opacity = startOpacity;
+                titleElement.style.opacity = startOpacity;
             }
             
             // 3秒かけてフェードアウト
@@ -341,12 +343,12 @@ namespace NovelGame
                 elapsed += Time.deltaTime;
                 float t = elapsed / fadeDuration;
                 float opacity = Mathf.Lerp(startOpacity, 0f, t);
-                titleText.style.opacity = opacity;
+                titleElement.style.opacity = opacity;
                 yield return null;
             }
             
             // 完全に透明になったことを確認
-            titleText.style.opacity = 0f;
+            titleElement.style.opacity = 0f;
             
             // シナリオ選択画面をフェードインで表示
             ShowSelectionScreenWithFadeIn();

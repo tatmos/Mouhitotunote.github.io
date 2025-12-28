@@ -4,7 +4,7 @@
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
         <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; align-items: center; justify-content: center; padding: 32px; max-width: 1200px; margin: 20px auto;">
             <ui:Button name="StartButton" text="もうひとつを探す" class="button-gradient" style="min-width: 300px; min-height: 60px; font-size: 24px;" />
-            <ui:Label name="MysteryVoiceText" text="" style="font-size: 24px; white-space: normal; max-width: 800px; margin-top: 40px; text-align: center; display: none;" />
+            <ui:VisualElement name="MysteryVoiceText" style="flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: 800px; margin-top: 40px; display: none;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -119,7 +119,7 @@ namespace NovelGame
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果を開始
         /// </summary>
-        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool, Vector2> onWordFound = null)
+        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool, Vector2> onWordFound = null, int fontSize = 20, bool isClickable = true)
         {
             // 既存のタイプライター効果を停止
             if (currentTypewriterEffect != null)
@@ -133,13 +133,13 @@ namespace NovelGame
             onWordFoundCallback = onWordFound;
 
             // タイプライター効果開始
-            currentTypewriterEffect = StartCoroutine(TypewriterEffectWithClickableWordCoroutine(container, fullText, onComplete));
+            currentTypewriterEffect = StartCoroutine(TypewriterEffectWithClickableWordCoroutine(container, fullText, onComplete, fontSize, isClickable));
         }
 
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果コルーチン
         /// </summary>
-        private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, System.Action onComplete = null)
+        private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, System.Action onComplete = null, int fontSize = 20, bool isClickable = true)
         {
             // ダークモードで失われた文字を取得
             var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
@@ -212,7 +212,7 @@ namespace NovelGame
                     {
                         string beforeWord = line.Substring(0, wordStartIndex);
                         Label beforeLabel = new Label();
-                        beforeLabel.style.fontSize = 20;
+                        beforeLabel.style.fontSize = fontSize;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
                         container.Add(beforeLabel);
                         
@@ -237,23 +237,34 @@ namespace NovelGame
                         }
                     }
                     
-                    // 「もうひとつ」をクリッカブルなLabelとして表示
+                    // 「もうひとつ」を強調表示（必要に応じてクリッカブル）するLabelとして表示
                     Label clickableLabel = new Label("");
-                    clickableLabel.style.fontSize = 20;
+                    clickableLabel.style.fontSize = fontSize;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
-                    clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
-                    clickableLabel.AddToClassList("clickable-word");
-                    clickableLabel.RegisterCallback<ClickEvent>(OnWordClicked);
-                    clickableWordLabel = clickableLabel;
+                    
+                    if (isClickable)
+                    {
+                        clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
+                        clickableLabel.AddToClassList("clickable-word");
+                        clickableLabel.RegisterCallback<ClickEvent>(OnWordClicked);
+                        clickableWordLabel = clickableLabel;
+                    }
+                    else
+                    {
+                        // クリッカブルでない場合も、強調のために少し色を変える（任意）
+                        // ここではシナリオに合わせるため青色にするが、クリックイベントは登録しない
+                        clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
+                    }
+                    
                     container.Add(clickableLabel);
                     
-                    // クリッカブルワードを1文字ずつ表示（強調のために遅延を長くする）
+                    // 強調ワードを1文字ずつ表示（強調のために遅延を長くする）
                     float emphasizedCharDelay = charDelay * 10.0f; // 通常の10倍の遅延
                     string currentClickableDisplayText = "";
                     for (int i = 0; i < clickableText.Length; i++)
                     {
                         char c = clickableText[i];
-                        // クリッカブルテキスト内の文字も失われた文字なら置換
+                        // 強調テキスト内の文字も失われた文字なら置換
                         char charToDisplay = lostLetters.Contains(c) ? '※' : c;
                         currentClickableDisplayText += charToDisplay;
                         clickableLabel.text = currentClickableDisplayText;
@@ -273,7 +284,7 @@ namespace NovelGame
                     {
                         string afterWord = line.Substring(wordEndIndex);
                         Label afterLabel = new Label();
-                        afterLabel.style.fontSize = 20;
+                        afterLabel.style.fontSize = fontSize;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
                         container.Add(afterLabel);
                         
@@ -302,7 +313,7 @@ namespace NovelGame
                 {
                     // 「もうひとつ」が見つからない場合、通常のタイプライター効果
                     Label textLabel = new Label();
-                    textLabel.style.fontSize = 20;
+                    textLabel.style.fontSize = fontSize;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
                     container.Add(textLabel);
                     

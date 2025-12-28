@@ -18,6 +18,7 @@ namespace NovelGame
         private HashSet<char> restoredLetters = new HashSet<char>();
         private HashSet<char> lastLostLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
+        private bool isDarkMode = false;
         private bool isThirdLoop = false;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
@@ -143,6 +144,15 @@ namespace NovelGame
                 }
 
                 OnScoreChanged?.Invoke();
+                
+                // 通常モードで全シナリオ(1-6)をクリアし、スコアがシナリオ数を超えたらダークモードに突入
+                // ただし、シナリオ6をクリアした瞬間に判定する（既存の仕様を維持しつつ、不意の突入を防ぐ）
+                if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= GetScenarios().Count)
+                {
+                    isDarkMode = true;
+                    Debug.Log("[GameManager] ダークモードに突入しました。");
+                }
+                
                 CheckLostLettersUpdate();
             }
 
@@ -248,7 +258,15 @@ namespace NovelGame
 
         public bool IsDarkMode()
         {
-            return score > GetScenarios().Count;
+            // 3周目または明示的なダークモードフラグ、あるいはスコアが規定を超えている（かつ、まだ通常ループ中ではない）場合にダークモードとする
+            // ただし、スコア判定は過去の互換性や特定の演出のために残すが、基本はフラグ管理を優先する
+            return isDarkMode || isThirdLoop;
+        }
+
+        public void SetDarkMode(bool enabled)
+        {
+            isDarkMode = enabled;
+            CheckLostLettersUpdate();
         }
 
         public bool IsThirdLoop()
@@ -283,6 +301,7 @@ namespace NovelGame
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             currentScenarioIndex = -1;
+            isDarkMode = true;
             isThirdLoop = true;
             OnScoreChanged?.Invoke();
         }
@@ -375,6 +394,7 @@ namespace NovelGame
             restoredLetters.Clear();
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
+            isDarkMode = false;
             isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
             currentScenarioIndex = -1;
             OnScoreChanged?.Invoke();
