@@ -42,6 +42,7 @@ namespace NovelGame
         [SerializeField] private AudioClip lostLetterSound; // ダークモードで「※」が表示される時の専用効果音
         [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
         [SerializeField] private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
+        [SerializeField] private AudioClip thunderSound; // 3周目移行時の雷のような音
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         [Header("Emoji Icons (for Web compatibility)")]
@@ -229,6 +230,22 @@ namespace NovelGame
             {
                 startButton.clicked += OnStartButtonClicked;
                 startButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                
+                // 3周目：スタートボタンのテキストも伏字にする
+                var lostLetters = gameManager.GetLostLetters();
+                if (lostLetters.Count > 0)
+                {
+                    string buttonText = "もうひとつを探す";
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        buttonText = buttonText.Replace(lostLetter.ToString(), "※");
+                    }
+                    startButton.text = buttonText;
+                }
+                else
+                {
+                    startButton.text = "もうひとつを探す";
+                }
             }
             
             // 謎の声テキストを非表示に設定
@@ -454,6 +471,13 @@ namespace NovelGame
         {
             FadeOutAudioOnSceneChange();
             FadeOutAmbientSoundForResult();
+            
+            // 雷のような特別な音を再生
+            if (thunderSound != null && sfxAudioSource != null)
+            {
+                sfxAudioSource.PlayOneShot(thunderSound);
+            }
+
             HideAllScreens();
 
             // 演出用の真っ黒なオーバーレイを作成

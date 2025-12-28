@@ -784,6 +784,7 @@ MonoBehaviour:
   lostLetterSound: {fileID: 8300000, guid: 2cc2317b562a8264cbec632929c47d64, type: 3}
   sparkleSound: {fileID: 8300000, guid: 126e265408ba40a4fb1d86a84a64da9b, type: 3}
   buttonHoverSound: {fileID: 8300000, guid: 856de598b7fd38244aa32e9a626fca82, type: 3}
+  thunderSound: {fileID: 8300000, guid: 4c394882dba1d9f469fcd3ddc7c352e9, type: 3}
   ambientSounds:
   - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
   - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}
