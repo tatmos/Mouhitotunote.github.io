@@ -37,6 +37,7 @@ namespace NovelGame
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
         [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
         [SerializeField] private AudioClip typewriterSound; // タイプライター文字表示時の効果音
+        [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         [Header("Emoji Icons (for Web compatibility)")]
@@ -125,23 +126,32 @@ namespace NovelGame
                 }
             });
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
+            achievementsScreenManager.SetOnSparkleClickedCallback(PlaySparkleSound);
             creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
             
-            // AudioSourceを追加（BGM用、効果音用、環境音用を分ける）
-            bgmAudioSource = gameObject.AddComponent<AudioSource>();
+            // BGM専用のGameObjectを作成し、ローパスフィルターがBGMだけに掛かるようにする
+            GameObject bgmObject = new GameObject("BGMPlayer");
+            bgmObject.transform.SetParent(this.transform);
+            bgmAudioSource = bgmObject.AddComponent<AudioSource>();
             bgmAudioSource.playOnAwake = false;
             bgmAudioSource.volume = 1f; // BGMの初期音量
             
             // BGM用のローパスフィルターを追加
-            bgmLowPassFilter = bgmAudioSource.gameObject.AddComponent<AudioLowPassFilter>();
+            bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
             bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
             bgmLowPassFilter.enabled = true;
             
-            sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            // 効果音専用のGameObject
+            GameObject sfxObject = new GameObject("SFXPlayer");
+            sfxObject.transform.SetParent(this.transform);
+            sfxAudioSource = sfxObject.AddComponent<AudioSource>();
             sfxAudioSource.playOnAwake = false;
             sfxAudioSource.volume = 1f; // 効果音の初期音量（必要に応じて調整可能）
             
-            ambientAudioSource = gameObject.AddComponent<AudioSource>();
+            // 環境音専用のGameObject
+            GameObject ambientObject = new GameObject("AmbientPlayer");
+            ambientObject.transform.SetParent(this.transform);
+            ambientAudioSource = ambientObject.AddComponent<AudioSource>();
             ambientAudioSource.playOnAwake = false;
             ambientAudioSource.volume = 0.5f; // 環境音の初期音量（必要に応じて調整可能）
             ambientAudioSource.loop = true; // 環境音はループ再生
@@ -1058,6 +1068,17 @@ namespace NovelGame
                 creditsScreenDocument.gameObject.SetActive(false);
             }
             if (achievementsScreenDocument != null) achievementsScreenDocument.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// スパークルアイコンクリック時の効果音を再生
+        /// </summary>
+        private void PlaySparkleSound()
+        {
+            if (sparkleSound != null && sfxAudioSource != null)
+            {
+                sfxAudioSource.PlayOneShot(sparkleSound);
+            }
         }
 
         private void UpdateScoreDisplay()

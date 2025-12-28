@@ -10,12 +10,21 @@ namespace NovelGame
     {
         private GameManager gameManager;
         private Sprite sparkleIcon;
+        private System.Action onSparkleClicked;
 
         public AchievementsScreenManager(GameManager gameManager)
         {
             this.gameManager = gameManager;
         }
         
+        /// <summary>
+        /// スパークルアイコンクリック時のコールバックを設定
+        /// </summary>
+        public void SetOnSparkleClickedCallback(System.Action callback)
+        {
+            this.onSparkleClicked = callback;
+        }
+
         /// <summary>
         /// スパークルアイコンを設定
         /// </summary>
@@ -125,6 +134,12 @@ namespace NovelGame
                 sparkleImage.style.width = 16f;
                 sparkleImage.style.height = 16f;
                 sparkleImage.style.marginRight = 4f;
+                
+                // クリック可能にする
+                sparkleImage.RegisterCallback<ClickEvent>(evt => onSparkleClicked?.Invoke());
+                // UIElements.Cursor と UnityEngine.Cursor が競合するため、型を明示するか
+                // もしくはカーソルのスタイル設定は今回必須でないため、音のみとする
+                
                 trueEndContainer.Add(sparkleImage);
             }
             
@@ -201,6 +216,10 @@ namespace NovelGame
                 sparkleImage.style.width = 16f;
                 sparkleImage.style.height = 16f;
                 sparkleImage.style.marginRight = 4f;
+                
+                // クリック可能にする
+                sparkleImage.RegisterCallback<ClickEvent>(evt => onSparkleClicked?.Invoke());
+                
                 trueEndContainer.Add(sparkleImage);
             }
             
