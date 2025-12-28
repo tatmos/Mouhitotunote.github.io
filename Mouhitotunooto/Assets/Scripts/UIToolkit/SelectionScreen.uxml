@@ -10,6 +10,7 @@
                 <ui:Button name="ShowProfileButton" text="登場人物プロフィールを見る" class="button-gradient" style="min-width: 250px; min-height: 50px; flex: 1 1 250px;" />
                 <ui:Button name="ShowCreditsButton" text="エンドクレジットを見る" class="button-gradient-indigo" style="min-width: 250px; min-height: 50px; display: none; flex: 1 1 250px;" />
                 <ui:Button name="ShowAchievementsButton" text="実績一覧を見る" class="button-gradient" style="min-width: 250px; min-height: 50px; display: none; flex: 1 1 250px;" />
+                <ui:Button name="ShowMouhitotsuButton" text="「もうひとつ」" class="button-gradient-indigo" style="min-width: 250px; min-height: 50px; display: none; flex: 1 1 250px;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

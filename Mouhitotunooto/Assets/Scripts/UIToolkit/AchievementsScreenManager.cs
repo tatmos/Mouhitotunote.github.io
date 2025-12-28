@@ -12,21 +12,12 @@ namespace NovelGame
         private Sprite sparkleIcon;
         private System.Action onSparkleClicked;
         private System.Action onHoverSound;
-        private System.Action<string> onDivisionJump;
 
         public AchievementsScreenManager(GameManager gameManager)
         {
             this.gameManager = gameManager;
         }
 
-        /// <summary>
-        /// Divisionジャンプ時のコールバックを設定
-        /// </summary>
-        public void SetOnDivisionJumpCallback(System.Action<string> callback)
-        {
-            this.onDivisionJump = callback;
-        }
-        
         /// <summary>
         /// スパークルアイコンクリック時のコールバックを設定
         /// </summary>
@@ -113,77 +104,6 @@ namespace NovelGame
             }
 
             container.Add(gridContainer);
-
-            // Divisionジャンプセクションを追加
-            CreateDivisionSection(container);
-        }
-
-        /// <summary>
-        /// Divisionジャンプセクションを作成
-        /// </summary>
-        private void CreateDivisionSection(VisualElement container)
-        {
-            var section = new VisualElement();
-            section.style.marginTop = 40;
-            section.style.paddingTop = 20;
-            section.style.borderTopWidth = 1;
-            section.style.borderTopColor = new Color(0.3f, 0.3f, 0.3f);
-            section.style.alignItems = Align.Center;
-
-            var title = new Label("物語の記録（再挑戦）");
-            title.style.fontSize = 24;
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            title.style.marginBottom = 20;
-            title.style.color = new Color(0.8f, 0.8f, 1f);
-            section.Add(title);
-
-            var buttonContainer = new VisualElement();
-            buttonContainer.style.flexDirection = FlexDirection.Row;
-            buttonContainer.style.flexWrap = Wrap.Wrap;
-            buttonContainer.style.justifyContent = Justify.Center;
-
-            string[] divisions = { "Prologue", "A", "B", "C", "D", "E" };
-            string[] divisionNames = { 
-                "プロローグ",
-                "Division A: 通常の物語", 
-                "Division B: ダークモードへの予兆", 
-                "Division C: 3周目への門", 
-                "Division D: 救済のエンド", 
-                "Division E: 終焉のエンド" 
-            };
-
-            for (int i = 0; i < divisions.Length; i++)
-            {
-                string id = divisions[i];
-                string name = divisionNames[i];
-
-                if (id == "Prologue" || gameManager.IsDivisionCleared(id))
-                {
-                    Button btn = new Button();
-                    btn.text = name;
-                    btn.style.fontSize = 16;
-                    btn.style.paddingLeft = 20;
-                    btn.style.paddingRight = 20;
-                    btn.style.paddingTop = 10;
-                    btn.style.paddingBottom = 10;
-                    btn.style.marginRight = 10;
-                    btn.style.marginBottom = 10;
-                    btn.style.backgroundColor = new Color(0.15f, 0.15f, 0.2f);
-                    btn.style.color = Color.white;
-                    btn.style.borderTopLeftRadius = 5;
-                    btn.style.borderTopRightRadius = 5;
-                    btn.style.borderBottomLeftRadius = 5;
-                    btn.style.borderBottomRightRadius = 5;
-
-                    btn.clicked += () => onDivisionJump?.Invoke(id);
-                    btn.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
-
-                    buttonContainer.Add(btn);
-                }
-            }
-
-            section.Add(buttonContainer);
-            container.Add(section);
         }
 
         /// <summary>

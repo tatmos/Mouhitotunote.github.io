@@ -20,6 +20,7 @@ namespace NovelGame
         [SerializeField] private UIDocument profileScreenDocument;
         [SerializeField] private UIDocument creditsScreenDocument;
         [SerializeField] private UIDocument achievementsScreenDocument;
+        [SerializeField] private UIDocument mouhitotsuScreenDocument;
 
         [Header("UXML Files")]
         [SerializeField] private VisualTreeAsset selectionScreenUXML;
@@ -28,6 +29,7 @@ namespace NovelGame
         [SerializeField] private VisualTreeAsset profileScreenUXML;
         [SerializeField] private VisualTreeAsset creditsScreenUXML;
         [SerializeField] private VisualTreeAsset achievementsScreenUXML;
+        [SerializeField] private VisualTreeAsset mouhitotsuScreenUXML;
 
         [Header("Background Images")]
         [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
@@ -61,6 +63,7 @@ namespace NovelGame
         private ScreenTransitionManager screenTransitionManager;
         private ProfileScreenManager profileScreenManager;
         private AchievementsScreenManager achievementsScreenManager;
+        private MouhitotsuScreenManager mouhitotsuScreenManager;
         private CreditsScreenManager creditsScreenManager;
         
         // プロフィール関連（ProfileScreenManagerで管理されているため、ここでは使用しない）
@@ -153,6 +156,10 @@ namespace NovelGame
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
             achievementsScreenManager.SetOnSparkleClickedCallback(PlaySparkleSound);
             achievementsScreenManager.SetOnHoverSoundCallback(PlayHoverSound);
+            
+            mouhitotsuScreenManager = new MouhitotsuScreenManager(gameManager);
+            mouhitotsuScreenManager.SetOnHoverSoundCallback(PlayHoverSound);
+            
             creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
             
             // BGM専用のGameObjectを作成し、ローパスフィルターがBGMだけに掛かるようにする
@@ -459,6 +466,31 @@ namespace NovelGame
                 }
             }
 
+            // 「もうひとつ」ボタンの設定（実績ボタンが表示されるタイミングと同じ、または全シナリオクリア後）
+            var showMouhitotsuButtonInFadeIn = root.Q<Button>("ShowMouhitotsuButton");
+            if (showMouhitotsuButtonInFadeIn != null)
+            {
+                var scenarios = gameManager.GetScenarios();
+                int totalCompleted = 0;
+                foreach (var scenario in scenarios)
+                {
+                    if (gameManager.IsScenarioCompleted(scenario.id))
+                    {
+                        totalCompleted++;
+                    }
+                }
+
+                if (totalCompleted >= scenarios.Count)
+                {
+                    showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.Flex;
+                    showMouhitotsuButtonInFadeIn.clicked += ShowMouhitotsuScreen;
+                }
+                else
+                {
+                    showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.None;
+                }
+            }
+
             // スコア表示を更新
             UpdateScoreDisplay();
 
@@ -673,6 +705,32 @@ namespace NovelGame
                 else
                 {
                     showAchievementsButton.style.display = DisplayStyle.None;
+                }
+            }
+
+            // 「もうひとつ」ボタンの設定
+            var showMouhitotsuButton = root.Q<Button>("ShowMouhitotsuButton");
+            if (showMouhitotsuButton != null)
+            {
+                showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                var scenarios = gameManager.GetScenarios();
+                int totalCompleted = 0;
+                foreach (var scenario in scenarios)
+                {
+                    if (gameManager.IsScenarioCompleted(scenario.id))
+                    {
+                        totalCompleted++;
+                    }
+                }
+
+                if (totalCompleted >= scenarios.Count)
+                {
+                    showMouhitotsuButton.style.display = DisplayStyle.Flex;
+                    showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
+                }
+                else
+                {
+                    showMouhitotsuButton.style.display = DisplayStyle.None;
                 }
             }
 
@@ -1339,6 +1397,7 @@ namespace NovelGame
                 creditsScreenDocument.gameObject.SetActive(false);
             }
             if (achievementsScreenDocument != null) achievementsScreenDocument.gameObject.SetActive(false);
+            if (mouhitotsuScreenDocument != null) mouhitotsuScreenDocument.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -1820,15 +1879,64 @@ namespace NovelGame
 
             if (achievementsScreenManager != null)
             {
-                achievementsScreenManager.SetOnDivisionJumpCallback(divisionId => {
-                    gameManager.JumpToDivision(divisionId);
-                    ShowSelectionScreen();
-                });
                 achievementsScreenManager.CreateAchievements(achievementsContainer);
             }
 
             // 戻るボタン
             var backButton = root.Q<Button>("BackToSelectionButtonFromAchievements");
+            if (backButton != null)
+            {
+                backButton.clicked += ShowSelectionScreen;
+                backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            }
+
+            // トランジション開始
+            if (screenTransitionManager != null)
+            {
+                screenTransitionManager.StartScreenTransition(root);
+            }
+        }
+
+        public void ShowMouhitotsuScreen()
+        {
+            FadeOutAudioOnSceneChange();
+            LowerSelectionBGMVolume();
+            HideAllScreens();
+            
+            if (mouhitotsuScreenDocument == null)
+            {
+                Debug.LogError("MouhitotsuScreenDocumentがアサインされていません！");
+                return;
+            }
+
+            mouhitotsuScreenDocument.gameObject.SetActive(true);
+            currentDocument = mouhitotsuScreenDocument;
+            
+            var root = mouhitotsuScreenDocument.rootVisualElement;
+            if (root == null) return;
+
+            // 背景画像を設定
+            if (selectionScreenBackground != null)
+            {
+                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                }
+            }
+            
+            var mouhitotsuContainer = root.Q<VisualElement>("MouhitotsuContainer");
+            if (mouhitotsuContainer != null && mouhitotsuScreenManager != null)
+            {
+                mouhitotsuScreenManager.SetOnDivisionJumpCallback(divisionId => {
+                    gameManager.JumpToDivision(divisionId);
+                    ShowSelectionScreen();
+                });
+                mouhitotsuScreenManager.CreateRetryButtons(mouhitotsuContainer);
+            }
+
+            // 戻るボタン
+            var backButton = root.Q<Button>("BackToSelectionButtonFromMouhitotsu");
             if (backButton != null)
             {
                 backButton.clicked += ShowSelectionScreen;
