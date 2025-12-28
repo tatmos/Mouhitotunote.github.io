@@ -1304,7 +1304,8 @@ namespace NovelGame
                 if (gameManager.IsThirdLoop() && gameManager.GetScenarioResult(6)?.hasWord == true)
                 {
                     // 3周目かつシナリオ6クリア（ワード取得成功）
-                    ShowCreditsScreen(isSpecial: true);
+                    // 暗転演出を挟んでから特別版エンドクレジットを表示
+                    StartCoroutine(ShowSpecialCreditsTransition());
                     return;
                 }
                 
@@ -2256,6 +2257,62 @@ namespace NovelGame
             }
         }
 
+
+        /// <summary>
+        /// 特別版エンドクレジットへの暗転演出
+        /// </summary>
+        private IEnumerator ShowSpecialCreditsTransition()
+        {
+            FadeOutAudioOnSceneChange();
+            FadeOutAmbientSoundForResult();
+            HideAllScreens();
+
+            // 演出用の真っ黒なオーバーレイを作成
+            if (creditsScreenDocument == null)
+            {
+                Debug.LogError("CreditsScreenDocumentがアサインされていません！演出をスキップします。");
+                ShowCreditsScreen(isSpecial: true);
+                yield break;
+            }
+
+            creditsScreenDocument.gameObject.SetActive(true);
+            var root = creditsScreenDocument.rootVisualElement;
+            
+            if (root == null)
+            {
+                Debug.LogError("rootVisualElementが取得できません！演出をスキップします。");
+                ShowCreditsScreen(isSpecial: true);
+                yield break;
+            }
+
+            var overlay = new VisualElement();
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 0;
+            overlay.style.top = 0;
+            overlay.style.right = 0;
+            overlay.style.bottom = 0;
+            overlay.style.backgroundColor = Color.black;
+            overlay.style.opacity = 0f;
+            root.Add(overlay);
+
+            // フェードイン（黒画面へ）
+            float fadeDuration = 1.5f;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                overlay.style.opacity = Mathf.Min(elapsed / fadeDuration, 1.0f);
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(1.0f);
+
+            // クレジット画面を表示
+            ShowCreditsScreen(isSpecial: true);
+            
+            // オーバーレイを削除
+            root.Remove(overlay);
+        }
 
         public void ShowCreditsScreen(bool isSpecial = false)
         {

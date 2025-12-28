@@ -363,9 +363,13 @@ namespace NovelGame
 
         public bool IsDarkMode()
         {
-            // 3周目または明示的なダークモードフラグ、あるいはスコアが規定を超えている（かつ、まだ通常ループ中ではない）場合にダークモードとする
-            // ただし、スコア判定は過去の互換性や特定の演出のために残すが、基本はフラグ管理を優先する
-            return isDarkMode || isThirdLoop;
+            // 3周目の間は、破損演出（ダークモード）は無効にする。
+            // ただし、内部的な条件判定のために isDarkMode フラグ自体は残っている可能性があるが、
+            // 演出としては isThirdLoop が優先されるべき。
+            if (isThirdLoop) return false;
+            
+            // 明示的なダークモードフラグ、あるいはスコアが規定を超えている（かつ、まだ通常ループ中ではない）場合にダークモードとする
+            return isDarkMode;
         }
 
         public void SetDarkMode(bool enabled)
