@@ -101,6 +101,7 @@ namespace NovelGame
             countdownManager = gameObject.AddComponent<CountdownManager>();
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
             profileScreenManager = new ProfileScreenManager(gameManager);
+            profileScreenManager.SetTypewriterEffectManager(typewriterEffectManager);
             profileScreenManager.SetOnProfileSelectedCallback(() => {
                 // プロフィールが選択されたら、プロフィール画面を再生成
                 if (profileScreenDocument != null && profileScreenDocument.gameObject.activeSelf)

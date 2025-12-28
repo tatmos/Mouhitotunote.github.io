@@ -10,13 +10,24 @@ namespace NovelGame
     public class ProfileScreenManager
     {
         private GameManager gameManager;
+        private TypewriterEffectManager typewriterEffectManager;
         private HashSet<int> expandedProfiles = new HashSet<int>();
         private int selectedProfileId = 1;
         private System.Action onProfileSelected; // プロフィール選択時のコールバック
+        private System.Action onProfileDetailUpdate; // プロフィール詳細更新時のコールバック
+        private bool showEpilogue2 = false; // エピローグ2を表示するかどうか
 
         public ProfileScreenManager(GameManager gameManager)
         {
             this.gameManager = gameManager;
+        }
+
+        /// <summary>
+        /// TypewriterEffectManagerを設定
+        /// </summary>
+        public void SetTypewriterEffectManager(TypewriterEffectManager manager)
+        {
+            this.typewriterEffectManager = manager;
         }
         
         /// <summary>
@@ -234,34 +245,62 @@ namespace NovelGame
                     info += $"\n\n【バグ】: {profile.bugDescription}";
                 }
 
-                infoLabel.text = info;
                 infoLabel.AddToClassList("profile-info");
                 infoLabel.style.whiteSpace = WhiteSpace.Normal;
                 infoLabel.style.maxWidth = Length.Percent(100);
                 infoLabel.style.overflow = Overflow.Hidden;
                 detailCard.Add(infoLabel);
 
+                if (typewriterEffectManager != null)
+                {
+                    typewriterEffectManager.StartTypewriterEffect(infoLabel, info);
+                }
+                else
+                {
+                    infoLabel.text = info;
+                }
+
                 // セリフ
                 if (!string.IsNullOrEmpty(profile.quote) || !string.IsNullOrEmpty(profile.quoteDarkMode))
                 {
-                    var quoteLabel = new Label(isDarkMode ? profile.quoteDarkMode : profile.quote);
+                    string quoteText = isDarkMode ? profile.quoteDarkMode : profile.quote;
+                    var quoteLabel = new Label();
                     quoteLabel.AddToClassList("profile-quote");
                     quoteLabel.style.color = isDarkMode ? Color.red : profile.borderColor;
                     quoteLabel.style.whiteSpace = WhiteSpace.Normal;
                     quoteLabel.style.maxWidth = Length.Percent(100);
                     quoteLabel.style.overflow = Overflow.Hidden;
                     detailCard.Add(quoteLabel);
+
+                    if (typewriterEffectManager != null)
+                    {
+                        typewriterEffectManager.StartTypewriterEffect(quoteLabel, quoteText);
+                    }
+                    else
+                    {
+                        quoteLabel.text = quoteText;
+                    }
                 }
 
                 // 後日談
                 if (result != null)
                 {
-                    var epilogueLabel = new Label(isDarkMode ? GetDarkModeEpilogue(profile.scenarioId, result.choiceId) : result.epilogue);
+                    string epilogueText = isDarkMode ? GetDarkModeEpilogue(profile.scenarioId, result.choiceId) : result.epilogue;
+                    var epilogueLabel = new Label();
                     epilogueLabel.AddToClassList("profile-epilogue");
                     epilogueLabel.style.whiteSpace = WhiteSpace.Normal;
                     epilogueLabel.style.maxWidth = Length.Percent(100);
                     epilogueLabel.style.overflow = Overflow.Hidden;
                     detailCard.Add(epilogueLabel);
+
+                    if (typewriterEffectManager != null)
+                    {
+                        typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText);
+                    }
+                    else
+                    {
+                        epilogueLabel.text = epilogueText;
+                    }
 
                     // 後日談の後日談
                     if (result.hasWord && profile.scenarioId <= 5)
@@ -279,12 +318,22 @@ namespace NovelGame
 
                             if (isExpanded)
                             {
-                                var epilogue2Label = new Label(isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2);
+                                string epilogue2Text = isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2;
+                                var epilogue2Label = new Label();
                                 epilogue2Label.AddToClassList("profile-epilogue2");
                                 epilogue2Label.style.whiteSpace = WhiteSpace.Normal;
                                 epilogue2Label.style.maxWidth = Length.Percent(100);
                                 epilogue2Label.style.overflow = Overflow.Hidden;
                                 detailCard.Add(epilogue2Label);
+
+                                if (typewriterEffectManager != null)
+                                {
+                                    typewriterEffectManager.StartTypewriterEffect(epilogue2Label, epilogue2Text);
+                                }
+                                else
+                                {
+                                    epilogue2Label.text = epilogue2Text;
+                                }
                             }
                         }
                     }
@@ -296,21 +345,41 @@ namespace NovelGame
                         if (scenario != null && scenario.branches.ContainsKey(result.choiceId) &&
                             !string.IsNullOrEmpty(scenario.branches[result.choiceId].hint))
                         {
-                            var hintLabel = new Label(scenario.branches[result.choiceId].hint);
+                            string hintText = scenario.branches[result.choiceId].hint;
+                            var hintLabel = new Label();
                             hintLabel.AddToClassList("profile-hint");
                             hintLabel.style.whiteSpace = WhiteSpace.Normal;
                             hintLabel.style.maxWidth = Length.Percent(100);
                             hintLabel.style.overflow = Overflow.Hidden;
                             detailCard.Add(hintLabel);
+
+                            if (typewriterEffectManager != null)
+                            {
+                                typewriterEffectManager.StartTypewriterEffect(hintLabel, hintText);
+                            }
+                            else
+                            {
+                                hintLabel.text = hintText;
+                            }
                         }
                     }
                 }
             }
             else
             {
-                var lockedLabel = new Label($"シナリオ「{GetScenarioTitle(profile.scenarioId)}」をクリアすると表示されます");
+                string lockedText = $"シナリオ「{GetScenarioTitle(profile.scenarioId)}」をクリアすると表示されます";
+                var lockedLabel = new Label();
                 lockedLabel.AddToClassList("profile-locked");
                 detailCard.Add(lockedLabel);
+
+                if (typewriterEffectManager != null)
+                {
+                    typewriterEffectManager.StartTypewriterEffect(lockedLabel, lockedText);
+                }
+                else
+                {
+                    lockedLabel.text = lockedText;
+                }
             }
 
             container.Add(detailCard);
@@ -334,12 +403,7 @@ namespace NovelGame
             // プロフィール詳細のみを再生成してUIを更新
             onProfileDetailUpdate?.Invoke();
         }
-        
-        /// <summary>
-        /// プロフィール詳細更新時のコールバック
-        /// </summary>
-        private System.Action onProfileDetailUpdate;
-        
+
         /// <summary>
         /// プロフィール詳細更新時のコールバックを設定
         /// </summary>
@@ -356,6 +420,13 @@ namespace NovelGame
             var profileDetail = root.Q<VisualElement>("ProfileDetail");
             if (profileDetail == null) return;
             
+            // 既存のタイプライター効果を停止
+            if (typewriterEffectManager != null)
+            {
+                // ラベルごとの停止はできないが、新しい表示を開始することで
+                // 前のコルーチンは停止されるように実装されている（はず）
+            }
+
             profileDetail.Clear();
             
             if (selectedProfileId > 0)

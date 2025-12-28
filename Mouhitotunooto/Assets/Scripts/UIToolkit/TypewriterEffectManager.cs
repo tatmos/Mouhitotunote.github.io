@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -17,6 +18,7 @@ namespace NovelGame
         private AudioSource audioSource;
         private float lastSoundTime;
         private Coroutine currentTypewriterEffect;
+        private Dictionary<Label, Coroutine> activeLabelEffects = new Dictionary<Label, Coroutine>();
         private Label clickableWordLabel = null;
         private System.Action<bool> onWordFoundCallback; // ワードが見つかった時のコールバック（bool: 見つかったかどうか）
 
@@ -80,17 +82,22 @@ namespace NovelGame
         /// <param name="speedMultiplier">速度の倍率（1.0が通常、2.0で2倍遅く）</param>
         public void StartTypewriterEffect(Label label, string fullText, System.Action onComplete = null, float speedMultiplier = 1.0f)
         {
-            // 既存のタイプライター効果を停止
-            if (currentTypewriterEffect != null)
+            // 既存のラベル単位のタイプライター効果を停止
+            if (activeLabelEffects.TryGetValue(label, out Coroutine existingCoroutine))
             {
-                StopCoroutine(currentTypewriterEffect);
+                if (existingCoroutine != null)
+                {
+                    StopCoroutine(existingCoroutine);
+                }
+                activeLabelEffects.Remove(label);
             }
 
             // 初期状態：テキストを空にする
             label.text = "";
 
             // タイプライター効果開始
-            currentTypewriterEffect = StartCoroutine(TypewriterEffectCoroutine(label, fullText, onComplete, speedMultiplier));
+            Coroutine newCoroutine = StartCoroutine(TypewriterEffectCoroutine(label, fullText, onComplete, speedMultiplier));
+            activeLabelEffects[label] = newCoroutine;
         }
 
         /// <summary>
@@ -375,7 +382,10 @@ namespace NovelGame
             // 完了コールバックを呼び出し
             onComplete?.Invoke();
             
-            currentTypewriterEffect = null;
+            if (activeLabelEffects.ContainsKey(label))
+            {
+                activeLabelEffects.Remove(label);
+            }
         }
 
         /// <summary>
