@@ -1291,7 +1291,11 @@ namespace NovelGame
             if (backButton != null)
             {
                 backButton.style.display = DisplayStyle.None;
-                backButton.clicked += ShowSelectionScreen;
+                backButton.clicked += () => {
+                    // 予約されているダークモードがあれば有効化
+                    gameManager.ActivatePendingDarkMode();
+                    ShowSelectionScreen();
+                };
             }
 
             // トランジション開始
@@ -1721,11 +1725,16 @@ namespace NovelGame
             }
 
             // すべての選択肢が表示された後に戻るボタンを表示
-            var backButton = root.Q<Button>("BackToSelectionButtonFromScenario");
-            if (backButton != null)
+            var backButtonFromScenario = root.Q<Button>("BackToSelectionButtonFromScenario");
+            if (backButtonFromScenario != null)
             {
                 yield return new WaitForSeconds(0.3f);
-                backButton.style.display = DisplayStyle.Flex;
+                backButtonFromScenario.style.display = DisplayStyle.Flex;
+                // ここでも一応予約の有効化を考慮（基本はリザルト画面経由だが）
+                backButtonFromScenario.clicked += () => {
+                    gameManager.ActivatePendingDarkMode();
+                    ShowSelectionScreen();
+                };
             }
         }
 
@@ -1944,7 +1953,7 @@ namespace NovelGame
             root.Add(blackOverlay);
             
             // division E の場合は最後に「（おや？）」を表示
-            if (gameManager.IsThirdLoop() && gameManager.GetScore() >= gameManager.GetScenarios().Count)
+            if (gameManager.IsThirdLoop() && gameManager.GetScore() >= 7)
             {
                 var oyaLabel = new Label("（おや？）");
                 oyaLabel.style.color = Color.white;

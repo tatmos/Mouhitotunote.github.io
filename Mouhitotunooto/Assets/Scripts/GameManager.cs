@@ -20,6 +20,7 @@ namespace NovelGame
         private int currentScenarioIndex = -1;
         private bool isDarkMode = false;
         private bool isThirdLoop = false;
+        private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
         
         // Divisionのクリア状況
         private HashSet<string> clearedDivisions = new HashSet<string>();
@@ -155,21 +156,21 @@ namespace NovelGame
 
                 OnScoreChanged?.Invoke();
                 
-                // 通常モードで全シナリオ(1-6)をクリアし、スコアがシナリオ数に達したらダークモードに突入
+                // 通常モードで全シナリオ(1-6)をクリアし、スコアが7に達したらダークモード突入を予約
                 // ただし、シナリオ6をクリアした瞬間に判定する（既存の仕様を維持しつつ、不意の突入を防ぐ）
-                if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= GetScenarios().Count)
+                if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= 7)
                 {
-                    // ダークモード突入フラグを立てる
-                    isDarkMode = true;
-                    Debug.Log("[GameManager] ダークモードに突入しました。");
+                    // ダークモード突入を予約（リザルト画面の後に有効化される）
+                    pendingDarkMode = true;
+                    Debug.Log("[GameManager] ダークモードへの突入条件を満たしました。予約します。");
                 }
                 
                 CheckLostLettersUpdate();
             }
 
             // ダークモード判定（Division判定に使用）
-            // このターンの直前にisDarkModeがtrueになった場合も考慮
-            bool isActuallyDarkMode = isDarkMode || isThirdLoop;
+            // このターンでダークモード突入条件を満たした場合も考慮
+            bool isActuallyDarkMode = isDarkMode || isThirdLoop || pendingDarkMode;
             
             scenarioResults[scenarioId] = new ScenarioResult
             {
@@ -201,7 +202,7 @@ namespace NovelGame
                     // 以前の状態が通常モードだった場合
                     if (!playedInDarkMode)
                     {
-                        if (score < totalScenarios)
+                        if (score < 7)
                         {
                             Debug.Log("[GameManager] division A: 伏字なしモードでクリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
                             clearedDivisions.Add("A");
@@ -223,7 +224,7 @@ namespace NovelGame
                 }
                 else if (isThirdLoop)
                 {
-                    if (score < totalScenarios)
+                    if (score < 7)
                     {
                         Debug.Log("[GameManager] division D: 伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                         clearedDivisions.Add("D");
@@ -324,7 +325,23 @@ namespace NovelGame
         public void SetDarkMode(bool enabled)
         {
             isDarkMode = enabled;
+            pendingDarkMode = false; // 明示的な設定時は予約を解除
             CheckLostLettersUpdate();
+        }
+
+        /// <summary>
+        /// 予約されているダークモードを有効化する
+        /// </summary>
+        public void ActivatePendingDarkMode()
+        {
+            if (pendingDarkMode)
+            {
+                isDarkMode = true;
+                pendingDarkMode = false;
+                Debug.Log("[GameManager] 予約されていたダークモードを有効化しました。");
+                CheckLostLettersUpdate();
+                OnScoreChanged?.Invoke(); // 伏字表示の更新などのために通知
+            }
         }
 
         public bool IsThirdLoop()
@@ -431,6 +448,7 @@ namespace NovelGame
             currentScenarioIndex = -1;
             isDarkMode = true;
             isThirdLoop = true;
+            pendingDarkMode = false;
             OnScoreChanged?.Invoke();
         }
 
@@ -524,6 +542,7 @@ namespace NovelGame
             seenEndsByMode.Clear();
             isDarkMode = false;
             isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
+            pendingDarkMode = false;
             currentScenarioIndex = -1;
             OnScoreChanged?.Invoke();
         }
