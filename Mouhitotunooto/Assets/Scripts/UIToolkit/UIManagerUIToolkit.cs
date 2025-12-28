@@ -833,7 +833,7 @@ namespace NovelGame
                     {
                         // タイプライター効果が完了したら選択肢ボタンを順次表示
                         StartCoroutine(ShowChoicesSequentially(root));
-                    }, (found) => {
+                    }, (found, pos) => {
                         if (found)
                         {
                             wordFoundInCurrentScenario = true;
@@ -1143,7 +1143,7 @@ namespace NovelGame
                                     ShowBackButton
                                 );
                             }
-                        }, (found) => {
+                        }, (found, pos) => {
                         if (found)
                         {
                             wordFoundInCurrentScenario = true;
@@ -1175,7 +1175,7 @@ namespace NovelGame
                             }
                             
                             // 綺麗な演出とともに一呼吸してから表示
-                            StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel));
+                            StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel, pos));
                         }
                     });
                     }
@@ -1935,7 +1935,7 @@ namespace NovelGame
         /// <summary>
         /// ワードゲット時の綺麗な演出を表示
         /// </summary>
-        private IEnumerator ShowWordGetWithEffect(VisualElement root, bool isDarkMode, Scenario scenario, ScenarioResult result, VisualElement epilogueContainer, Label epilogueLabel)
+        private IEnumerator ShowWordGetWithEffect(VisualElement root, bool isDarkMode, Scenario scenario, ScenarioResult result, VisualElement epilogueContainer, Label epilogueLabel, Vector2 clickPosition = default)
         {
             // 演出用のオーバーレイを作成
             var effectOverlay = new VisualElement();
@@ -1945,8 +1945,14 @@ namespace NovelGame
             effectOverlay.style.right = 0;
             effectOverlay.style.bottom = 0;
             effectOverlay.style.backgroundColor = new Color(1f, 1f, 1f, 0f);
-            effectOverlay.style.justifyContent = Justify.Center;
-            effectOverlay.style.alignItems = Align.Center;
+            
+            // clickPositionが指定されていない場合のみ中央揃えにする
+            if (clickPosition == default)
+            {
+                effectOverlay.style.justifyContent = Justify.Center;
+                effectOverlay.style.alignItems = Align.Center;
+            }
+            
             root.Add(effectOverlay);
             
             // 光るエフェクト（円形のグラデーション風）
@@ -1961,6 +1967,16 @@ namespace NovelGame
             glowEffect.style.borderBottomRightRadius = borderRadius;
             glowEffect.style.backgroundColor = new Color(1f, 0.84f, 0f, 0f); // 黄色
             glowEffect.style.position = Position.Absolute;
+
+            // クリック位置が指定されている場合は、その位置にエフェクトを表示
+            if (clickPosition != default)
+            {
+                // UI Toolkitの座標系にあわせる
+                // effectOverlayが(0,0,root.width,root.height)なので、その中での相対座標として設定
+                glowEffect.style.left = clickPosition.x - 100f;
+                glowEffect.style.top = clickPosition.y - 100f;
+            }
+
             effectOverlay.Add(glowEffect);
             
             // エフェクトアニメーション（拡大してフェードアウト）
@@ -1976,10 +1992,20 @@ namespace NovelGame
                 
                 // スケールアニメーション
                 float currentScale = Mathf.Lerp(startScale, endScale, t);
-                glowEffect.style.width = 200f * currentScale;
-                glowEffect.style.height = 200f * currentScale;
+                float currentWidth = 200f * currentScale;
+                float currentHeight = 200f * currentScale;
+                glowEffect.style.width = currentWidth;
+                glowEffect.style.height = currentHeight;
+
+                // 位置の調整（中心を維持するため）
+                if (clickPosition != default)
+                {
+                    glowEffect.style.left = clickPosition.x - (currentWidth / 2f);
+                    glowEffect.style.top = clickPosition.y - (currentHeight / 2f);
+                }
+
                 // 円形を維持するため、すべての角に同じ値を設定
-                float currentBorderRadius = 100f * currentScale;
+                float currentBorderRadius = (currentWidth / 2f);
                 glowEffect.style.borderTopLeftRadius = currentBorderRadius;
                 glowEffect.style.borderTopRightRadius = currentBorderRadius;
                 glowEffect.style.borderBottomLeftRadius = currentBorderRadius;
@@ -2858,6 +2884,7 @@ namespace NovelGame
                 leftSparkle.style.width = 24f;
                 leftSparkle.style.height = 24f;
                 leftSparkle.style.marginRight = 8f;
+                leftSparkle.RegisterCallback<ClickEvent>(evt => PlaySparkleSound());
                 horizontalContainer.Add(leftSparkle);
             }
             
@@ -2873,6 +2900,7 @@ namespace NovelGame
                 rightSparkle.style.width = 24f;
                 rightSparkle.style.height = 24f;
                 rightSparkle.style.marginLeft = 8f;
+                rightSparkle.RegisterCallback<ClickEvent>(evt => PlaySparkleSound());
                 horizontalContainer.Add(rightSparkle);
             }
             

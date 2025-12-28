@@ -21,7 +21,7 @@ namespace NovelGame
         private Coroutine currentTypewriterEffect;
         private Dictionary<Label, Coroutine> activeLabelEffects = new Dictionary<Label, Coroutine>();
         private Label clickableWordLabel = null;
-        private System.Action<bool> onWordFoundCallback; // ワードが見つかった時のコールバック（bool: 見つかったかどうか）
+        private System.Action<bool, Vector2> onWordFoundCallback; // ワードが見つかった時のコールバック（bool: 見つかったかどうか, Vector2: クリック位置）
 
         private void Awake()
         {
@@ -119,7 +119,7 @@ namespace NovelGame
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果を開始
         /// </summary>
-        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool> onWordFound = null)
+        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool, Vector2> onWordFound = null)
         {
             // 既存のタイプライター効果を停止
             if (currentTypewriterEffect != null)
@@ -352,8 +352,8 @@ namespace NovelGame
         {
             if (clickableWordLabel == null) return;
             
-            // コールバックを呼び出し
-            onWordFoundCallback?.Invoke(true);
+            // コールバックを呼び出し（クリック位置を渡す）
+            onWordFoundCallback?.Invoke(true, evt.position);
             
             // テキストを即座に全表示し、コルーチンを停止する
             SkipTypewriterWithClickableWord();
