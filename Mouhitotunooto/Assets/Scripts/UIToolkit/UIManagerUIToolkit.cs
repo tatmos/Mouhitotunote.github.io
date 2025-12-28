@@ -665,8 +665,6 @@ namespace NovelGame
                 clockIcon.sprite = this.clockIcon;
             }
             
-            Debug.Log($"ShowScenarioScreen: choiceButtonContainer={(choiceButtonContainer != null ? "見つかった" : "見つからない")}");
-            
             // フラグをリセット
             wordFoundInCurrentScenario = false;
             
@@ -680,11 +678,6 @@ namespace NovelGame
             if (choiceButtonContainer != null)
             {
                 choiceButtonContainer.style.display = DisplayStyle.None;
-                Debug.Log("選択肢ボタンコンテナを非表示にしました");
-            }
-            else
-            {
-                Debug.LogWarning("choiceButtonContainerが見つかりません");
             }
             
             // メッセージラベルを非表示にする
@@ -715,14 +708,22 @@ namespace NovelGame
                 
                 if (isDarkMode)
                 {
+                    string originalSetup = scenario.setup;
+                    // 失われた文字を※に置換
+                    var lostLetters = gameManager.GetLostLetters();
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        originalSetup = originalSetup.Replace(lostLetter.ToString(), "※");
+                    }
+
                     setupText = scenario.id switch
                     {
-                        1 => "【エラー】探偵事務所のデータが破損しています。\n写真の人物が歪み、存在が不安定になっています。\nバグの影響で「も」という文字が消失しました。",
-                        2 => "【エラー】レストランのデータが破損しています。\nメニューが文字化けし、料理のデータが読み込めません。\nバグの影響で「う」という文字が消失しました。",
-                        3 => "【エラー】タイムカプセルのデータが破損しています。\n過去の記憶が歪み、データが欠損しています。\nバグの影響で「ひ」という文字が消失しました。",
-                        4 => "【エラー】魔法学校のデータが破損しています。\n呪文のコードがエラーを起こし、魔法が機能しません。\nバグの影響で「と」という文字が消失しました。",
-                        5 => "【エラー】パズルのデータが破損しています。\nピースの整合性が失われ、完成することができません。\nバグの影響で「つ」という文字が消失しました。",
-                        6 => scenario.setup, // シナリオ6は既存のテキストを使用
+                        1 => $"【エラー】探偵事務所のデータが破損しています。\n写真の人物が歪み、存在が不安定になっています。\nバグの影響で「も」という文字が消失しました。\n\n{originalSetup}",
+                        2 => $"【エラー】レストランのデータが破損しています。\nメニューが文字化けし、料理のデータが読み込めません。\nバグの影響で「う」という文字が消失しました。\n\n{originalSetup}",
+                        3 => $"【エラー】タイムカプセルのデータが破損しています。\n過去の記憶が歪み、データが欠損しています。\nバグの影響で「ひ」という文字が消失しました。\n\n{originalSetup}",
+                        4 => $"【エラー】魔法学校のデータが破損しています。\n呪文のコードがエラーを起こし、魔法が機能しません。\nバグの影響で「と」という文字が消失しました。\n\n{originalSetup}",
+                        5 => $"【エラー】パズルのデータが破損しています。\nピースの整合性が失われ、完成することができません。\nバグの影響で「つ」という文字が消失しました。\n\n{originalSetup}",
+                        6 => scenario.setup,
                         _ => scenario.setup
                     };
                 }
@@ -733,7 +734,6 @@ namespace NovelGame
                     typewriterEffectManager.StartTypewriterEffectWithClickableWord(setupContainer, setupText, () =>
                     {
                         // タイプライター効果が完了したら選択肢ボタンを順次表示
-                        Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを順次表示します。");
                         StartCoroutine(ShowChoicesSequentially(root));
                     }, (found) => {
                         if (found)
@@ -1193,11 +1193,31 @@ namespace NovelGame
             {
                 int score = gameManager.GetScore();
                 int totalScenarios = gameManager.GetScenarios().Count;
-                scoreLabel.text = $"【もうひとつ】ワードゲット数: {score} / {totalScenarios}";
+                
+                // ダークモードで失われた文字を取得
+                var lostLetters = gameManager.GetLostLetters();
+                string scoreText = "【もうひとつ】ワードゲット数";
+                
+                // 失われた文字を※に置き換え
+                if (lostLetters.Count > 0)
+                {
+                    List<string> lostLettersList = new List<string>();
+                    foreach (char c in lostLetters) lostLettersList.Add(c.ToString());
+                    Debug.Log($"[UpdateScoreDisplay] 失われた文字数: {lostLetters.Count}, 文字: {string.Join(", ", lostLettersList.ToArray())}");
+                    Debug.Log($"[UpdateScoreDisplay] 置き換え前: {scoreText}");
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        scoreText = scoreText.Replace(lostLetter.ToString(), "※");
+                    }
+                    Debug.Log($"[UpdateScoreDisplay] 置き換え後: {scoreText}");
+                }
+                
+                scoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
+                Debug.Log($"[UpdateScoreDisplay] 最終表示テキスト: {scoreLabel.text}");
                 
                 // 異常なスコアの場合はスタイルを適用
                 scoreLabel.ClearClassList();
-                if (score > totalScenarios)
+                if (score > totalScenarios || lostLetters.Count > 0)
                 {
                     scoreLabel.AddToClassList("score-text-anomaly");
                 }
@@ -1218,11 +1238,31 @@ namespace NovelGame
                     {
                         int score = gameManager.GetScore();
                         int totalScenarios = gameManager.GetScenarios().Count;
-                        selectionScoreLabel.text = $"【もうひとつ】ワードゲット数: {score} / {totalScenarios}";
+                        
+                        // ダークモードで失われた文字を取得
+                        var lostLetters = gameManager.GetLostLetters();
+                        string scoreText = "【もうひとつ】ワードゲット数";
+                        
+                        // 失われた文字を※に置き換え
+                        if (lostLetters.Count > 0)
+                        {
+                            List<string> lostLettersList = new List<string>();
+                            foreach (char c in lostLetters) lostLettersList.Add(c.ToString());
+                            Debug.Log($"[UpdateScoreDisplay-Selection] 失われた文字数: {lostLetters.Count}, 文字: {string.Join(", ", lostLettersList.ToArray())}");
+                            Debug.Log($"[UpdateScoreDisplay-Selection] 置き換え前: {scoreText}");
+                            foreach (char lostLetter in lostLetters)
+                            {
+                                scoreText = scoreText.Replace(lostLetter.ToString(), "※");
+                            }
+                            Debug.Log($"[UpdateScoreDisplay-Selection] 置き換え後: {scoreText}");
+                        }
+                        
+                        selectionScoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
+                        Debug.Log($"[UpdateScoreDisplay-Selection] 最終表示テキスト: {selectionScoreLabel.text}");
                         
                         // 異常なスコアの場合はスタイルを適用
                         selectionScoreLabel.ClearClassList();
-                        if (score > totalScenarios)
+                        if (score > totalScenarios || lostLetters.Count > 0)
                         {
                             selectionScoreLabel.AddToClassList("score-text-anomaly");
                         }

@@ -139,49 +139,52 @@ namespace NovelGame
                 string line = lines[lineIndex];
                 
                 // 行を解析して「【もうひとつ】」または「もうひとつ」の位置を検出
-                int wordStartIndex = line.IndexOf("【もうひとつ】");
+                // ダークモード時の「※」を含むパターンも考慮
+                string[] patterns = { "【もうひとつ】", "もうひとつ" };
+                
+                // ダークモード用に「も」「う」「ひ」「と」「つ」が「※」に置換されたパターンを生成
+                List<string> dynamicPatterns = new List<string>();
+                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                
+                foreach (var p in patterns)
+                {
+                    dynamicPatterns.Add(p);
+                    // 1文字ずつ「※」に置換したパターンを追加（より複雑な置換も考えられるが、まずは1文字ずつ）
+                    foreach (var letter in letters)
+                    {
+                        string replaced = p.Replace(letter.ToString(), "※");
+                        if (replaced != p && !dynamicPatterns.Contains(replaced))
+                        {
+                            dynamicPatterns.Add(replaced);
+                        }
+                    }
+                    
+                    // 全ての対象文字を「※」に置換した究極のパターンも追加
+                    string allReplaced = p;
+                    foreach (var letter in letters)
+                    {
+                        allReplaced = allReplaced.Replace(letter.ToString(), "※");
+                    }
+                    if (allReplaced != p && !dynamicPatterns.Contains(allReplaced))
+                    {
+                        dynamicPatterns.Add(allReplaced);
+                    }
+                }
+
+                int wordStartIndex = -1;
                 int wordLength = 0;
                 string clickableText = "";
-                
-                if (wordStartIndex >= 0)
+                string matchedPattern = "";
+
+                foreach (var pattern in dynamicPatterns)
                 {
-                    // 「【もうひとつ】」が見つかった場合
-                    wordLength = "【もうひとつ】".Length;
-                    clickableText = "もうひとつ";
-                }
-                else
-                {
-                    // 「もうひとつ」を検索（【】なし）
-                    // ただし、「もうひとつ」が他の単語の一部でないことを確認
-                    wordStartIndex = line.IndexOf("もうひとつ");
+                    wordStartIndex = line.IndexOf(pattern);
                     if (wordStartIndex >= 0)
                     {
-                        // 前後の文字を確認して、単語の境界であることを確認
-                        bool isValidWord = true;
-                        if (wordStartIndex > 0)
-                        {
-                            char beforeChar = line[wordStartIndex - 1];
-                            // ひらがな、カタカナ、漢字、英数字の場合は単語の一部の可能性がある
-                            if (char.IsLetterOrDigit(beforeChar) || beforeChar == '【' || beforeChar == '「' || beforeChar == '『')
-                            {
-                                isValidWord = false;
-                            }
-                        }
-                        if (wordStartIndex + "もうひとつ".Length < line.Length)
-                        {
-                            char afterChar = line[wordStartIndex + "もうひとつ".Length];
-                            // ひらがな、カタカナ、漢字、英数字の場合は単語の一部の可能性がある
-                            if (char.IsLetterOrDigit(afterChar) || afterChar == '】' || afterChar == '」' || afterChar == '』')
-                            {
-                                isValidWord = false;
-                            }
-                        }
-                        
-                        if (isValidWord)
-                        {
-                            wordLength = "もうひとつ".Length;
-                            clickableText = "もうひとつ";
-                        }
+                        matchedPattern = pattern;
+                        wordLength = pattern.Length;
+                        clickableText = pattern.Replace("【", "").Replace("】", "");
+                        break;
                     }
                 }
                 

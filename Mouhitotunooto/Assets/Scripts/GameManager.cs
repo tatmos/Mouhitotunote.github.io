@@ -241,6 +241,33 @@ namespace NovelGame
             return score > GetScenarios().Count;
         }
 
+        /// <summary>
+        /// ダークモードで失われた文字を取得
+        /// </summary>
+        public HashSet<char> GetLostLetters()
+        {
+            HashSet<char> lostLetters = new HashSet<char>();
+            if (!IsDarkMode()) return lostLetters;
+
+            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
+            
+            // 現在のシナリオに対応する文字を失われた文字に加える
+            var currentScenario = GetCurrentScenario();
+            if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
+            {
+                lostLetters.Add(allLetters[currentScenario.id - 1]);
+            }
+            
+            // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出
+            int lostCount = score - GetScenarios().Count;
+            for (int i = 0; i < lostCount && i < allLetters.Length; i++)
+            {
+                lostLetters.Add(allLetters[i]);
+            }
+            
+            return lostLetters;
+        }
+
         public void ResetGame()
         {
             score = 0;
