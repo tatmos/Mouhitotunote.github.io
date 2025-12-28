@@ -15,6 +15,7 @@ namespace NovelGame
         private int selectedProfileId = 1;
         private System.Action onProfileSelected; // プロフィール選択時のコールバック
         private System.Action onProfileDetailUpdate; // プロフィール詳細更新時のコールバック
+        private System.Action onHoverSound; // ホバー音再生用のコールバック
         private bool showEpilogue2 = false; // エピローグ2を表示するかどうか
 
         public ProfileScreenManager(GameManager gameManager)
@@ -136,6 +137,9 @@ namespace NovelGame
                         onProfileSelected?.Invoke();
                     }
                 };
+                
+                // マウスオーバー音を設定
+                listButton.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
 
                 profileList.Add(listButton);
             }
@@ -314,6 +318,7 @@ namespace NovelGame
                             var expandButton = new Button();
                             expandButton.text = isExpanded ? "▼ 後日談の後日談を隠す" : "▶ 後日談の後日談を見る";
                             expandButton.clicked += () => ToggleEpilogue2(profile.scenarioId);
+                            expandButton.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
                             detailCard.Add(expandButton);
 
                             if (isExpanded)
@@ -410,6 +415,14 @@ namespace NovelGame
         public void SetOnProfileDetailUpdateCallback(System.Action callback)
         {
             onProfileDetailUpdate = callback;
+        }
+
+        /// <summary>
+        /// ホバー音再生用のコールバックを設定
+        /// </summary>
+        public void SetOnHoverSoundCallback(System.Action callback)
+        {
+            onHoverSound = callback;
         }
         
         /// <summary>

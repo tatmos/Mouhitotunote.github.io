@@ -38,6 +38,7 @@ namespace NovelGame
         [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
         [SerializeField] private AudioClip typewriterSound; // タイプライター文字表示時の効果音
         [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
+        [SerializeField] private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         [Header("Emoji Icons (for Web compatibility)")]
@@ -103,6 +104,7 @@ namespace NovelGame
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
             profileScreenManager = new ProfileScreenManager(gameManager);
             profileScreenManager.SetTypewriterEffectManager(typewriterEffectManager);
+            profileScreenManager.SetOnHoverSoundCallback(PlayHoverSound);
             profileScreenManager.SetOnProfileSelectedCallback(() => {
                 // プロフィールが選択されたら、プロフィール画面を再生成
                 if (profileScreenDocument != null && profileScreenDocument.gameObject.activeSelf)
@@ -127,6 +129,7 @@ namespace NovelGame
             });
             achievementsScreenManager = new AchievementsScreenManager(gameManager);
             achievementsScreenManager.SetOnSparkleClickedCallback(PlaySparkleSound);
+            achievementsScreenManager.SetOnHoverSoundCallback(PlayHoverSound);
             creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
             
             // BGM専用のGameObjectを作成し、ローパスフィルターがBGMだけに掛かるようにする
@@ -203,6 +206,7 @@ namespace NovelGame
             if (startButton != null)
             {
                 startButton.clicked += OnStartButtonClicked;
+                startButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
             
             // 謎の声テキストを非表示に設定
@@ -460,6 +464,7 @@ namespace NovelGame
             if (showProfileButton != null)
             {
                 showProfileButton.clicked += ShowProfileScreen;
+                showProfileButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
 
             // エンドクレジットボタンの設定（真実の扉クリア後のみ表示）
@@ -468,6 +473,7 @@ namespace NovelGame
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
+                showCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 
                 var scenario6Result = gameManager.GetScenarioResult(6);
                 if (scenario6Result != null)
@@ -487,6 +493,7 @@ namespace NovelGame
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
+                showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 
                 var scenarios = gameManager.GetScenarios();
                 int totalCompleted = 0;
@@ -573,6 +580,7 @@ namespace NovelGame
             if (backButton != null)
             {
                 backButton.clicked += ShowSelectionScreen;
+                backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
             
             // トランジション開始
@@ -1088,6 +1096,17 @@ namespace NovelGame
             }
         }
 
+        /// <summary>
+        /// ボタンマウスオーバー時の効果音を再生
+        /// </summary>
+        public void PlayHoverSound()
+        {
+            if (buttonHoverSound != null && sfxAudioSource != null)
+            {
+                sfxAudioSource.PlayOneShot(buttonHoverSound);
+            }
+        }
+
         private void UpdateScoreDisplay()
         {
             if (currentDocument == null || currentDocument.rootVisualElement == null) return;
@@ -1216,6 +1235,9 @@ namespace NovelGame
 
                 int scenarioId = scenario.id;
                 button.clicked += () => OnScenarioSelected(scenarioId);
+                
+                // マウスオーバー時の音を設定
+                button.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
 
                 buttonContainer.Add(button);
             }
@@ -1279,6 +1301,9 @@ namespace NovelGame
 
                 int choiceId = choice.id;
                 button.clicked += () => OnChoiceSelected(choiceId);
+                
+                // マウスオーバー時の音を設定
+                button.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
 
                 // 最初は非表示
                 button.style.display = DisplayStyle.None;
@@ -1290,6 +1315,8 @@ namespace NovelGame
             if (backButton != null)
             {
                 backButton.clicked += ShowSelectionScreen;
+                // マウスオーバー時の音を設定
+                backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 // 最初は非表示
                 backButton.style.display = DisplayStyle.None;
             }
@@ -1425,6 +1452,7 @@ namespace NovelGame
             if (backButton != null)
             {
                 backButton.clicked += ShowSelectionScreen;
+                backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
 
             // トランジション開始

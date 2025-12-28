@@ -782,6 +782,7 @@ MonoBehaviour:
   selectionBGM: {fileID: 8300000, guid: e5fe1fc23fd7a7e4a950c9fd4d2f0200, type: 3}
   typewriterSound: {fileID: 8300000, guid: c9a87ef262e90a94789ca788cd69684e, type: 3}
   sparkleSound: {fileID: 8300000, guid: 126e265408ba40a4fb1d86a84a64da9b, type: 3}
+  buttonHoverSound: {fileID: 8300000, guid: 856de598b7fd38244aa32e9a626fca82, type: 3}
   ambientSounds:
   - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
   - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}

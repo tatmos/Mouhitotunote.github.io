@@ -11,6 +11,7 @@ namespace NovelGame
         private GameManager gameManager;
         private Sprite sparkleIcon;
         private System.Action onSparkleClicked;
+        private System.Action onHoverSound;
 
         public AchievementsScreenManager(GameManager gameManager)
         {
@@ -23,6 +24,14 @@ namespace NovelGame
         public void SetOnSparkleClickedCallback(System.Action callback)
         {
             this.onSparkleClicked = callback;
+        }
+
+        /// <summary>
+        /// ホバー音再生用のコールバックを設定
+        /// </summary>
+        public void SetOnHoverSoundCallback(System.Action callback)
+        {
+            this.onHoverSound = callback;
         }
 
         /// <summary>
@@ -137,6 +146,8 @@ namespace NovelGame
                 
                 // クリック可能にする
                 sparkleImage.RegisterCallback<ClickEvent>(evt => onSparkleClicked?.Invoke());
+                // ホバー音を設定
+                sparkleImage.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
                 // UIElements.Cursor と UnityEngine.Cursor が競合するため、型を明示するか
                 // もしくはカーソルのスタイル設定は今回必須でないため、音のみとする
                 
@@ -219,6 +230,8 @@ namespace NovelGame
                 
                 // クリック可能にする
                 sparkleImage.RegisterCallback<ClickEvent>(evt => onSparkleClicked?.Invoke());
+                // ホバー音を設定
+                sparkleImage.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
                 
                 trueEndContainer.Add(sparkleImage);
             }
