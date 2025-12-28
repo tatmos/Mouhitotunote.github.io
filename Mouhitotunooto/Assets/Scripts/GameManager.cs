@@ -13,6 +13,7 @@ namespace NovelGame
         
         private int score = 0;
         private HashSet<int> completedScenarios = new HashSet<int>();
+        private HashSet<int> completedScenariosInDarkMode = new HashSet<int>(); // ダークモード中にクリアしたシナリオ
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
         private HashSet<char> collectedLetters = new HashSet<char>();
         private HashSet<char> restoredLetters = new HashSet<char>();
@@ -137,6 +138,12 @@ namespace NovelGame
             {
                 score++;
                 completedScenarios.Add(scenarioId);
+                
+                // ダークモード中にクリアした場合は記録
+                if (playedInDarkMode)
+                {
+                    completedScenariosInDarkMode.Add(scenarioId);
+                }
 
                 // 文字を収集（シナリオ1-5のみ）
                 if (scenarioId <= 5)
@@ -393,6 +400,7 @@ namespace NovelGame
                     for (int i = 1; i <= 5; i++)
                     {
                         completedScenarios.Add(i);
+                        completedScenariosInDarkMode.Add(i);
                         score++;
                     }
                     score++; // シナリオ6分
@@ -428,11 +436,10 @@ namespace NovelGame
             int count = 0;
             for (int i = 1; i <= 5; i++)
             {
-                if (completedScenarios.Contains(i)) count++;
+                if (completedScenariosInDarkMode.Contains(i)) count++;
             }
             
-            int lostCountFromScore = score - GetScenarios().Count;
-            return (count >= 5) || (lostCountFromScore >= 5);
+            return count >= 5;
         }
 
         public void TriggerThirdLoop()
@@ -440,6 +447,7 @@ namespace NovelGame
             // ResetGameの前に一時的にフラグを退避させるか、ResetGameを呼んでからフラグを立てる
             score = 0;
             completedScenarios.Clear();
+            completedScenariosInDarkMode.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
             restoredLetters.Clear();
@@ -495,10 +503,10 @@ namespace NovelGame
 
             if (!isProcessingScenario6)
             {
-                // 完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
+                // ダークモード中に完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
                 for (int i = 1; i <= 5; i++)
                 {
-                    if (completedScenarios.Contains(i))
+                    if (completedScenariosInDarkMode.Contains(i))
                     {
                         lostLetters.Add(allLetters[i - 1]);
                     }
@@ -506,11 +514,14 @@ namespace NovelGame
             }
             
             // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出
+            // ※「シナリオをクリアして消える」という直感的な演出を優先するため、現在はコメントアウトまたは無効化
+            /*
             int lostCount = score - GetScenarios().Count;
             for (int i = 0; i < lostCount && i < allLetters.Length; i++)
             {
                 lostLetters.Add(allLetters[i]);
             }
+            */
             
             return lostLetters;
         }
@@ -535,6 +546,7 @@ namespace NovelGame
         {
             score = 0;
             completedScenarios.Clear();
+            completedScenariosInDarkMode.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
             restoredLetters.Clear();

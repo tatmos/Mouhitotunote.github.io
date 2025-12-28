@@ -604,6 +604,133 @@ namespace NovelGame
             ShowTitleScreen();
         }
 
+        /// <summary>
+        /// 確認ダイアログを表示
+        /// </summary>
+        private void ShowConfirmationDialog(string message, System.Action onConfirm)
+        {
+            if (currentDocument == null || currentDocument.rootVisualElement == null) return;
+            
+            var root = currentDocument.rootVisualElement;
+            
+            // モーダル背景
+            var modalBackground = new VisualElement();
+            modalBackground.style.position = Position.Absolute;
+            modalBackground.style.left = 0;
+            modalBackground.style.top = 0;
+            modalBackground.style.right = 0;
+            modalBackground.style.bottom = 0;
+            modalBackground.style.backgroundColor = new Color(0, 0, 0, 0.8f);
+            modalBackground.style.justifyContent = Justify.Center;
+            modalBackground.style.alignItems = Align.Center;
+            // zIndexが使えない場合は、rootの最後に追加することで最前面に表示される
+            
+            // ダイアログ本体
+            var dialog = new VisualElement();
+            dialog.AddToClassList("card");
+            dialog.style.paddingTop = 32;
+            dialog.style.paddingBottom = 32;
+            dialog.style.paddingLeft = 32;
+            dialog.style.paddingRight = 32;
+            dialog.style.width = 500;
+            dialog.style.alignItems = Align.Center;
+            
+            // メッセージ
+            var label = new Label(message);
+            label.style.fontSize = 20;
+            label.style.whiteSpace = WhiteSpace.Normal;
+            label.style.marginBottom = 30;
+            label.style.unityTextAlign = TextAnchor.MiddleCenter;
+            dialog.Add(label);
+            
+            // ボタンコンテナ
+            var buttonContainer = new VisualElement();
+            buttonContainer.style.flexDirection = FlexDirection.Row;
+            buttonContainer.style.justifyContent = Justify.SpaceBetween;
+            buttonContainer.style.width = Length.Percent(100);
+            
+            // OKボタン
+            var okButton = new Button(() => {
+                root.Remove(modalBackground);
+                onConfirm?.Invoke();
+            });
+            okButton.text = "OK";
+            okButton.AddToClassList("button-gradient");
+            okButton.style.flexGrow = 1;
+            okButton.style.marginRight = 10;
+            okButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            buttonContainer.Add(okButton);
+            
+            // キャンセルボタン
+            var cancelButton = new Button(() => {
+                root.Remove(modalBackground);
+            });
+            cancelButton.text = "キャンセル";
+            cancelButton.AddToClassList("button-gradient-indigo");
+            cancelButton.style.flexGrow = 1;
+            cancelButton.style.marginLeft = 10;
+            cancelButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            buttonContainer.Add(cancelButton);
+            
+            dialog.Add(buttonContainer);
+            modalBackground.Add(dialog);
+            root.Add(modalBackground);
+        }
+
+        /// <summary>
+        /// 暗転演出を伴うDivisionジャンプを実行
+        /// </summary>
+        private IEnumerator PerformDivisionJump(string divisionId)
+        {
+            if (currentDocument == null || currentDocument.rootVisualElement == null)
+            {
+                gameManager.JumpToDivision(divisionId);
+                ShowSelectionScreen();
+                yield break;
+            }
+
+            var root = currentDocument.rootVisualElement;
+
+            // 暗転オーバーレイ
+            var blackOverlay = new VisualElement();
+            blackOverlay.style.position = Position.Absolute;
+            blackOverlay.style.left = 0;
+            blackOverlay.style.top = 0;
+            blackOverlay.style.right = 0;
+            blackOverlay.style.bottom = 0;
+            blackOverlay.style.backgroundColor = Color.black;
+            blackOverlay.style.opacity = 0;
+            root.Add(blackOverlay);
+
+            // 音を鳴らす
+            if (thunderSound != null && sfxAudioSource != null)
+            {
+                sfxAudioSource.PlayOneShot(thunderSound);
+            }
+
+            // フェードイン
+            float duration = 1.0f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                blackOverlay.style.opacity = Mathf.Min(elapsed / duration, 1.0f);
+                yield return null;
+            }
+
+            // ジャンプ処理
+            gameManager.JumpToDivision(divisionId);
+            
+            // 画面遷移
+            ShowSelectionScreen();
+            
+            // 新しい画面が表示されるまで待つ（ShowSelectionScreen内でHideAllScreensが呼ばれるため）
+            yield return null;
+            
+            // ShowSelectionScreen() で currentDocument が変わるので、新しい root にオーバーレイを付け直す必要があるかもしれないが、
+            // 演出としては一瞬暗くなってから新しい画面が表示されるので、これで十分か。
+        }
+
         public void ShowSelectionScreen()
         {
             FadeOutAudioOnSceneChange();
@@ -1929,8 +2056,9 @@ namespace NovelGame
             if (mouhitotsuContainer != null && mouhitotsuScreenManager != null)
             {
                 mouhitotsuScreenManager.SetOnDivisionJumpCallback(divisionId => {
-                    gameManager.JumpToDivision(divisionId);
-                    ShowSelectionScreen();
+                    ShowConfirmationDialog("現在の状況が消えてしまいますがよろしいですか？", () => {
+                        StartCoroutine(PerformDivisionJump(divisionId));
+                    });
                 });
                 mouhitotsuScreenManager.CreateRetryButtons(mouhitotsuContainer);
             }
