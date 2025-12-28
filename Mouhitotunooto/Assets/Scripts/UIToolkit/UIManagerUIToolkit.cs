@@ -388,6 +388,26 @@ namespace NovelGame
                 }
             }
             
+            // バージョン情報の表示（3周目などで伏字にする）
+            var versionText = root.Q<Label>("VersionText");
+            if (versionText != null)
+            {
+                var lostLetters = gameManager.GetLostLetters();
+                if (lostLetters.Count > 0)
+                {
+                    string text = "v1.1.0 (2025-12-29)";
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        text = text.Replace(lostLetter.ToString(), "※");
+                    }
+                    versionText.text = text;
+                }
+                else
+                {
+                    versionText.text = "v1.1.0 (2025-12-29)";
+                }
+            }
+            
             // トランジション開始
             if (screenTransitionManager != null)
             {

@@ -1,10 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441132597879392&amp;guid=129863cdc8fc8a64386b92878645c775&amp;type=3#GameStyles"/>
     <ui:VisualElement name="TitleScreen" class="screen-background" style="flex-grow: 1;">
-        <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-image: url(&quot;project://database/Assets/Images/Backgrounds/Background_SelectionScreen.png?fileID=2800000&amp;guid=177f5023fb09abd4ca114c81d8d80700&amp;type=3#Background_SelectionScreen&quot;);"/>
+        <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-image: none;"/>
         <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; align-items: center; justify-content: center; padding: 32px; max-width: 1200px; margin: 20px auto; background-color: rgba(255, 255, 255, 0.25);">
             <ui:Button name="StartButton" text="もうひとつ" class="button-gradient" style="min-width: 300px; min-height: 60px; font-size: 24px; background-color: rgb(139, 171, 246);"/>
             <ui:VisualElement name="MysteryVoiceText" style="flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: 800px; margin-top: 40px; display: none;"/>
         </ui:VisualElement>
+        <ui:Label name="VersionText" text="v1.1.0 (2025-12-29)" style="position: absolute; right: 20px; bottom: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.5);"/>
     </ui:VisualElement>
 </ui:UXML>
