@@ -123,8 +123,13 @@ namespace NovelGame
             var scenario = GetCurrentScenario();
             if (scenario == null) return;
 
+            // 選択されたブランチの情報を取得
             var branch = scenario.branches[choiceId];
             var scenarioId = scenario.id;
+
+            // シナリオ開始時のモードを記録（エンド記録用）
+            // HandleChoiceの中でモードが変わる可能性があるため、現在のモードを保持しておく
+            bool playedInDarkMode = IsDarkMode();
 
             bool hasWord = overrideHasWord ?? branch.hasWord;
             if (hasWord)
@@ -150,12 +155,11 @@ namespace NovelGame
 
                 OnScoreChanged?.Invoke();
                 
-                // 通常モードで全シナリオ(1-6)をクリアし、スコアがシナリオ数を超えたらダークモードに突入
+                // 通常モードで全シナリオ(1-6)をクリアし、スコアがシナリオ数に達したらダークモードに突入
                 // ただし、シナリオ6をクリアした瞬間に判定する（既存の仕様を維持しつつ、不意の突入を防ぐ）
                 if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= GetScenarios().Count)
                 {
-                    // ダークモード突入フラグを立てるが、このターンのDivision判定が終わるまで反映を遅らせる
-                    // (HandleChoiceの最後でログ出力とフラグの整合性を保つため)
+                    // ダークモード突入フラグを立てる
                     isDarkMode = true;
                     Debug.Log("[GameManager] ダークモードに突入しました。");
                 }
@@ -166,7 +170,6 @@ namespace NovelGame
             // ダークモード判定（Division判定に使用）
             // このターンの直前にisDarkModeがtrueになった場合も考慮
             bool isActuallyDarkMode = isDarkMode || isThirdLoop;
-            bool wasDarkMode = isActuallyDarkMode && scenarioId == 6;
             
             scenarioResults[scenarioId] = new ScenarioResult
             {
@@ -177,35 +180,26 @@ namespace NovelGame
                 scoreAtCompletion = score
             };
             
-            // 見たエンドを記録（通常モード/ダークモードを区別）
+            // 見たエンドを記録（シナリオ開始時のモードを使用）
             if (!seenEndsByMode.ContainsKey(scenarioId))
             {
                 seenEndsByMode[scenarioId] = new Dictionary<bool, HashSet<int>>();
             }
-            if (!seenEndsByMode[scenarioId].ContainsKey(wasDarkMode))
+            if (!seenEndsByMode[scenarioId].ContainsKey(playedInDarkMode))
             {
-                seenEndsByMode[scenarioId][wasDarkMode] = new HashSet<int>();
+                seenEndsByMode[scenarioId][playedInDarkMode] = new HashSet<int>();
             }
-            seenEndsByMode[scenarioId][wasDarkMode].Add(choiceId);
+            seenEndsByMode[scenarioId][playedInDarkMode].Add(choiceId);
 
             // 節目（Division）の判定とログ出力
             if (scenarioId == 6)
             {
                 int totalScenarios = GetScenarios().Count;
-                // isDarkModeがこのターンのhasWord処理でtrueになった場合、
-                // 通常モードからの遷移(Division B)として判定したいので、以前の状態を参照するか、
-                // score超過の瞬間を特別に扱う必要がある。
                 
                 if (!isThirdLoop)
                 {
-                    // ダークモードフラグが立っているが、まだDivision Bのログを出していない場合
-                    if (!clearedDivisions.Contains("B") && score >= totalScenarios && !isActuallyDarkMode)
-                    {
-                        // ここは通らない（既にisDarkModeをtrueにしているため）
-                    }
-
                     // 以前の状態が通常モードだった場合
-                    if (!isActuallyDarkMode || (isDarkMode && !clearedDivisions.Contains("B")))
+                    if (!playedInDarkMode)
                     {
                         if (score < totalScenarios)
                         {
