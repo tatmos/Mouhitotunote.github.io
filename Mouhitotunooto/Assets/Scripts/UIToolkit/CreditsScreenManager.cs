@@ -255,6 +255,11 @@ namespace NovelGame
                 onSpecialCreditsComplete?.Invoke();
             };
 
+            // マウスオーバー時の音を追加
+            button.RegisterCallback<MouseEnterEvent>(evt => {
+                UIManagerUIToolkit.Instance?.PlayHoverSound();
+            });
+
             creditsContainer.Add(button);
         }
 

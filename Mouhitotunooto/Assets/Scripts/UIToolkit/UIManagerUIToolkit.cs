@@ -10,6 +10,8 @@ namespace NovelGame
     /// </summary>
     public class UIManagerUIToolkit : MonoBehaviour
     {
+        public static UIManagerUIToolkit Instance { get; private set; }
+
         [Header("UI Documents")]
         [SerializeField] private UIDocument titleScreenDocument;
         [SerializeField] private UIDocument selectionScreenDocument;
@@ -93,6 +95,16 @@ namespace NovelGame
 
         private void Start()
         {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             gameManager = GameManager.Instance;
             if (gameManager == null)
             {
@@ -1252,7 +1264,7 @@ namespace NovelGame
             }
         }
 
-        private void HideAllScreens()
+        private void HideAllScreens(bool keepBgm = false)
         {
             if (titleScreenDocument != null) titleScreenDocument.gameObject.SetActive(false);
             if (selectionScreenDocument != null) selectionScreenDocument.gameObject.SetActive(false);
@@ -1271,7 +1283,7 @@ namespace NovelGame
                 {
                     creditsScreenManager.StopAutoScroll();
                 }
-                if (bgmAudioSource != null && bgmAudioSource.clip == creditsBGM)
+                if (!keepBgm && bgmAudioSource != null && bgmAudioSource.clip == creditsBGM)
                 {
                     // BGMをフェードアウト
                     fadeOutCoroutine = StartCoroutine(FadeOutAudio(2f));
@@ -1822,11 +1834,19 @@ namespace NovelGame
             // BGMを再生
             if (creditsBGM != null && bgmAudioSource != null)
             {
+                // 既存のフェードアウトコルーチンを停止
+                if (fadeOutCoroutine != null)
+                {
+                    StopCoroutine(fadeOutCoroutine);
+                    fadeOutCoroutine = null;
+                }
+
                 // BGMが再生されたので環境音をフェードアウト
                 FadeOutAmbientSound();
                 
                 bgmAudioSource.clip = creditsBGM;
                 bgmAudioSource.loop = true;
+                bgmAudioSource.volume = 1f; // 音量をリセット
                 bgmAudioSource.Play();
             }
 
@@ -1851,8 +1871,8 @@ namespace NovelGame
         /// </summary>
         private IEnumerator EndGameRoutine()
         {
-            // すべてのスクリーンを隠す
-            HideAllScreens();
+            // すべてのスクリーンを隠す（BGMは維持）
+            HideAllScreens(true);
             
             // 真っ黒な画面を作成
             if (creditsScreenDocument == null)
