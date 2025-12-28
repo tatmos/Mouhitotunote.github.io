@@ -256,8 +256,12 @@ namespace NovelGame
             {
                 mysteryVoiceText.style.display = DisplayStyle.Flex;
                 
+                // 3周目の場合はテキストを変更
+                string mysteryText = gameManager.IsThirdLoop()
+                    ? "謎の声：あなたは「※※※※※」を探す使命を...忘れてはいけません。"
+                    : "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
+
                 // タイプライター効果でテキストを表示（速度を2倍遅く）
-                string mysteryText = "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
                 typewriterEffectManager.StartTypewriterEffect(mysteryVoiceText, mysteryText, () =>
                 {
                     // タイプライター効果完了後、テキストを3秒かけてフェードアウト
@@ -431,6 +435,75 @@ namespace NovelGame
             }
         }
 
+        /// <summary>
+        /// 3周目への移行カットシーンを表示
+        /// </summary>
+        private IEnumerator ShowThirdLoopCutscene()
+        {
+            FadeOutAudioOnSceneChange();
+            FadeOutAmbientSoundForResult();
+            HideAllScreens();
+
+            // 演出用の真っ黒なオーバーレイを作成
+            var root = titleScreenDocument.rootVisualElement.parent; // 全画面を覆うために親を取得
+            var overlay = new VisualElement();
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 0;
+            overlay.style.top = 0;
+            overlay.style.right = 0;
+            overlay.style.bottom = 0;
+            overlay.style.backgroundColor = Color.black;
+            overlay.style.justifyContent = Justify.Center;
+            overlay.style.alignItems = Align.Center;
+            root.Add(overlay);
+
+            // テキスト表示用のラベル
+            var cutsceneLabel = new Label("");
+            cutsceneLabel.style.fontSize = 32;
+            cutsceneLabel.style.color = Color.white;
+            cutsceneLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            cutsceneLabel.style.whiteSpace = WhiteSpace.Normal;
+            cutsceneLabel.style.width = Length.Percent(80);
+            overlay.Add(cutsceneLabel);
+
+            yield return new WaitForSeconds(1.5f);
+
+            // タイプライター表示
+            bool isComplete = false;
+            if (typewriterEffectManager != null)
+            {
+                typewriterEffectManager.StartTypewriterEffect(cutsceneLabel, "あなたは「※※※※※」を探す使命があります。", () => isComplete = true);
+            }
+            else
+            {
+                cutsceneLabel.text = "あなたは「※※※※※」を探す使命があります。";
+                isComplete = true;
+            }
+
+            while (!isComplete) yield return null;
+
+            yield return new WaitForSeconds(3.0f);
+
+            // フェードアウト
+            float fadeDuration = 2.0f;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float alpha = Mathf.Lerp(1.0f, 0f, elapsed / fadeDuration);
+                cutsceneLabel.style.opacity = alpha;
+                yield return null;
+            }
+
+            root.Remove(overlay);
+
+            // 3周目開始
+            gameManager.TriggerThirdLoop();
+            
+            // タイトル画面へ
+            ShowTitleScreen();
+        }
+
         public void ShowSelectionScreen()
         {
             FadeOutAudioOnSceneChange();
@@ -465,7 +538,16 @@ namespace NovelGame
             var titleLabel = root.Q<Label>("TitleText");
             if (titleLabel != null)
             {
-                titleLabel.text = "ミニノベルゲーム";
+                string titleText = "ミニノベルゲーム";
+                var lostLetters = gameManager.GetLostLetters();
+                if (lostLetters.Count > 0)
+                {
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        titleText = titleText.Replace(lostLetter.ToString(), "※");
+                    }
+                }
+                titleLabel.text = titleText;
                 titleLabel.AddToClassList("title-text");
             }
 
@@ -774,6 +856,13 @@ namespace NovelGame
 
         public void ShowResultScreen()
         {
+            var currentScenario = gameManager.GetCurrentScenario();
+            if (currentScenario != null && currentScenario.id == 6 && gameManager.AreAllLettersLost())
+            {
+                StartCoroutine(ShowThirdLoopCutscene());
+                return;
+            }
+
             FadeOutAudioOnSceneChange();
             // 環境音を長めにフェードアウト（結果画面に移行）
             FadeOutAmbientSoundForResult();

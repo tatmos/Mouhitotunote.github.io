@@ -17,6 +17,7 @@ namespace NovelGame
         private HashSet<char> collectedLetters = new HashSet<char>();
         private HashSet<char> lastLostLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
+        private bool isThirdLoop = false;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
         private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
@@ -249,16 +250,47 @@ namespace NovelGame
             return score > GetScenarios().Count;
         }
 
+        public bool IsThirdLoop()
+        {
+            return isThirdLoop;
+        }
+
+        public bool AreAllLettersLost()
+        {
+            return GetLostLetters().Count >= 5;
+        }
+
+        public void TriggerThirdLoop()
+        {
+            // ResetGameの前に一時的にフラグを退避させるか、ResetGameを呼んでからフラグを立てる
+            score = 0;
+            completedScenarios.Clear();
+            scenarioResults.Clear();
+            collectedLetters.Clear();
+            lastLostLetters.Clear();
+            seenEndsByMode.Clear();
+            currentScenarioIndex = -1;
+            isThirdLoop = true;
+            OnScoreChanged?.Invoke();
+        }
+
         /// <summary>
         /// ダークモードで失われた文字を取得
         /// </summary>
         public HashSet<char> GetLostLetters()
         {
             HashSet<char> lostLetters = new HashSet<char>();
+            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
+
+            // 3周目は最初から全ての文字が失われている
+            if (isThirdLoop)
+            {
+                foreach (char c in allLetters) lostLetters.Add(c);
+                return lostLetters;
+            }
+
             if (!IsDarkMode()) return lostLetters;
 
-            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
-            
             // 完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
             for (int i = 1; i <= 5; i++)
             {
@@ -302,6 +334,7 @@ namespace NovelGame
             collectedLetters.Clear();
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
+            isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
             currentScenarioIndex = -1;
             OnScoreChanged?.Invoke();
         }
