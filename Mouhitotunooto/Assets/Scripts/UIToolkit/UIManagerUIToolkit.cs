@@ -445,7 +445,26 @@ namespace NovelGame
             HideAllScreens();
 
             // 演出用の真っ黒なオーバーレイを作成
-            var root = titleScreenDocument.rootVisualElement.parent; // 全画面を覆うために親を取得
+            if (titleScreenDocument == null)
+            {
+                Debug.LogError("TitleScreenDocumentがアサインされていません！カットシーンをスキップします。");
+                gameManager.TriggerThirdLoop();
+                ShowTitleScreen();
+                yield break;
+            }
+
+            // タイトル画面をアクティブにして、rootを取得できるようにする
+            titleScreenDocument.gameObject.SetActive(true);
+            var root = titleScreenDocument.rootVisualElement;
+            
+            if (root == null)
+            {
+                Debug.LogError("rootVisualElementが取得できません！カットシーンをスキップします。");
+                gameManager.TriggerThirdLoop();
+                ShowTitleScreen();
+                yield break;
+            }
+
             var overlay = new VisualElement();
             overlay.style.position = Position.Absolute;
             overlay.style.left = 0;
@@ -1091,7 +1110,7 @@ namespace NovelGame
                                             else if (wordFoundInCurrentScenario)
                                             {
                                                 // ✨を画像で置き換え
-                                                SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, "【もうひとつ】ワードゲット!");
+                                                SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, GetMaskedWordGetText());
                                                 wordGetLabel.AddToClassList("word-get-success");
                                             }
                                             else
@@ -1129,6 +1148,17 @@ namespace NovelGame
                         {
                             wordFoundInCurrentScenario = true;
                             
+                            // 3周目の場合は、シナリオIDに対応する文字を復活させる
+                            if (gameManager.IsThirdLoop())
+                            {
+                                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                                int letterIndex = scenario.id - 1;
+                                if (letterIndex >= 0 && letterIndex < letters.Length)
+                                {
+                                    gameManager.RestoreLetter(letters[letterIndex]);
+                                }
+                            }
+
                             // 効果音を再生
                             PlayWordGetSound();
                             
@@ -1270,6 +1300,22 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 消失文字を考慮した「ワードゲット!」テキストを取得
+        /// </summary>
+        private string GetMaskedWordGetText()
+        {
+            string text = "【もうひとつ】ワードゲット!";
+            if (gameManager == null) return text;
+
+            var lostLetters = gameManager.GetLostLetters();
+            foreach (char lostLetter in lostLetters)
+            {
+                text = text.Replace(lostLetter.ToString(), "※");
+            }
+            return text;
+        }
+
+        /// <summary>
         /// ボタンマウスオーバー時の効果音を再生
         /// </summary>
         public void PlayHoverSound()
@@ -1309,7 +1355,6 @@ namespace NovelGame
                 }
                 
                 scoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
-                Debug.Log($"[UpdateScoreDisplay] 最終表示テキスト: {scoreLabel.text}");
                 
                 // 異常なスコアの場合はスタイルを適用
                 scoreLabel.ClearClassList();
@@ -1354,7 +1399,6 @@ namespace NovelGame
                         }
                         
                         selectionScoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
-                        Debug.Log($"[UpdateScoreDisplay-Selection] 最終表示テキスト: {selectionScoreLabel.text}");
                         
                         // 異常なスコアの場合はスタイルを適用
                         selectionScoreLabel.ClearClassList();
@@ -1811,7 +1855,22 @@ namespace NovelGame
             HideAllScreens();
             
             // 真っ黒な画面を作成
-            var root = creditsScreenDocument.rootVisualElement.parent;
+            if (creditsScreenDocument == null)
+            {
+                Debug.LogError("CreditsScreenDocumentがアサインされていません！");
+                yield break;
+            }
+
+            // クレジット画面をアクティブにして、rootを取得できるようにする
+            creditsScreenDocument.gameObject.SetActive(true);
+            var root = creditsScreenDocument.rootVisualElement;
+            
+            if (root == null)
+            {
+                Debug.LogError("rootVisualElementが取得できません！");
+                yield break;
+            }
+
             var blackOverlay = new VisualElement();
             blackOverlay.style.position = Position.Absolute;
             blackOverlay.style.left = 0;
@@ -1963,7 +2022,7 @@ namespace NovelGame
                 else
                 {
                     // ✨を画像で置き換え
-                    SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, "【もうひとつ】ワードゲット!");
+                    SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, GetMaskedWordGetText());
                     wordGetLabel.AddToClassList("word-get-success");
                 }
                 

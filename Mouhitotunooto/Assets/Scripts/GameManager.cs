@@ -15,6 +15,7 @@ namespace NovelGame
         private HashSet<int> completedScenarios = new HashSet<int>();
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
         private HashSet<char> collectedLetters = new HashSet<char>();
+        private HashSet<char> restoredLetters = new HashSet<char>();
         private HashSet<char> lastLostLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
         private bool isThirdLoop = false;
@@ -257,7 +258,17 @@ namespace NovelGame
 
         public bool AreAllLettersLost()
         {
-            return GetLostLetters().Count >= 5;
+            if (isThirdLoop) return true;
+            
+            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
+            int count = 0;
+            for (int i = 1; i <= 5; i++)
+            {
+                if (completedScenarios.Contains(i)) count++;
+            }
+            
+            int lostCountFromScore = score - GetScenarios().Count;
+            return (count >= 5) || (lostCountFromScore >= 5);
         }
 
         public void TriggerThirdLoop()
@@ -267,11 +278,25 @@ namespace NovelGame
             completedScenarios.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
+            restoredLetters.Clear();
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             currentScenarioIndex = -1;
             isThirdLoop = true;
             OnScoreChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// 文字を復活させる（3周目用）
+        /// </summary>
+        public void RestoreLetter(char letter)
+        {
+            if (isThirdLoop && !restoredLetters.Contains(letter))
+            {
+                restoredLetters.Add(letter);
+                Debug.Log($"[GameManager] 文字が復活しました: {letter}");
+                CheckLostLettersUpdate();
+            }
         }
 
         /// <summary>
@@ -282,21 +307,35 @@ namespace NovelGame
             HashSet<char> lostLetters = new HashSet<char>();
             char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
 
-            // 3周目は最初から全ての文字が失われている
+            // 3周目は最初から全ての文字が失われている（ただし復活した文字は除く）
             if (isThirdLoop)
             {
-                foreach (char c in allLetters) lostLetters.Add(c);
+                foreach (char c in allLetters)
+                {
+                    if (!restoredLetters.Contains(c))
+                    {
+                        lostLetters.Add(c);
+                    }
+                }
                 return lostLetters;
             }
 
             if (!IsDarkMode()) return lostLetters;
 
-            // 完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
-            for (int i = 1; i <= 5; i++)
+            // シナリオ6のプレイ中（または終了直後）は、シナリオ1〜5のクリア状況による一括消失を抑制する
+            // （ただし、スコア加算による消失は許可する、または演出上制限する）
+            var currentScenario = GetCurrentScenario();
+            bool isProcessingScenario6 = currentScenario != null && currentScenario.id == 6;
+
+            if (!isProcessingScenario6)
             {
-                if (completedScenarios.Contains(i))
+                // 完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
+                for (int i = 1; i <= 5; i++)
                 {
-                    lostLetters.Add(allLetters[i - 1]);
+                    if (completedScenarios.Contains(i))
+                    {
+                        lostLetters.Add(allLetters[i - 1]);
+                    }
                 }
             }
             
@@ -332,6 +371,7 @@ namespace NovelGame
             completedScenarios.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
+            restoredLetters.Clear();
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
