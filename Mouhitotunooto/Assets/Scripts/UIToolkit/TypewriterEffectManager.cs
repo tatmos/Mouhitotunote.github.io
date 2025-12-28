@@ -203,7 +203,7 @@ namespace NovelGame
                     }
                     
                     // 「もうひとつ」をクリッカブルなLabelとして表示
-                    Label clickableLabel = new Label(clickableText);
+                    Label clickableLabel = new Label("");
                     clickableLabel.style.fontSize = 20;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
                     clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
@@ -212,8 +212,21 @@ namespace NovelGame
                     clickableWordLabel = clickableLabel;
                     container.Add(clickableLabel);
                     
-                    // クリッカブルワード表示時にも音を鳴らす
-                    PlayTypewriterSound();
+                    // クリッカブルワードを1文字ずつ表示（強調のために遅延を長くする）
+                    float emphasizedCharDelay = charDelay * 10.0f; // 通常の10倍の遅延
+                    for (int i = 0; i < clickableText.Length; i++)
+                    {
+                        char c = clickableText[i];
+                        clickableLabel.text = clickableText.Substring(0, i + 1);
+                        
+                        // 空白文字および記号・句読点以外の場合に音を鳴らす
+                        if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
+                        {
+                            PlayTypewriterSound();
+                        }
+                        
+                        yield return new WaitForSeconds(emphasizedCharDelay);
+                    }
                     
                     // 後の部分を通常のLabelとして表示
                     int wordEndIndex = wordStartIndex + wordLength;
