@@ -12,15 +12,22 @@ namespace NovelGame
         private Coroutine scrollCoroutine;
         private ScrollView creditsScrollView;
         private float scrollSpeed = 30f; // スクロール速度（ピクセル/秒）
+        private System.Action onSpecialCreditsComplete;
+        private bool isSpecialVersion = false;
+        private VisualElement creditsContainer;
+
         /// <summary>
         /// クレジット情報を作成
         /// </summary>
-        public void CreateCredits(VisualElement container, ScrollView scrollView)
+        public void CreateCredits(VisualElement container, ScrollView scrollView, bool isSpecial = false, System.Action onComplete = null)
         {
             container.Clear();
             
             // スクロールビューを保存
             creditsScrollView = scrollView;
+            creditsContainer = container;
+            isSpecialVersion = isSpecial;
+            onSpecialCreditsComplete = onComplete;
             
             // 既存のスクロールコルーチンを停止
             if (scrollCoroutine != null)
@@ -31,7 +38,7 @@ namespace NovelGame
 
             // コンテナの上下に余白を追加
             container.style.paddingTop = 200f; // 上部余白
-            container.style.paddingBottom = 200f; // 下部余白
+            container.style.paddingBottom = isSpecial ? 600f : 200f; // 特別版は最後にボタンを出すので広めに空ける
 
             // クレジット情報を追加
             AddCreditItem(container, "ゲームデザイン", "tatmos");
@@ -91,6 +98,18 @@ namespace NovelGame
 
             container.Add(musicSection);
 
+            // 特別版：Thank you for playing を追加
+            if (isSpecial)
+            {
+                var thanksLabel = new Label("Thank you for playing");
+                thanksLabel.style.fontSize = 40;
+                thanksLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                thanksLabel.style.marginTop = 100;
+                thanksLabel.style.marginBottom = 100;
+                thanksLabel.style.color = Color.white;
+                thanksLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                container.Add(thanksLabel);
+            }
 
             // スクロールを開始
             if (scrollView != null)
@@ -146,13 +165,14 @@ namespace NovelGame
         }
         
         /// <summary>
-        /// 自動スクロールのコルーチン（無限ループ）
+        /// 自動スクロールのコルーチン
         /// </summary>
         private IEnumerator AutoScrollCoroutine()
         {
             if (creditsScrollView == null) yield break;
             
             float currentScroll = 0f;
+            bool specialCompleteTriggered = false;
             
             while (true)
             {
@@ -169,10 +189,27 @@ namespace NovelGame
                     // スクロールを進める
                     currentScroll += scrollSpeed * Time.deltaTime;
                     
-                    // 最後までスクロールしたら先頭に戻す
+                    // 最後までスクロールした時の処理
                     if (currentScroll > maxScroll)
                     {
-                        currentScroll = 0f;
+                        if (isSpecialVersion)
+                        {
+                            // 特別版：最後まで到達したらスクロールを止めてボタンを表示
+                            currentScroll = maxScroll;
+                            creditsScrollView.verticalScroller.value = currentScroll;
+                            
+                            if (!specialCompleteTriggered)
+                            {
+                                specialCompleteTriggered = true;
+                                ShowSpecialEndButton();
+                            }
+                            yield break; // ループを抜けてスクロール停止
+                        }
+                        else
+                        {
+                            // 通常版：先頭に戻す（無限ループ）
+                            currentScroll = 0f;
+                        }
                     }
                     
                     creditsScrollView.verticalScroller.value = currentScroll;
@@ -185,6 +222,40 @@ namespace NovelGame
                 
                 yield return null;
             }
+        }
+
+        /// <summary>
+        /// 特別版：最後にボタンを表示
+        /// </summary>
+        private void ShowSpecialEndButton()
+        {
+            if (creditsContainer == null) return;
+
+            var button = new Button();
+            button.text = "「もうひとつ」の世界へ";
+            button.style.fontSize = 32;
+            button.style.marginTop = 50;
+            button.style.paddingTop = 20;
+            button.style.paddingBottom = 20;
+            button.style.paddingLeft = 40;
+            button.style.paddingRight = 40;
+            button.style.alignSelf = Align.Center;
+            button.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+            button.style.color = Color.white;
+            button.style.borderTopWidth = 1;
+            button.style.borderBottomWidth = 1;
+            button.style.borderLeftWidth = 1;
+            button.style.borderRightWidth = 1;
+            button.style.borderTopColor = Color.white;
+            button.style.borderBottomColor = Color.white;
+            button.style.borderLeftColor = Color.white;
+            button.style.borderRightColor = Color.white;
+
+            button.clicked += () => {
+                onSpecialCreditsComplete?.Invoke();
+            };
+
+            creditsContainer.Add(button);
         }
 
         /// <summary>

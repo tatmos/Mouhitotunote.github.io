@@ -381,7 +381,7 @@ namespace NovelGame
                 if (scenario6Result != null)
                 {
                     showCreditsButton.style.display = DisplayStyle.Flex;
-                    showCreditsButton.clicked += ShowCreditsScreen;
+                    showCreditsButton.clicked += () => ShowCreditsScreen(false);
                 }
                 else
                 {
@@ -571,7 +571,7 @@ namespace NovelGame
                 if (scenario6Result != null)
                 {
                     showCreditsButton.style.display = DisplayStyle.Flex;
-                    showCreditsButton.clicked += ShowCreditsScreen;
+                    showCreditsButton.clicked += () => ShowCreditsScreen(false);
                 }
                 else
                 {
@@ -857,10 +857,20 @@ namespace NovelGame
         public void ShowResultScreen()
         {
             var currentScenario = gameManager.GetCurrentScenario();
-            if (currentScenario != null && currentScenario.id == 6 && gameManager.AreAllLettersLost())
+            if (currentScenario != null && currentScenario.id == 6)
             {
-                StartCoroutine(ShowThirdLoopCutscene());
-                return;
+                if (gameManager.IsThirdLoop() && gameManager.GetScenarioResult(6)?.hasWord == true)
+                {
+                    // 3周目かつシナリオ6クリア（ワード取得成功）
+                    ShowCreditsScreen(isSpecial: true);
+                    return;
+                }
+                
+                if (gameManager.AreAllLettersLost())
+                {
+                    StartCoroutine(ShowThirdLoopCutscene());
+                    return;
+                }
             }
 
             FadeOutAudioOnSceneChange();
@@ -1727,7 +1737,7 @@ namespace NovelGame
         }
 
 
-        public void ShowCreditsScreen()
+        public void ShowCreditsScreen(bool isSpecial = false)
         {
             HideAllScreens();
             
@@ -1759,7 +1769,10 @@ namespace NovelGame
 
             if (creditsScreenManager != null)
             {
-                creditsScreenManager.CreateCredits(creditsContent, creditsScrollView);
+                creditsScreenManager.CreateCredits(creditsContent, creditsScrollView, isSpecial, () => {
+                    // 特別版クレジット終了後の処理（「もうひとつ」の世界へボタンが押された時）
+                    StartCoroutine(EndGameRoutine());
+                });
             }
             
             // BGMを再生
@@ -1777,6 +1790,8 @@ namespace NovelGame
             var backButton = root.Q<Button>("BackToSelectionButtonFromCredits");
             if (backButton != null)
             {
+                // 特別版の場合は非表示
+                backButton.style.display = isSpecial ? DisplayStyle.None : DisplayStyle.Flex;
                 backButton.clicked += ShowSelectionScreen;
             }
 
@@ -1785,6 +1800,31 @@ namespace NovelGame
             {
                 screenTransitionManager.StartScreenTransition(root);
             }
+        }
+
+        /// <summary>
+        /// ゲーム終了演出（画面暗転、音楽のみ）
+        /// </summary>
+        private IEnumerator EndGameRoutine()
+        {
+            // すべてのスクリーンを隠す
+            HideAllScreens();
+            
+            // 真っ黒な画面を作成
+            var root = creditsScreenDocument.rootVisualElement.parent;
+            var blackOverlay = new VisualElement();
+            blackOverlay.style.position = Position.Absolute;
+            blackOverlay.style.left = 0;
+            blackOverlay.style.top = 0;
+            blackOverlay.style.right = 0;
+            blackOverlay.style.bottom = 0;
+            blackOverlay.style.backgroundColor = Color.black;
+            root.Add(blackOverlay);
+            
+            // 音楽だけが流れている状態
+            Debug.Log("[UIManager] ゲーム終了。暗転状態で音楽のみ再生中。");
+            
+            yield break;
         }
 
 
