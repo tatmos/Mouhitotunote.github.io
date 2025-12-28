@@ -183,6 +183,7 @@ namespace NovelGame
             ambientAudioSource.loop = true; // 環境音はループ再生
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
+            Debug.Log("[GameManager] プロローグを開始します。");
             ShowTitleScreen();
         }
 
@@ -1810,6 +1811,10 @@ namespace NovelGame
 
             if (achievementsScreenManager != null)
             {
+                achievementsScreenManager.SetOnDivisionJumpCallback(divisionId => {
+                    gameManager.JumpToDivision(divisionId);
+                    ShowSelectionScreen();
+                });
                 achievementsScreenManager.CreateAchievements(achievementsContainer);
             }
 
@@ -1934,7 +1939,18 @@ namespace NovelGame
             blackOverlay.style.right = 0;
             blackOverlay.style.bottom = 0;
             blackOverlay.style.backgroundColor = Color.black;
+            blackOverlay.style.justifyContent = Justify.Center;
+            blackOverlay.style.alignItems = Align.Center;
             root.Add(blackOverlay);
+            
+            // division E の場合は最後に「（おや？）」を表示
+            if (gameManager.IsThirdLoop() && gameManager.GetScore() >= gameManager.GetScenarios().Count)
+            {
+                var oyaLabel = new Label("（おや？）");
+                oyaLabel.style.color = Color.white;
+                oyaLabel.style.fontSize = 24;
+                blackOverlay.Add(oyaLabel);
+            }
             
             // 音楽だけが流れている状態
             Debug.Log("[UIManager] ゲーム終了。暗転状態で音楽のみ再生中。");

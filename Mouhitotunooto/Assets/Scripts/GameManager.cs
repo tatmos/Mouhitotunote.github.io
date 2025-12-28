@@ -21,6 +21,11 @@ namespace NovelGame
         private bool isDarkMode = false;
         private bool isThirdLoop = false;
         
+        // Divisionのクリア状況
+        private HashSet<string> clearedDivisions = new HashSet<string>();
+        // 全Divisionを表示するデバッグフラグ
+        [SerializeField] private bool debugShowAllDivisions = false;
+        
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
         private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
 
@@ -149,6 +154,8 @@ namespace NovelGame
                 // ただし、シナリオ6をクリアした瞬間に判定する（既存の仕様を維持しつつ、不意の突入を防ぐ）
                 if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= GetScenarios().Count)
                 {
+                    // ダークモード突入フラグを立てるが、このターンのDivision判定が終わるまで反映を遅らせる
+                    // (HandleChoiceの最後でログ出力とフラグの整合性を保つため)
                     isDarkMode = true;
                     Debug.Log("[GameManager] ダークモードに突入しました。");
                 }
@@ -156,7 +163,10 @@ namespace NovelGame
                 CheckLostLettersUpdate();
             }
 
-            bool wasDarkMode = IsDarkMode() && scenarioId == 6;
+            // ダークモード判定（Division判定に使用）
+            // このターンの直前にisDarkModeがtrueになった場合も考慮
+            bool isActuallyDarkMode = isDarkMode || isThirdLoop;
+            bool wasDarkMode = isActuallyDarkMode && scenarioId == 6;
             
             scenarioResults[scenarioId] = new ScenarioResult
             {
@@ -177,6 +187,60 @@ namespace NovelGame
                 seenEndsByMode[scenarioId][wasDarkMode] = new HashSet<int>();
             }
             seenEndsByMode[scenarioId][wasDarkMode].Add(choiceId);
+
+            // 節目（Division）の判定とログ出力
+            if (scenarioId == 6)
+            {
+                int totalScenarios = GetScenarios().Count;
+                // isDarkModeがこのターンのhasWord処理でtrueになった場合、
+                // 通常モードからの遷移(Division B)として判定したいので、以前の状態を参照するか、
+                // score超過の瞬間を特別に扱う必要がある。
+                
+                if (!isThirdLoop)
+                {
+                    // ダークモードフラグが立っているが、まだDivision Bのログを出していない場合
+                    if (!clearedDivisions.Contains("B") && score >= totalScenarios && !isActuallyDarkMode)
+                    {
+                        // ここは通らない（既にisDarkModeをtrueにしているため）
+                    }
+
+                    // 以前の状態が通常モードだった場合
+                    if (!isActuallyDarkMode || (isDarkMode && !clearedDivisions.Contains("B")))
+                    {
+                        if (score < totalScenarios)
+                        {
+                            Debug.Log("[GameManager] division A: 伏字なしモードでクリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
+                            clearedDivisions.Add("A");
+                        }
+                        else
+                        {
+                            Debug.Log("[GameManager] division B: 伏字なしモードでクリア数オーバーありでシナリオ6クリア -> もうひとつの世界（ダークモード）に気がつく");
+                            clearedDivisions.Add("B");
+                        }
+                    }
+                    else if (isActuallyDarkMode)
+                    {
+                        if (AreAllLettersLost())
+                        {
+                            Debug.Log("[GameManager] division C: EndingBの後にすべての文字を失った状態でシナリオ6クリア -> すべての文字を消失した 伏字モードに強制移行");
+                            clearedDivisions.Add("C");
+                        }
+                    }
+                }
+                else if (isThirdLoop)
+                {
+                    if (score < totalScenarios)
+                    {
+                        Debug.Log("[GameManager] division D: 伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                        clearedDivisions.Add("D");
+                    }
+                    else
+                    {
+                        Debug.Log("[GameManager] division E: 2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                        clearedDivisions.Add("E");
+                    }
+                }
+            }
 
             OnScenarioCompleted?.Invoke();
         }
@@ -272,6 +336,76 @@ namespace NovelGame
         public bool IsThirdLoop()
         {
             return isThirdLoop;
+        }
+
+        /// <summary>
+        /// Divisionのクリア状況を取得
+        /// </summary>
+        public bool IsDivisionCleared(string divisionId)
+        {
+            if (debugShowAllDivisions) return true;
+            return clearedDivisions.Contains(divisionId);
+        }
+
+        /// <summary>
+        /// 特定のDivisionへジャンプ（デバッグ/再挑戦用）
+        /// </summary>
+        public void JumpToDivision(string divisionId)
+        {
+            ResetGame();
+            int totalScenarios = GetScenarios().Count;
+
+            switch (divisionId)
+            {
+                case "Prologue":
+                    Debug.Log("[GameManager] プロローグを開始します。");
+                    break;
+                case "A":
+                    // 通常モード、未クリア状態
+                    Debug.Log("[GameManager] Division A を開始します。");
+                    break;
+                case "B":
+                    // 通常モード、全クリア状態
+                    Debug.Log("[GameManager] Division B を開始します。");
+                    for (int i = 1; i <= totalScenarios; i++)
+                    {
+                        completedScenarios.Add(i);
+                        score++;
+                    }
+                    // シナリオ6もクリア済みにすることでダークモード条件を満たす
+                    isDarkMode = false;
+                    break;
+                case "C":
+                    // ダークモード、全文字消失直前
+                    Debug.Log("[GameManager] Division C を開始します。");
+                    isDarkMode = true;
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        completedScenarios.Add(i);
+                        score++;
+                    }
+                    score++; // シナリオ6分
+                    break;
+                case "D":
+                    // 3周目、開始状態
+                    Debug.Log("[GameManager] Division D を開始します。");
+                    TriggerThirdLoop();
+                    break;
+                case "E":
+                    // 3周目、全文字復活直前
+                    Debug.Log("[GameManager] Division E を開始します。");
+                    TriggerThirdLoop();
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        completedScenarios.Add(i);
+                        score++;
+                        char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                        RestoreLetter(letters[i-1]);
+                    }
+                    break;
+            }
+            OnScoreChanged?.Invoke();
+            Debug.Log($"[GameManager] Division {divisionId} へジャンプしました。");
         }
 
         public bool AreAllLettersLost()
