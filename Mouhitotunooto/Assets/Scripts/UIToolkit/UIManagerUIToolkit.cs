@@ -2577,7 +2577,45 @@ namespace NovelGame
             // 音楽だけが流れている状態
             Debug.Log("[UIManager] ゲーム終了。暗転状態で音楽のみ再生中。");
             
-            yield break;
+            // クリア日時と時間を記録
+            gameManager.SetGameEndTime(System.DateTime.Now);
+
+            // 30秒待機してから進捗度を表示
+            yield return new WaitForSeconds(30f);
+
+            int clearedCount = gameManager.GetClearedDivisionsCount();
+            int totalDivisions = 5; // A, B, C, D, E
+            int percentage = Mathf.Clamp((int)((float)clearedCount / totalDivisions * 100), 0, 100);
+
+            var progressLabel = new Label($"物語の解明度: {percentage}%");
+            progressLabel.name = "EndGameProgressLabel";
+            progressLabel.style.position = Position.Absolute;
+            progressLabel.style.right = 20;
+            progressLabel.style.bottom = 20;
+            progressLabel.style.color = new Color(0.3f, 0.3f, 0.3f, 0.5f); // 薄く表示
+            progressLabel.style.fontSize = 14;
+            
+            // クリッカブルにする設定
+            progressLabel.pickingMode = PickingMode.Position;
+            progressLabel.RegisterCallback<ClickEvent>(evt => {
+                string playTime = gameManager.GetPlayTimeDisplay();
+                string clearDate = gameManager.GetGameEndTime().ToString("yyyy/MM/dd HH:mm:ss");
+                Debug.Log($"[EndGame] もうおしまいです。もうひとつのゲームを追いかけてみてください (クリア時間: {playTime}, クリア日時: {clearDate})");
+            });
+
+            blackOverlay.Add(progressLabel);
+
+            // 徐々に表示
+            float fadeDuration = 3.0f;
+            float elapsed = 0f;
+            progressLabel.style.opacity = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                progressLabel.style.opacity = elapsed / fadeDuration;
+                yield return null;
+            }
+            progressLabel.style.opacity = 1f;
         }
 
 

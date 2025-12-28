@@ -23,6 +23,10 @@ namespace NovelGame
         private bool isThirdLoop = false;
         private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
         
+        // タイムトラッキング
+        private DateTime gameStartTime;
+        private DateTime gameEndTime;
+
         // Divisionのクリア状況
         private HashSet<string> clearedDivisions = new HashSet<string>();
         // 全Divisionを表示するデバッグフラグ
@@ -50,6 +54,22 @@ namespace NovelGame
         private void Start()
         {
             InitializeScenarios();
+            gameStartTime = DateTime.Now;
+        }
+
+        public DateTime GetGameStartTime() => gameStartTime;
+
+        public void SetGameEndTime(DateTime endTime)
+        {
+            gameEndTime = endTime;
+        }
+
+        public DateTime GetGameEndTime() => gameEndTime;
+
+        public string GetPlayTimeDisplay()
+        {
+            TimeSpan duration = gameEndTime - gameStartTime;
+            return $"{(int)duration.TotalHours}時間{duration.Minutes}分{duration.Seconds}秒";
         }
 
         private void InitializeScenarios()
@@ -428,6 +448,7 @@ namespace NovelGame
             {
                 case "Prologue":
                     Debug.Log("[GameManager] プロローグを開始します。");
+                    gameStartTime = DateTime.Now;
                     break;
                 case "A":
                     // 通常モード、未クリア状態
@@ -608,6 +629,7 @@ namespace NovelGame
             isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
             pendingDarkMode = false;
             currentScenarioIndex = -1;
+            gameStartTime = DateTime.Now;
             OnScoreChanged?.Invoke();
         }
     }
