@@ -511,6 +511,12 @@ namespace NovelGame
                         lostLetters.Add(allLetters[i - 1]);
                     }
                 }
+
+                // 現在プレイ中のシナリオに対応する文字も「消失」として扱う（シナリオ1〜5のみ）
+                if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
+                {
+                    lostLetters.Add(allLetters[currentScenario.id - 1]);
+                }
             }
             
             // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出
