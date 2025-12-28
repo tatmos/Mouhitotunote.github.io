@@ -290,6 +290,16 @@ namespace NovelGame
                     ? "謎の声：あなたは「※※※※※」を探す使命を...忘れてはいけません。"
                     : "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
 
+                // ダークモード：失われた文字を置換
+                var lostLetters = gameManager.GetLostLetters();
+                if (lostLetters.Count > 0)
+                {
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        mysteryText = mysteryText.Replace(lostLetter.ToString(), "※");
+                    }
+                }
+
                 // タイプライター効果でテキストを表示（速度を2倍遅く）
                 typewriterEffectManager.StartTypewriterEffect(mysteryVoiceText, mysteryText, () =>
                 {

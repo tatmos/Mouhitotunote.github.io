@@ -259,6 +259,7 @@ namespace NovelGame
         public bool AreAllLettersLost()
         {
             if (isThirdLoop) return true;
+            if (!IsDarkMode()) return false;
             
             char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
             int count = 0;
