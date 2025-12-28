@@ -13,6 +13,7 @@ namespace NovelGame
     {
         [Header("Audio Settings")]
         [SerializeField] private AudioClip typewriterSound;
+        [SerializeField] private AudioClip lostLetterSound;
         [SerializeField] private float soundInterval = 0.06f; // 音を鳴らす最小間隔（秒）
 
         private AudioSource audioSource;
@@ -42,6 +43,14 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 消失文字（※）用の音のクリップを設定
+        /// </summary>
+        public void SetLostLetterSound(AudioClip clip)
+        {
+            lostLetterSound = clip;
+        }
+
+        /// <summary>
         /// 記号や句読点かどうかを判定
         /// </summary>
         private bool IsPunctuationOrSymbol(char c)
@@ -61,14 +70,18 @@ namespace NovelGame
         /// <summary>
         /// タイプライター音を再生
         /// </summary>
-        private void PlayTypewriterSound()
+        /// <param name="displayedChar">実際に表示された文字</param>
+        private void PlayTypewriterSound(char displayedChar)
         {
-            if (typewriterSound == null || audioSource == null) return;
+            if (audioSource == null) return;
+
+            AudioClip clipToPlay = (displayedChar == '※') ? lostLetterSound : typewriterSound;
+            if (clipToPlay == null) return;
 
             // 短い間隔で連続して鳴りすぎないように調整
             if (Time.time - lastSoundTime >= soundInterval)
             {
-                audioSource.PlayOneShot(typewriterSound);
+                audioSource.PlayOneShot(clipToPlay);
                 lastSoundTime = Time.time;
             }
         }
@@ -128,6 +141,9 @@ namespace NovelGame
         /// </summary>
         private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, System.Action onComplete = null)
         {
+            // ダークモードで失われた文字を取得
+            var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
+            
             // テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
             
@@ -200,15 +216,19 @@ namespace NovelGame
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
                         container.Add(beforeLabel);
                         
+                        string currentDisplayText = "";
                         for (int i = 0; i < beforeWord.Length; i++)
                         {
                             char c = beforeWord[i];
-                            beforeLabel.text = beforeWord.Substring(0, i + 1);
-                            
+                            // 失われた文字なら置換
+                            char charToDisplay = lostLetters.Contains(c) ? '※' : c;
+                            currentDisplayText += charToDisplay;
+                            beforeLabel.text = currentDisplayText;
+                        
                             // 空白文字および記号・句読点以外の場合に音を鳴らす
                             if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                             {
-                                PlayTypewriterSound();
+                                PlayTypewriterSound(charToDisplay);
                             }
 
                             // 記号や句読点の場合は待機時間を長くする
@@ -229,15 +249,19 @@ namespace NovelGame
                     
                     // クリッカブルワードを1文字ずつ表示（強調のために遅延を長くする）
                     float emphasizedCharDelay = charDelay * 10.0f; // 通常の10倍の遅延
+                    string currentClickableDisplayText = "";
                     for (int i = 0; i < clickableText.Length; i++)
                     {
                         char c = clickableText[i];
-                        clickableLabel.text = clickableText.Substring(0, i + 1);
+                        // クリッカブルテキスト内の文字も失われた文字なら置換
+                        char charToDisplay = lostLetters.Contains(c) ? '※' : c;
+                        currentClickableDisplayText += charToDisplay;
+                        clickableLabel.text = currentClickableDisplayText;
                         
                         // 空白文字および記号・句読点以外の場合に音を鳴らす
                         if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                         {
-                            PlayTypewriterSound();
+                            PlayTypewriterSound(charToDisplay);
                         }
                         
                         yield return new WaitForSeconds(emphasizedCharDelay);
@@ -253,15 +277,19 @@ namespace NovelGame
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
                         container.Add(afterLabel);
                         
+                        string currentAfterDisplayText = "";
                         for (int i = 0; i < afterWord.Length; i++)
                         {
                             char c = afterWord[i];
-                            afterLabel.text = afterWord.Substring(0, i + 1);
+                            // 失われた文字なら置換
+                            char charToDisplay = lostLetters.Contains(c) ? '※' : c;
+                            currentAfterDisplayText += charToDisplay;
+                            afterLabel.text = currentAfterDisplayText;
                             
                             // 空白文字および記号・句読点以外の場合に音を鳴らす
                             if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                             {
-                                PlayTypewriterSound();
+                                PlayTypewriterSound(charToDisplay);
                             }
 
                             // 記号や句読点の場合は待機時間を長くする
@@ -278,15 +306,19 @@ namespace NovelGame
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
                     container.Add(textLabel);
                     
+                    string currentLineDisplayText = "";
                     for (int charIndex = 0; charIndex < line.Length; charIndex++)
                     {
                         char c = line[charIndex];
-                        textLabel.text = line.Substring(0, charIndex + 1);
+                        // 失われた文字なら置換
+                        char charToDisplay = lostLetters.Contains(c) ? '※' : c;
+                        currentLineDisplayText += charToDisplay;
+                        textLabel.text = currentLineDisplayText;
                         
                         // 空白文字および記号・句読点以外の場合に音を鳴らす
                         if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                         {
-                            PlayTypewriterSound();
+                            PlayTypewriterSound(charToDisplay);
                         }
                         
                         // 記号や句読点の場合は待機時間を長くする
@@ -334,6 +366,9 @@ namespace NovelGame
         /// </summary>
         private IEnumerator TypewriterEffectCoroutine(Label label, string fullText, System.Action onComplete = null, float speedMultiplier = 1.0f)
         {
+            // ダークモードで失われた文字を取得
+            var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
+            
             // テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
             
@@ -347,18 +382,21 @@ namespace NovelGame
                 string line = lines[lineIndex];
                 
                 // 各行を1文字ずつ表示
+                string currentLineText = "";
                 for (int charIndex = 0; charIndex < line.Length; charIndex++)
                 {
                     char c = line[charIndex];
-                    // 現在の行までの完全に表示されたテキスト + 現在の行の部分的なテキスト
-                    string currentText = displayedText + line.Substring(0, charIndex + 1);
+                    // 失われた文字なら置換
+                    char charToDisplay = lostLetters.Contains(c) ? '※' : c;
+                    currentLineText += charToDisplay;
                     
-                    label.text = currentText;
+                    // 現在の行までの完全に表示されたテキスト + 現在の行の部分的なテキスト
+                    label.text = displayedText + currentLineText;
 
                     // 空白文字および記号・句読点以外の場合に音を鳴らす
                     if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
                     {
-                        PlayTypewriterSound();
+                        PlayTypewriterSound(charToDisplay);
                     }
 
                     // 記号や句読点の場合は待機時間を長くする
@@ -366,8 +404,13 @@ namespace NovelGame
                     yield return new WaitForSeconds(delay);
                 }
 
-                // 行を完全に表示したら、displayedTextに追加
-                displayedText += line;
+                // 行を完全に表示したら、displayedTextに追加（置換済みのものを追加）
+                string finalLineText = "";
+                foreach (char c in line)
+                {
+                    finalLineText += lostLetters.Contains(c) ? '※' : c;
+                }
+                displayedText += finalLineText;
                 
                 // 最後の行以外は改行を追加
                 if (lineIndex < lines.Length - 1)
@@ -380,9 +423,6 @@ namespace NovelGame
                 }
             }
 
-            // 最終的なテキストを設定（念のため）
-            label.text = fullText;
-            
             // 完了コールバックを呼び出し
             onComplete?.Invoke();
             
@@ -405,28 +445,44 @@ namespace NovelGame
             // コンテナをクリア
             currentContainer.Clear();
 
+            // ダークモードで失われた文字を取得
+            var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
+
             // テキストを解析して一気に表示
             string[] lines = currentFullText.Split('\n');
             for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
             {
                 string line = lines[lineIndex];
-                int wordStartIndex = line.IndexOf("【もうひとつ】");
+                
+                // ダークモード用に「も」「う」「ひ」「と」「つ」が「※」に置換されたパターンを考慮
+                string[] patterns = { "【もうひとつ】", "もうひとつ" };
+                List<string> dynamicPatterns = new List<string>();
+                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                foreach (var p in patterns)
+                {
+                    dynamicPatterns.Add(p);
+                    foreach (var letter in letters)
+                    {
+                        string replaced = p.Replace(letter.ToString(), "※");
+                        if (replaced != p && !dynamicPatterns.Contains(replaced)) dynamicPatterns.Add(replaced);
+                    }
+                    string allReplaced = p;
+                    foreach (var letter in letters) allReplaced = allReplaced.Replace(letter.ToString(), "※");
+                    if (allReplaced != p && !dynamicPatterns.Contains(allReplaced)) dynamicPatterns.Add(allReplaced);
+                }
+
+                int wordStartIndex = -1;
                 int wordLength = 0;
                 string clickableText = "";
 
-                if (wordStartIndex >= 0)
+                foreach (var pattern in dynamicPatterns)
                 {
-                    wordLength = "【もうひとつ】".Length;
-                    clickableText = "もうひとつ";
-                }
-                else
-                {
-                    wordStartIndex = line.IndexOf("もうひとつ");
+                    wordStartIndex = line.IndexOf(pattern);
                     if (wordStartIndex >= 0)
                     {
-                        // 境界判定ロジックは簡易化（既にStart時に検証済みのはずだが、ここでも一応やるならやる）
-                        wordLength = "もうひとつ".Length;
-                        clickableText = "もうひとつ";
+                        wordLength = pattern.Length;
+                        clickableText = pattern.Replace("【", "").Replace("】", "");
+                        break;
                     }
                 }
 
@@ -434,13 +490,19 @@ namespace NovelGame
                 {
                     if (wordStartIndex > 0)
                     {
-                        Label beforeLabel = new Label(line.Substring(0, wordStartIndex));
+                        string beforeWord = line.Substring(0, wordStartIndex);
+                        string replacedBefore = "";
+                        foreach (char c in beforeWord) replacedBefore += lostLetters.Contains(c) ? '※' : c;
+                        
+                        Label beforeLabel = new Label(replacedBefore);
                         beforeLabel.style.fontSize = 20;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
                         currentContainer.Add(beforeLabel);
                     }
 
-                    Label clickableLabel = new Label(clickableText);
+                    string replacedClickable = "";
+                    foreach (char c in clickableText) replacedClickable += lostLetters.Contains(c) ? '※' : c;
+                    Label clickableLabel = new Label(replacedClickable);
                     clickableLabel.style.fontSize = 20;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
                     clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.8f, 0.4f)); // 最初から緑色（見つかった状態）
@@ -449,7 +511,11 @@ namespace NovelGame
                     int wordEndIndex = wordStartIndex + wordLength;
                     if (wordEndIndex < line.Length)
                     {
-                        Label afterLabel = new Label(line.Substring(wordEndIndex));
+                        string afterWord = line.Substring(wordEndIndex);
+                        string replacedAfter = "";
+                        foreach (char c in afterWord) replacedAfter += lostLetters.Contains(c) ? '※' : c;
+                        
+                        Label afterLabel = new Label(replacedAfter);
                         afterLabel.style.fontSize = 20;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
                         currentContainer.Add(afterLabel);
@@ -457,7 +523,9 @@ namespace NovelGame
                 }
                 else
                 {
-                    Label textLabel = new Label(line);
+                    string replacedLine = "";
+                    foreach (char c in line) replacedLine += lostLetters.Contains(c) ? '※' : c;
+                    Label textLabel = new Label(replacedLine);
                     textLabel.style.fontSize = 20;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
                     currentContainer.Add(textLabel);
@@ -472,7 +540,6 @@ namespace NovelGame
             }
 
             currentContainer = null;
-            currentFullText = "";
         }
 
         /// <summary>

@@ -37,6 +37,7 @@ namespace NovelGame
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
         [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
         [SerializeField] private AudioClip typewriterSound; // タイプライター文字表示時の効果音
+        [SerializeField] private AudioClip lostLetterSound; // ダークモードで「※」が表示される時の専用効果音
         [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
         [SerializeField] private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
@@ -104,6 +105,10 @@ namespace NovelGame
             if (typewriterSound != null)
             {
                 typewriterEffectManager.SetTypewriterSound(typewriterSound);
+            }
+            if (lostLetterSound != null)
+            {
+                typewriterEffectManager.SetLostLetterSound(lostLetterSound);
             }
             countdownManager = gameObject.AddComponent<CountdownManager>();
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
@@ -708,21 +713,13 @@ namespace NovelGame
                 
                 if (isDarkMode)
                 {
-                    string originalSetup = scenario.setup;
-                    // 失われた文字を※に置換
-                    var lostLetters = gameManager.GetLostLetters();
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        originalSetup = originalSetup.Replace(lostLetter.ToString(), "※");
-                    }
-
                     setupText = scenario.id switch
                     {
-                        1 => $"【エラー】探偵事務所のデータが破損しています。\n写真の人物が歪み、存在が不安定になっています。\nバグの影響で「も」という文字が消失しました。\n\n{originalSetup}",
-                        2 => $"【エラー】レストランのデータが破損しています。\nメニューが文字化けし、料理のデータが読み込めません。\nバグの影響で「う」という文字が消失しました。\n\n{originalSetup}",
-                        3 => $"【エラー】タイムカプセルのデータが破損しています。\n過去の記憶が歪み、データが欠損しています。\nバグの影響で「ひ」という文字が消失しました。\n\n{originalSetup}",
-                        4 => $"【エラー】魔法学校のデータが破損しています。\n呪文のコードがエラーを起こし、魔法が機能しません。\nバグの影響で「と」という文字が消失しました。\n\n{originalSetup}",
-                        5 => $"【エラー】パズルのデータが破損しています。\nピースの整合性が失われ、完成することができません。\nバグの影響で「つ」という文字が消失しました。\n\n{originalSetup}",
+                        1 => $"【エラー】探偵事務所のデータが破損しています。\n写真の人物が歪み、存在が不安定になっています。\nバグの影響で「も」という文字が消失しました。\n\n{scenario.setup}",
+                        2 => $"【エラー】レストランのデータが破損しています。\nメニューが文字化けし、料理のデータが読み込めません。\nバグの影響で「う」という文字が消失しました。\n\n{scenario.setup}",
+                        3 => $"【エラー】タイムカプセルのデータが破損しています。\n過去の記憶が歪み、データが欠損しています。\nバグの影響で「ひ」という文字が消失しました。\n\n{scenario.setup}",
+                        4 => $"【エラー】魔法学校のデータが破損しています。\n呪文のコードがエラーを起こし、魔法が機能しません。\nバグの影響で「と」という文字が消失しました。\n\n{scenario.setup}",
+                        5 => $"【エラー】パズルのデータが破損しています。\nピースの整合性が失われ、完成することができません。\nバグの影響で「つ」という文字が消失しました。\n\n{scenario.setup}",
                         6 => scenario.setup,
                         _ => scenario.setup
                     };
