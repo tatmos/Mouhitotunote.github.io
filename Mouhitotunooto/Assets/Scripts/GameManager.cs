@@ -97,6 +97,15 @@ namespace NovelGame
         {
             var scenarios = GetScenarios();
             currentScenarioIndex = scenarios.FindIndex(s => s.id == scenarioId);
+            
+            // ダークモード中にシナリオを選択した際、スコアが6に戻っていればDivision Cへ強制転送
+            if (IsDarkMode() && !isThirdLoop && score <= 6)
+            {
+                Debug.Log("[GameManager] 不正なデータが修正されました。システムを強制再起動します。");
+                // 3周目への移行（Division C相当の処理）
+                UIManagerUIToolkit.Instance.TriggerDivisionCTransition(score);
+            }
+            
             CheckLostLettersUpdate();
         }
 
@@ -136,7 +145,12 @@ namespace NovelGame
             bool hasWord = overrideHasWord ?? branch.hasWord;
             if (hasWord)
             {
-                score++;
+                // ダークモード中はスコア（ワードゲット数）が増えないようにする
+                if (!playedInDarkMode)
+                {
+                    score++;
+                }
+                
                 completedScenarios.Add(scenarioId);
                 
                 // ダークモード中にクリアした場合は記録
@@ -169,10 +183,34 @@ namespace NovelGame
                 {
                     // ダークモード突入を予約（リザルト画面の後に有効化される）
                     pendingDarkMode = true;
-                    Debug.Log("[GameManager] ダークモードへの突入条件を満たしました。予約します。");
+                    Debug.Log("[GameManager] 真実の扉で不正を判定されました。修正プログラムを起動します（ダークモード予約）。");
                 }
                 
                 CheckLostLettersUpdate();
+            }
+
+            // 3周目の場合は、シナリオIDに対応する文字を復活させる
+            if (isThirdLoop && hasWord)
+            {
+                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                int letterIndex = scenarioId - 1;
+                if (letterIndex >= 0 && letterIndex < letters.Length)
+                {
+                    RestoreLetter(letters[letterIndex]);
+                }
+            }
+
+            // ダークモード中に False エンド（ワード取得失敗）を選んでスコアが6に戻った場合も、Division Cへの移行を検討
+            // ただし、現在は playedInDarkMode かつ !hasWord の場合、score はそのまま（増えていない）
+            // スコアが 7 から 6 に戻るという状況は、「ダークモード中にわざとワードを取らない」ことで発生させたい
+            if (playedInDarkMode && !isThirdLoop && !hasWord)
+            {
+                if (score > 6)
+                {
+                    score--;
+                    Debug.Log($"[GameManager] 不正なデータを破棄しました。現在のスコア: {score}");
+                    OnScoreChanged?.Invoke();
+                }
             }
 
             // ダークモード判定（Division判定に使用）
@@ -216,15 +254,16 @@ namespace NovelGame
                         }
                         else
                         {
-                            Debug.Log("[GameManager] division B: 伏字なしモードでクリア数オーバーありでシナリオ6クリア -> もうひとつの世界（ダークモード）に気がつく");
+                            Debug.Log("[GameManager] division B: 伏字なしモードでクリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
                             clearedDivisions.Add("B");
                         }
                     }
                     else if (isActuallyDarkMode)
                     {
+                        // ダークモード中の判定
                         if (AreAllLettersLost())
                         {
-                            Debug.Log("[GameManager] division C: EndingBの後にすべての文字を失った状態でシナリオ6クリア -> すべての文字を消失した 伏字モードに強制移行");
+                            Debug.Log("[GameManager] division C: すべての文字を失った状態でシナリオ6クリア -> 3周目へ強制移行");
                             clearedDivisions.Add("C");
                         }
                     }
@@ -351,6 +390,14 @@ namespace NovelGame
             }
         }
 
+        /// <summary>
+        /// クリア済みのDivision数を取得
+        /// </summary>
+        public int GetClearedDivisionsCount()
+        {
+            return clearedDivisions.Count;
+        }
+
         public bool IsThirdLoop()
         {
             return isThirdLoop;
@@ -454,7 +501,7 @@ namespace NovelGame
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             currentScenarioIndex = -1;
-            isDarkMode = true;
+            isDarkMode = false; // 3周目開始時は破損状態をリセットし、伏字のみの状態にする
             isThirdLoop = true;
             pendingDarkMode = false;
             OnScoreChanged?.Invoke();
@@ -496,27 +543,22 @@ namespace NovelGame
 
             if (!IsDarkMode()) return lostLetters;
 
-            // シナリオ6のプレイ中（または終了直後）は、シナリオ1〜5のクリア状況による一括消失を抑制する
-            // （ただし、スコア加算による消失は許可する、または演出上制限する）
-            var currentScenario = GetCurrentScenario();
-            bool isProcessingScenario6 = currentScenario != null && currentScenario.id == 6;
-
-            if (!isProcessingScenario6)
+            // ダークモード中に完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
+            for (int i = 1; i <= 5; i++)
             {
-                // ダークモード中に完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
-                for (int i = 1; i <= 5; i++)
+                if (completedScenariosInDarkMode.Contains(i))
                 {
-                    if (completedScenariosInDarkMode.Contains(i))
-                    {
-                        lostLetters.Add(allLetters[i - 1]);
-                    }
+                    lostLetters.Add(allLetters[i - 1]);
                 }
+            }
 
+            // シナリオ6のプレイ中（または終了直後）は、追加の消失（累積的なものなど）を抑制する場合があるが、
+            // 既に完了したシナリオの文字は消えたままにする。
+            var currentScenario = GetCurrentScenario();
+            if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
+            {
                 // 現在プレイ中のシナリオに対応する文字も「消失」として扱う（シナリオ1〜5のみ）
-                if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
-                {
-                    lostLetters.Add(allLetters[currentScenario.id - 1]);
-                }
+                lostLetters.Add(allLetters[currentScenario.id - 1]);
             }
             
             // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出

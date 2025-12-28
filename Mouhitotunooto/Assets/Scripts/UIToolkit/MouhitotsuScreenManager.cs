@@ -36,9 +36,15 @@ namespace NovelGame
         /// <summary>
         /// 再挑戦ボタンを作成
         /// </summary>
-        public void CreateRetryButtons(VisualElement container)
+        public void CreateRetryButtons(VisualElement root)
         {
+            var container = root.Q<VisualElement>("MouhitotsuContainer");
+            if (container == null) return;
+            
             container.Clear();
+
+            // 進捗度の表示を追加
+            AddProgressDisplay(root);
 
             var buttonContainer = new VisualElement();
             buttonContainer.style.flexDirection = FlexDirection.Column;
@@ -86,6 +92,38 @@ namespace NovelGame
             }
 
             container.Add(buttonContainer);
+        }
+
+        /// <summary>
+        /// 進捗度表示を追加
+        /// </summary>
+        private void AddProgressDisplay(VisualElement root)
+        {
+            // 既存の進捗ラベルがあれば削除（再生成のため）
+            var oldProgress = root.Q<Label>("MouhitotsuProgress");
+            if (oldProgress != null)
+            {
+                oldProgress.parent.Remove(oldProgress);
+            }
+
+            int clearedCount = gameManager.GetClearedDivisionsCount();
+            int totalDivisions = 5; // A, B, C, D, E
+            int percentage = Mathf.Clamp((int)((float)clearedCount / totalDivisions * 100), 0, 100);
+
+            var progressLabel = new Label($"物語の解明度: {percentage}%");
+            progressLabel.name = "MouhitotsuProgress";
+            progressLabel.style.fontSize = 24;
+            progressLabel.style.marginBottom = 20;
+            progressLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            progressLabel.style.color = new Color(0.8f, 0.8f, 1f);
+            progressLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+
+            // タイトルの直下に挿入
+            var title = root.Q<Label>("MouhitotsuTitle");
+            if (title != null)
+            {
+                title.parent.Insert(title.parent.IndexOf(title) + 1, progressLabel);
+            }
         }
     }
 }

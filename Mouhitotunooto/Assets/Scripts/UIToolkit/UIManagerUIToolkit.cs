@@ -262,6 +262,70 @@ namespace NovelGame
             {
                 mysteryVoiceText.style.display = DisplayStyle.None;
             }
+
+            // メニューボタンコンテナを取得
+            var menuButtonContainer = root.Q<VisualElement>("MenuButtonContainer");
+            if (menuButtonContainer == null)
+            {
+                // TitleScreen.uxml に MenuButtonContainer がない場合は作成して追加
+                menuButtonContainer = new VisualElement();
+                menuButtonContainer.name = "MenuButtonContainer";
+                menuButtonContainer.style.flexDirection = FlexDirection.Row;
+                menuButtonContainer.style.justifyContent = Justify.Center;
+                menuButtonContainer.style.alignItems = Align.Center;
+                menuButtonContainer.style.width = Length.Percent(100);
+                menuButtonContainer.style.marginTop = 20;
+                menuButtonContainer.style.flexWrap = Wrap.Wrap;
+                
+                var content = root.Q<VisualElement>("Content");
+                if (content != null)
+                {
+                    content.Add(menuButtonContainer);
+                }
+            }
+
+            if (menuButtonContainer != null)
+            {
+                menuButtonContainer.Clear();
+
+                // 実績ボタン（全シナリオクリア後のみ表示）
+                var scenarios = gameManager.GetScenarios();
+                int totalCompleted = 0;
+                foreach (var scenario in scenarios)
+                {
+                    if (gameManager.IsScenarioCompleted(scenario.id))
+                    {
+                        totalCompleted++;
+                    }
+                }
+
+                if (totalCompleted >= scenarios.Count)
+                {
+                    // 実績ボタン
+                    Button showAchievementsButton = new Button();
+                    showAchievementsButton.name = "ShowAchievementsButton";
+                    showAchievementsButton.AddToClassList("button-gradient");
+                    showAchievementsButton.style.minWidth = 200;
+                    showAchievementsButton.style.minHeight = 40;
+                    showAchievementsButton.style.marginRight = 10;
+                    SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧");
+                    showAchievementsButton.clicked += ShowAchievementsScreen;
+                    showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                    menuButtonContainer.Add(showAchievementsButton);
+
+                    // 「もうひとつ」ボタン
+                    Button showMouhitotsuButton = new Button();
+                    showMouhitotsuButton.name = "ShowMouhitotsuButton";
+                    showMouhitotsuButton.AddToClassList("button-gradient-indigo");
+                    showMouhitotsuButton.style.minWidth = 200;
+                    showMouhitotsuButton.style.minHeight = 40;
+                    showMouhitotsuButton.style.marginLeft = 10;
+                    showMouhitotsuButton.text = "「もうひとつ」";
+                    showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
+                    showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                    menuButtonContainer.Add(showMouhitotsuButton);
+                }
+            }
             
             // トランジション開始
             if (screenTransitionManager != null)
@@ -507,6 +571,130 @@ namespace NovelGame
             {
                 screenTransitionManager.StartScreenTransition(root);
             }
+        }
+
+        /// <summary>
+        /// Division C（3周目）への移行演出を外部から開始するためのメソッド
+        /// </summary>
+        public void TriggerDivisionCTransition(int score)
+        {
+            StartCoroutine(ShowDivisionCTransition(score));
+        }
+
+        /// <summary>
+        /// Division C（3周目）への移行演出を表示
+        /// </summary>
+        private IEnumerator ShowDivisionCTransition(int score)
+        {
+            FadeOutAudioOnSceneChange();
+            FadeOutAmbientSoundForResult();
+            
+            // 雷のような特別な音を再生
+            if (thunderSound != null && sfxAudioSource != null)
+            {
+                sfxAudioSource.PlayOneShot(thunderSound);
+            }
+
+            HideAllScreens();
+
+            // 演出用の真っ黒なオーバーレイを作成
+            if (titleScreenDocument == null)
+            {
+                Debug.LogError("TitleScreenDocumentがアサインされていません！演出をスキップします。");
+                gameManager.TriggerThirdLoop();
+                ShowTitleScreen();
+                yield break;
+            }
+
+            // タイトル画面をアクティブにして、rootを取得できるようにする
+            titleScreenDocument.gameObject.SetActive(true);
+            var root = titleScreenDocument.rootVisualElement;
+            
+            if (root == null)
+            {
+                Debug.LogError("rootVisualElementが取得できません！演出をスキップします。");
+                gameManager.TriggerThirdLoop();
+                ShowTitleScreen();
+                yield break;
+            }
+
+            var overlay = new VisualElement();
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 0;
+            overlay.style.top = 0;
+            overlay.style.right = 0;
+            overlay.style.bottom = 0;
+            overlay.style.backgroundColor = Color.black;
+            overlay.style.justifyContent = Justify.Center;
+            overlay.style.alignItems = Align.Center;
+            root.Add(overlay);
+
+            // テキスト表示用のラベル
+            var cutsceneLabel = new Label("");
+            cutsceneLabel.style.fontSize = 32;
+            cutsceneLabel.style.color = Color.white;
+            cutsceneLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+            cutsceneLabel.style.whiteSpace = WhiteSpace.Normal;
+            cutsceneLabel.style.width = Length.Percent(80);
+            overlay.Add(cutsceneLabel);
+
+            yield return new WaitForSeconds(1.5f);
+
+            // 表示するテキストを構築
+            string transitionText = "不正なデータが修正されました。システムを強制再起動します";
+            
+            // ダークモード：失われた文字を置換
+            var lostLetters = gameManager.GetLostLetters();
+            if (lostLetters.Count > 0)
+            {
+                foreach (char lostLetter in lostLetters)
+                {
+                    transitionText = transitionText.Replace(lostLetter.ToString(), "※");
+                }
+            }
+
+            // タイプライター表示
+            bool isComplete = false;
+            if (typewriterEffectManager != null)
+            {
+                typewriterEffectManager.StartTypewriterEffect(cutsceneLabel, transitionText, () => isComplete = true);
+            }
+            else
+            {
+                cutsceneLabel.text = transitionText;
+                isComplete = true;
+            }
+
+            while (!isComplete) yield return null;
+
+            yield return new WaitForSeconds(3.0f);
+
+            // 長めのフェードアウト（5秒）
+            float fadeDuration = 5.0f;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float alpha = Mathf.Lerp(1.0f, 0f, elapsed / fadeDuration);
+                cutsceneLabel.style.opacity = alpha;
+                yield return null;
+            }
+
+            root.Remove(overlay);
+
+            // 3周目開始（Division C移行）
+            gameManager.TriggerThirdLoop();
+            
+            // タイトル画面へ
+            ShowTitleScreen();
+        }
+
+        /// <summary>
+        /// 3周目への移行カットシーンを外部から開始するためのメソッド
+        /// </summary>
+        public void TriggerThirdLoopCutscene()
+        {
+            StartCoroutine(ShowThirdLoopCutscene());
         }
 
         /// <summary>
@@ -1043,7 +1231,8 @@ namespace NovelGame
                 setupContainer.Clear();
                 
                 // ダークモード時のsetupテキストを取得
-                bool isDarkMode = gameManager.IsDarkMode();
+                bool isDarkMode = gameManager.IsDarkMode() && !gameManager.IsThirdLoop();
+                bool isThirdLoop = gameManager.IsThirdLoop();
                 string setupText = scenario.setup;
                 
                 if (isDarkMode)
@@ -1079,7 +1268,7 @@ namespace NovelGame
                             var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
                             if (wordFoundMessageLabel != null)
                             {
-                                wordFoundMessageLabel.text = isDarkMode 
+                                wordFoundMessageLabel.text = isDarkMode || isThirdLoop
                                     ? "⚠️ システムエラー：データ破損を検出 ⚠️"
                                     : "あなたは何かをみつけた気がした";
                                 wordFoundMessageLabel.style.display = DisplayStyle.Flex;
@@ -1382,17 +1571,6 @@ namespace NovelGame
                         {
                             wordFoundInCurrentScenario = true;
                             
-                            // 3周目の場合は、シナリオIDに対応する文字を復活させる
-                            if (gameManager.IsThirdLoop())
-                            {
-                                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
-                                int letterIndex = scenario.id - 1;
-                                if (letterIndex >= 0 && letterIndex < letters.Length)
-                                {
-                                    gameManager.RestoreLetter(letters[letterIndex]);
-                                }
-                            }
-
                             // 効果音を再生
                             PlayWordGetSound();
                             
@@ -2060,7 +2238,7 @@ namespace NovelGame
                         StartCoroutine(PerformDivisionJump(divisionId));
                     });
                 });
-                mouhitotsuScreenManager.CreateRetryButtons(mouhitotsuContainer);
+                mouhitotsuScreenManager.CreateRetryButtons(root);
             }
 
             // 戻るボタン
