@@ -203,6 +203,48 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 暗転演出を伴ってタイトル画面を表示
+        /// </summary>
+        public void ShowTitleScreenWithFade()
+        {
+            StartCoroutine(ShowTitleScreenCoroutine());
+        }
+
+        private IEnumerator ShowTitleScreenCoroutine()
+        {
+            if (currentDocument == null || currentDocument.rootVisualElement == null)
+            {
+                ShowTitleScreen();
+                yield break;
+            }
+
+            var root = currentDocument.rootVisualElement;
+
+            // 暗転オーバーレイ
+            var blackOverlay = new VisualElement();
+            blackOverlay.style.position = Position.Absolute;
+            blackOverlay.style.left = 0;
+            blackOverlay.style.top = 0;
+            blackOverlay.style.right = 0;
+            blackOverlay.style.bottom = 0;
+            blackOverlay.style.backgroundColor = Color.black;
+            blackOverlay.style.opacity = 0;
+            root.Add(blackOverlay);
+
+            // フェードイン（黒画面へ）
+            float duration = 0.5f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                blackOverlay.style.opacity = Mathf.Min(elapsed / duration, 1.0f);
+                yield return null;
+            }
+
+            ShowTitleScreen();
+        }
+
+        /// <summary>
         /// タイトル画面を表示
         /// </summary>
         public void ShowTitleScreen()
@@ -685,7 +727,7 @@ namespace NovelGame
             // 3周目開始（Division C移行）
             gameManager.TriggerThirdLoop();
             
-            // タイトル画面へ
+            // タイトル画面へ（すでに暗い画面なので、フェード演出を介さず直接呼ぶ）
             ShowTitleScreen();
         }
 
@@ -788,7 +830,7 @@ namespace NovelGame
             // 3周目開始
             gameManager.TriggerThirdLoop();
             
-            // タイトル画面へ
+            // タイトル画面へ（すでに暗い画面なので、フェード演出を介さず直接呼ぶ）
             ShowTitleScreen();
         }
 
@@ -1115,6 +1157,14 @@ namespace NovelGame
                 backButton.clicked += ShowSelectionScreen;
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
+
+            // タイトル画面に戻るボタン（もしあれば）
+            var backToTitleButton = root.Q<Button>("BackToTitleButtonFromProfile");
+            if (backToTitleButton != null)
+            {
+                backToTitleButton.clicked += ShowTitleScreenWithFade;
+                backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            }
             
             // トランジション開始
             if (root != null && screenTransitionManager != null)
@@ -1301,18 +1351,29 @@ namespace NovelGame
             var currentScenario = gameManager.GetCurrentScenario();
             if (currentScenario != null && currentScenario.id == 6)
             {
-                if (gameManager.IsThirdLoop() && gameManager.GetScenarioResult(6)?.hasWord == true)
+                bool isThirdLoop = gameManager.IsThirdLoop();
+                var result6 = gameManager.GetScenarioResult(6);
+
+                if (isThirdLoop)
                 {
-                    // 3周目かつシナリオ6クリア（ワード取得成功）
-                    // 暗転演出を挟んでから特別版エンドクレジットを表示
-                    StartCoroutine(ShowSpecialCreditsTransition());
-                    return;
+                    if (result6 != null && result6.hasWord)
+                    {
+                        // 3周目かつシナリオ6クリア（ワード取得成功）
+                        // 暗転演出を挟んでから特別版エンドクレジットを表示
+                        StartCoroutine(ShowSpecialCreditsTransition());
+                        return;
+                    }
+                    // ワード未取得の場合は通常のリザルト画面へ（後で共通処理へ）
                 }
-                
-                if (gameManager.AreAllLettersLost())
+                else
                 {
-                    StartCoroutine(ShowThirdLoopCutscene());
-                    return;
+                    // まだ3周目でない場合の判定
+                    if (gameManager.AreAllLettersLost())
+                    {
+                        // ダークモードですべての文字を消失した状態でクリア
+                        StartCoroutine(ShowThirdLoopCutscene());
+                        return;
+                    }
                 }
             }
 
@@ -1659,6 +1720,18 @@ namespace NovelGame
                     // 予約されているダークモードがあれば有効化
                     gameManager.ActivatePendingDarkMode();
                     ShowSelectionScreen();
+                };
+            }
+
+            // タイトル画面に戻るボタン（もしあれば。最初は非表示）
+            var backToTitleButton = root.Q<Button>("BackToTitleButton");
+            if (backToTitleButton != null)
+            {
+                backToTitleButton.style.display = DisplayStyle.None;
+                backToTitleButton.clicked += () => {
+                    // 予約されているダークモードがあれば有効化
+                    gameManager.ActivatePendingDarkMode();
+                    ShowTitleScreenWithFade();
                 };
             }
 
@@ -2101,6 +2174,16 @@ namespace NovelGame
                     ShowSelectionScreen();
                 };
             }
+
+            var backToTitleButtonFromScenario = root.Q<Button>("BackToTitleButtonFromScenario");
+            if (backToTitleButtonFromScenario != null)
+            {
+                backToTitleButtonFromScenario.style.display = DisplayStyle.Flex;
+                backToTitleButtonFromScenario.clicked += () => {
+                    gameManager.ActivatePendingDarkMode();
+                    ShowTitleScreenWithFade();
+                };
+            }
         }
 
         private void OnChoiceSelected(int choiceId)
@@ -2196,6 +2279,14 @@ namespace NovelGame
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
 
+            // タイトル画面に戻るボタン（もしあれば）
+            var backToTitleButton = root.Q<Button>("BackToTitleButtonFromAchievements");
+            if (backToTitleButton != null)
+            {
+                backToTitleButton.clicked += ShowTitleScreenWithFade;
+                backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            }
+
             // トランジション開始
             if (screenTransitionManager != null)
             {
@@ -2248,6 +2339,14 @@ namespace NovelGame
             {
                 backButton.clicked += ShowSelectionScreen;
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            }
+
+            // タイトル画面に戻るボタン（もしあれば）
+            var backToTitleButton = root.Q<Button>("BackToTitleButtonFromMouhitotsu");
+            if (backToTitleButton != null)
+            {
+                backToTitleButton.clicked += ShowTitleScreenWithFade;
+                backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
             }
 
             // トランジション開始
@@ -2456,6 +2555,12 @@ namespace NovelGame
                 if (backButton != null)
                 {
                     backButton.style.display = DisplayStyle.Flex;
+                }
+
+                var backToTitleButton = root.Q<Button>("BackToTitleButton");
+                if (backToTitleButton != null)
+                {
+                    backToTitleButton.style.display = DisplayStyle.Flex;
                 }
             }
         }
