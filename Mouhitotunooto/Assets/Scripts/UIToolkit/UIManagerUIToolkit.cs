@@ -877,6 +877,13 @@ namespace NovelGame
                         // 「もうひとつ」が含まれている場合：クリッカブルワード付きタイプライター効果
                         typewriterEffectManager.StartTypewriterEffectWithClickableWord(resultContainer, resultText, () =>
                         {
+                            // 既にワードが見つかっている場合は、カウントダウンの開始をスキップ
+                            if (wordFoundInCurrentScenario)
+                            {
+                                Debug.Log("既にワードが見つかっているため、カウントダウンの開始をスキップします。");
+                                return;
+                            }
+
                             // 結果テキストのタイプライター効果が完了したらカウントダウンを開始
                             if (countdownManager != null)
                             {

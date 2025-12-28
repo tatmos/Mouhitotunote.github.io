@@ -100,6 +100,9 @@ namespace NovelGame
             activeLabelEffects[label] = newCoroutine;
         }
 
+        private VisualElement currentContainer = null;
+        private string currentFullText = "";
+
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果を開始
         /// </summary>
@@ -111,7 +114,9 @@ namespace NovelGame
                 StopCoroutine(currentTypewriterEffect);
             }
 
-            // コールバックを設定
+            // 現在の状態を保存
+            currentContainer = container;
+            currentFullText = fullText;
             onWordFoundCallback = onWordFound;
 
             // タイプライター効果開始
@@ -312,15 +317,11 @@ namespace NovelGame
         {
             if (clickableWordLabel == null) return;
             
-            // 色を変更（緑色）
-            clickableWordLabel.style.color = new StyleColor(new Color(0.2f, 0.8f, 0.4f));
-            clickableWordLabel.RemoveFromClassList("clickable-word");
-            
-            // クリックイベントを削除
-            clickableWordLabel.UnregisterCallback<ClickEvent>(OnWordClicked);
-            
             // コールバックを呼び出し
             onWordFoundCallback?.Invoke(true);
+            
+            // テキストを即座に全表示し、コルーチンを停止する
+            SkipTypewriterWithClickableWord();
             
             clickableWordLabel = null;
         }
@@ -386,6 +387,89 @@ namespace NovelGame
             {
                 activeLabelEffects.Remove(label);
             }
+        }
+
+        /// <summary>
+        /// クリッカブルな「もうひとつ」を含むテキストを即座に全表示する
+        /// </summary>
+        public void SkipTypewriterWithClickableWord()
+        {
+            if (currentTypewriterEffect == null || currentContainer == null || string.IsNullOrEmpty(currentFullText)) return;
+
+            // コルーチンを停止
+            StopTypewriterEffect();
+
+            // コンテナをクリア
+            currentContainer.Clear();
+
+            // テキストを解析して一気に表示
+            string[] lines = currentFullText.Split('\n');
+            for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+            {
+                string line = lines[lineIndex];
+                int wordStartIndex = line.IndexOf("【もうひとつ】");
+                int wordLength = 0;
+                string clickableText = "";
+
+                if (wordStartIndex >= 0)
+                {
+                    wordLength = "【もうひとつ】".Length;
+                    clickableText = "もうひとつ";
+                }
+                else
+                {
+                    wordStartIndex = line.IndexOf("もうひとつ");
+                    if (wordStartIndex >= 0)
+                    {
+                        // 境界判定ロジックは簡易化（既にStart時に検証済みのはずだが、ここでも一応やるならやる）
+                        wordLength = "もうひとつ".Length;
+                        clickableText = "もうひとつ";
+                    }
+                }
+
+                if (wordStartIndex >= 0 && wordLength > 0)
+                {
+                    if (wordStartIndex > 0)
+                    {
+                        Label beforeLabel = new Label(line.Substring(0, wordStartIndex));
+                        beforeLabel.style.fontSize = 20;
+                        beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        currentContainer.Add(beforeLabel);
+                    }
+
+                    Label clickableLabel = new Label(clickableText);
+                    clickableLabel.style.fontSize = 20;
+                    clickableLabel.style.whiteSpace = WhiteSpace.Normal;
+                    clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.8f, 0.4f)); // 最初から緑色（見つかった状態）
+                    currentContainer.Add(clickableLabel);
+
+                    int wordEndIndex = wordStartIndex + wordLength;
+                    if (wordEndIndex < line.Length)
+                    {
+                        Label afterLabel = new Label(line.Substring(wordEndIndex));
+                        afterLabel.style.fontSize = 20;
+                        afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        currentContainer.Add(afterLabel);
+                    }
+                }
+                else
+                {
+                    Label textLabel = new Label(line);
+                    textLabel.style.fontSize = 20;
+                    textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    currentContainer.Add(textLabel);
+                }
+
+                if (lineIndex < lines.Length - 1)
+                {
+                    Label lineBreak = new Label("\n");
+                    lineBreak.style.fontSize = 20;
+                    currentContainer.Add(lineBreak);
+                }
+            }
+
+            currentContainer = null;
+            currentFullText = "";
         }
 
         /// <summary>
