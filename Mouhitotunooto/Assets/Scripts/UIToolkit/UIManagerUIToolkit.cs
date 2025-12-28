@@ -678,19 +678,9 @@ namespace NovelGame
                 {
                     typewriterEffectManager.StartTypewriterEffectWithClickableWord(setupContainer, scenario.setup, () =>
                     {
-                        // タイプライター効果が完了したら選択肢ボタンを表示
-                        Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを表示します。");
-                        // 再取得を試みる
-                        var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
-                        if (buttonContainer != null)
-                        {
-                            buttonContainer.style.display = DisplayStyle.Flex;
-                            Debug.Log($"選択肢ボタンコンテナを表示: {buttonContainer.childCount}個のボタン");
-                        }
-                        else
-                        {
-                            Debug.LogWarning("choiceButtonContainerが見つかりません");
-                        }
+                        // タイプライター効果が完了したら選択肢ボタンを順次表示
+                        Debug.Log("setupのタイプライター効果が完了しました。選択肢ボタンを順次表示します。");
+                        StartCoroutine(ShowChoicesSequentially(root));
                     }, (found) => {
                         if (found)
                         {
@@ -708,23 +698,16 @@ namespace NovelGame
                                 StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
                             }
                             
-                            // 選択肢ボタンを表示
-                            var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
-                            if (choiceButtonContainer != null)
-                            {
-                                choiceButtonContainer.style.display = DisplayStyle.Flex;
-                            }
+                            // 選択肢ボタンを順次表示
+                            StartCoroutine(ShowChoicesSequentially(root));
                         }
                     });
                 }
             }
             else
             {
-                // タイプライター効果がない場合は即座に選択肢ボタンを表示
-                if (choiceButtonContainer != null)
-                {
-                    choiceButtonContainer.style.display = DisplayStyle.Flex;
-                }
+                // タイプライター効果がない場合は即座に選択肢ボタンを順次表示
+                StartCoroutine(ShowChoicesSequentially(root));
             }
 
             CreateChoiceButtons(root, scenario);
@@ -1268,6 +1251,8 @@ namespace NovelGame
                 int choiceId = choice.id;
                 button.clicked += () => OnChoiceSelected(choiceId);
 
+                // 最初は非表示
+                button.style.display = DisplayStyle.None;
                 buttonContainer.Add(button);
             }
 
@@ -1276,6 +1261,40 @@ namespace NovelGame
             if (backButton != null)
             {
                 backButton.clicked += ShowSelectionScreen;
+                // 最初は非表示
+                backButton.style.display = DisplayStyle.None;
+            }
+        }
+
+        /// <summary>
+        /// 選択肢を順次表示するコルーチン
+        /// </summary>
+        private IEnumerator ShowChoicesSequentially(VisualElement root)
+        {
+            var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
+            if (buttonContainer == null) yield break;
+
+            // コンテナを表示
+            buttonContainer.style.display = DisplayStyle.Flex;
+
+            // 選択肢ボタンを一つずつ表示
+            foreach (var child in buttonContainer.Children())
+            {
+                if (child is Button button)
+                {
+                    button.style.display = DisplayStyle.Flex;
+                    // フェードインやアニメーションを追加することも可能ですが、
+                    // まずは単純に表示を切り替えます
+                    yield return new WaitForSeconds(0.5f);
+                }
+            }
+
+            // すべての選択肢が表示された後に戻るボタンを表示
+            var backButton = root.Q<Button>("BackToSelectionButtonFromScenario");
+            if (backButton != null)
+            {
+                yield return new WaitForSeconds(0.3f);
+                backButton.style.display = DisplayStyle.Flex;
             }
         }
 
