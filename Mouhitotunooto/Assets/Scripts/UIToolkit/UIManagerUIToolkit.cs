@@ -76,6 +76,12 @@ namespace NovelGame
         private int currentAmbientScenarioId = -1; // 現在再生中の環境音のシナリオID
         private float selectionBGMNormalVolume = 1.0f; // シナリオ選択BGMの通常音量
         private float selectionBGMLoweredVolume = 0.5f; // プロフィール/実績画面でのBGM音量（通常の50%）
+        
+        // ローパスフィルター関連
+        private AudioLowPassFilter bgmLowPassFilter; // BGM用のローパスフィルター
+        private Coroutine lowPassFadeCoroutine; // ローパスフィルターのフェード用コルーチン
+        private const float LowPassNormalCutoff = 22000f; // 通常時のカットオフ周波数
+        private const float LowPassMuffledCutoff = 1000f; // モヤがかった時のカットオフ周波数
 
         private void Start()
         {
@@ -124,6 +130,11 @@ namespace NovelGame
             bgmAudioSource = gameObject.AddComponent<AudioSource>();
             bgmAudioSource.playOnAwake = false;
             bgmAudioSource.volume = 1f; // BGMの初期音量
+            
+            // BGM用のローパスフィルターを追加
+            bgmLowPassFilter = bgmAudioSource.gameObject.AddComponent<AudioLowPassFilter>();
+            bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
+            bgmLowPassFilter.enabled = true;
             
             sfxAudioSource = gameObject.AddComponent<AudioSource>();
             sfxAudioSource.playOnAwake = false;
@@ -1736,6 +1747,17 @@ namespace NovelGame
                 sfxFadeOutCoroutine = StartCoroutine(FadeOutSfxAudio(0.5f));
             }
             
+            // ローパスフィルターをリセット（通常の状態に戻す）
+            if (bgmLowPassFilter != null)
+            {
+                if (lowPassFadeCoroutine != null)
+                {
+                    StopCoroutine(lowPassFadeCoroutine);
+                    lowPassFadeCoroutine = null;
+                }
+                bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
+            }
+
             // 効果音が停止したら環境音をフェードイン
             StartCoroutine(CheckAndFadeInAmbientAfterSfx());
         }
@@ -1817,11 +1839,26 @@ namespace NovelGame
                     // 少し低い場合は即座に通常音量に戻す
                     bgmAudioSource.volume = selectionBGMNormalVolume;
                 }
+
+                // ローパスフィルターを解除（既に再生中の場合も必要）
+                if (lowPassFadeCoroutine != null)
+                {
+                    StopCoroutine(lowPassFadeCoroutine);
+                }
+                lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 2.0f));
+
                 return;
             }
             
             // フェードイン（音量を通常音量に戻す）
             fadeInCoroutine = StartCoroutine(FadeInAudioToNormalVolume(3f));
+
+            // ローパスフィルターを解除（通常の状態に戻す）
+            if (lowPassFadeCoroutine != null)
+            {
+                StopCoroutine(lowPassFadeCoroutine);
+            }
+            lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 2.0f));
         }
         
         /// <summary>
@@ -1889,6 +1926,7 @@ namespace NovelGame
         
         /// <summary>
         /// シナリオ選択BGMの音量を下げる（プロフィール/実績画面用）
+        /// 現在は音量の代わりにローパスフィルターを適用する
         /// </summary>
         private void LowerSelectionBGMVolume()
         {
@@ -1906,8 +1944,40 @@ namespace NovelGame
                 fadeOutCoroutine = null;
             }
             
-            // 音量を下げる（3.0秒でフェードアウト）
-            StartCoroutine(FadeSelectionBGMVolume(selectionBGMNormalVolume, selectionBGMLoweredVolume, 3.0f));
+            // ローパスフィルターを適用（音量はそのままにするか、わずかに下げる）
+            if (lowPassFadeCoroutine != null)
+            {
+                StopCoroutine(lowPassFadeCoroutine);
+            }
+            lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 2.0f));
+            
+            // 音量も少し下げておくとより効果的（ユーザーの要望通り「音量を下げる」から「LPF」への変更だが、併用してもよい）
+            // ひとまずLPFのみに変更するが、必要ならここでも音量を調整できる
+            // bgmAudioSource.volume = selectionBGMLoweredVolume;
+        }
+
+        /// <summary>
+        /// ローパスフィルターのカットオフ周波数をフェードさせる
+        /// </summary>
+        private IEnumerator FadeLowPassFilter(float targetCutoff, float duration)
+        {
+            if (bgmLowPassFilter == null) yield break;
+
+            float startCutoff = bgmLowPassFilter.cutoffFrequency;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                // 周波数の変化は対数的（Logarithmic）に感じられるため、Lerpよりも適切な補間があるが、
+                // 今回はシンプルにLerpを使用する
+                bgmLowPassFilter.cutoffFrequency = Mathf.Lerp(startCutoff, targetCutoff, t);
+                yield return null;
+            }
+
+            bgmLowPassFilter.cutoffFrequency = targetCutoff;
+            lowPassFadeCoroutine = null;
         }
         
         /// <summary>
