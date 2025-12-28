@@ -1281,6 +1281,8 @@ namespace NovelGame
             buttonContainer.Clear();
 
             var scenarios = gameManager.GetScenarios();
+            var lostLetters = gameManager.GetLostLetters();
+
             foreach (var scenario in scenarios)
             {
                 // シナリオ6は最初の5つをクリアするまで表示しない
@@ -1301,7 +1303,21 @@ namespace NovelGame
                 buttonContent.style.alignItems = Align.FlexStart;
                 buttonContent.style.width = Length.Percent(100);
                 
-                var titleLabel = new Label(scenario.title);
+                string scenarioTitleText = scenario.title;
+                string scenarioDescriptionText = scenario.setup;
+
+                // ダークモード：失われた文字を置換
+                if (lostLetters.Count > 0)
+                {
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        string target = lostLetter.ToString();
+                        scenarioTitleText = scenarioTitleText.Replace(target, "※");
+                        scenarioDescriptionText = scenarioDescriptionText.Replace(target, "※");
+                    }
+                }
+
+                var titleLabel = new Label(scenarioTitleText);
                 titleLabel.style.fontSize = 20;
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.whiteSpace = WhiteSpace.Normal;
@@ -1309,7 +1325,7 @@ namespace NovelGame
                 buttonContent.Add(titleLabel);
                 
                 // シナリオの説明を追加（2行まで）
-                var descriptionLabel = new Label(scenario.setup);
+                var descriptionLabel = new Label(scenarioDescriptionText);
                 descriptionLabel.style.fontSize = 14;
                 descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
                 descriptionLabel.style.opacity = 0.9f;
@@ -1417,6 +1433,8 @@ namespace NovelGame
                 choices = scenario.choices;
             }
 
+            var lostLetters = gameManager.GetLostLetters();
+
             foreach (var choice in choices)
             {
                 // ボタンを作成
@@ -1432,13 +1450,27 @@ namespace NovelGame
                     button.AddToClassList("choice-button");
                 }
                 
+                string choiceLabelText = $"選択肢{choice.id}：{choice.text}";
+                string previewLabelText = choice.preview;
+
+                // 失われた文字を※に置き換え
+                if (lostLetters.Count > 0)
+                {
+                    foreach (char lostLetter in lostLetters)
+                    {
+                        string target = lostLetter.ToString();
+                        choiceLabelText = choiceLabelText.Replace(target, "※");
+                        previewLabelText = previewLabelText.Replace(target, "※");
+                    }
+                }
+
                 // ボタンの中にテキストを配置
-                var buttonText = new Label($"選択肢{choice.id}：{choice.text}");
+                var buttonText = new Label(choiceLabelText);
                 buttonText.style.fontSize = 18;
                 buttonText.style.whiteSpace = WhiteSpace.Normal;
                 buttonText.style.unityFontStyleAndWeight = FontStyle.Bold;
                 
-                var previewText = new Label(choice.preview);
+                var previewText = new Label(previewLabelText);
                 previewText.style.fontSize = 14;
                 previewText.style.opacity = 0.8f;
                 previewText.style.whiteSpace = WhiteSpace.Normal;

@@ -15,6 +15,7 @@ namespace NovelGame
         private HashSet<int> completedScenarios = new HashSet<int>();
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
         private HashSet<char> collectedLetters = new HashSet<char>();
+        private HashSet<char> lastLostLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
@@ -86,6 +87,7 @@ namespace NovelGame
         {
             var scenarios = GetScenarios();
             currentScenarioIndex = scenarios.FindIndex(s => s.id == scenarioId);
+            CheckLostLettersUpdate();
         }
 
         public int GetScore()
@@ -129,11 +131,17 @@ namespace NovelGame
                     int letterIndex = scenarioId - 1;
                     if (letterIndex >= 0 && letterIndex < letters.Length)
                     {
-                        collectedLetters.Add(letters[letterIndex]);
+                        char collectedLetter = letters[letterIndex];
+                        if (!collectedLetters.Contains(collectedLetter))
+                        {
+                            Debug.Log($"[GameManager] 文字を取得しました: {collectedLetter}");
+                        }
+                        collectedLetters.Add(collectedLetter);
                     }
                 }
 
                 OnScoreChanged?.Invoke();
+                CheckLostLettersUpdate();
             }
 
             bool wasDarkMode = IsDarkMode() && scenarioId == 6;
@@ -251,11 +259,13 @@ namespace NovelGame
 
             char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
             
-            // 現在のシナリオに対応する文字を失われた文字に加える
-            var currentScenario = GetCurrentScenario();
-            if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
+            // 完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
+            for (int i = 1; i <= 5; i++)
             {
-                lostLetters.Add(allLetters[currentScenario.id - 1]);
+                if (completedScenarios.Contains(i))
+                {
+                    lostLetters.Add(allLetters[i - 1]);
+                }
             }
             
             // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出
@@ -268,12 +278,29 @@ namespace NovelGame
             return lostLetters;
         }
 
+        /// <summary>
+        /// 消失した文字の更新をチェックし、新しく消失した文字があればログを出力
+        /// </summary>
+        private void CheckLostLettersUpdate()
+        {
+            var currentLostLetters = GetLostLetters();
+            foreach (char c in currentLostLetters)
+            {
+                if (!lastLostLetters.Contains(c))
+                {
+                    Debug.Log($"[GameManager] 文字が消失しました: {c}");
+                }
+            }
+            lastLostLetters = currentLostLetters;
+        }
+
         public void ResetGame()
         {
             score = 0;
             completedScenarios.Clear();
             scenarioResults.Clear();
             collectedLetters.Clear();
+            lastLostLetters.Clear();
             seenEndsByMode.Clear();
             currentScenarioIndex = -1;
             OnScoreChanged?.Invoke();
