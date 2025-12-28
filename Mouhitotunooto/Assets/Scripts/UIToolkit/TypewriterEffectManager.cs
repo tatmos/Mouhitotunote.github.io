@@ -190,6 +190,12 @@ namespace NovelGame
                             char c = beforeWord[i];
                             beforeLabel.text = beforeWord.Substring(0, i + 1);
                             
+                            // 空白文字および記号・句読点以外の場合に音を鳴らす
+                            if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
+                            {
+                                PlayTypewriterSound();
+                            }
+
                             // 記号や句読点の場合は待機時間を長くする
                             float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
                             yield return new WaitForSeconds(delay);
@@ -206,6 +212,9 @@ namespace NovelGame
                     clickableWordLabel = clickableLabel;
                     container.Add(clickableLabel);
                     
+                    // クリッカブルワード表示時にも音を鳴らす
+                    PlayTypewriterSound();
+                    
                     // 後の部分を通常のLabelとして表示
                     int wordEndIndex = wordStartIndex + wordLength;
                     if (wordEndIndex < line.Length)
@@ -221,6 +230,12 @@ namespace NovelGame
                             char c = afterWord[i];
                             afterLabel.text = afterWord.Substring(0, i + 1);
                             
+                            // 空白文字および記号・句読点以外の場合に音を鳴らす
+                            if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
+                            {
+                                PlayTypewriterSound();
+                            }
+
                             // 記号や句読点の場合は待機時間を長くする
                             float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
                             yield return new WaitForSeconds(delay);
