@@ -1362,14 +1362,6 @@ namespace NovelGame
         }
 
 
-        private void ToggleEpilogue2(int scenarioId)
-        {
-            if (profileScreenManager != null)
-            {
-                profileScreenManager.ToggleEpilogue2(scenarioId);
-                ShowProfileScreen(); // 再生成
-            }
-        }
 
         private string GetScenarioTitle(int scenarioId)
         {

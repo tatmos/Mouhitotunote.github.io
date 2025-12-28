@@ -317,29 +317,45 @@ namespace NovelGame
 
                             var expandButton = new Button();
                             expandButton.text = isExpanded ? "▼ 後日談の後日談を隠す" : "▶ 後日談の後日談を見る";
-                            expandButton.clicked += () => ToggleEpilogue2(profile.scenarioId);
                             expandButton.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
                             detailCard.Add(expandButton);
 
-                            if (isExpanded)
-                            {
-                                string epilogue2Text = isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2;
-                                var epilogue2Label = new Label();
-                                epilogue2Label.AddToClassList("profile-epilogue2");
-                                epilogue2Label.style.whiteSpace = WhiteSpace.Normal;
-                                epilogue2Label.style.maxWidth = Length.Percent(100);
-                                epilogue2Label.style.overflow = Overflow.Hidden;
-                                detailCard.Add(epilogue2Label);
+                            string epilogue2Text = isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2;
+                            var epilogue2Label = new Label(epilogue2Text);
+                            epilogue2Label.AddToClassList("profile-epilogue2");
+                            epilogue2Label.style.whiteSpace = WhiteSpace.Normal;
+                            epilogue2Label.style.maxWidth = Length.Percent(100);
+                            epilogue2Label.style.overflow = Overflow.Hidden;
+                            epilogue2Label.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+                            detailCard.Add(epilogue2Label);
 
-                                if (typewriterEffectManager != null)
+                            expandButton.clicked += () =>
+                            {
+                                bool nowExpanded = !expandedProfiles.Contains(profile.scenarioId);
+                                if (nowExpanded)
                                 {
-                                    typewriterEffectManager.StartTypewriterEffect(epilogue2Label, epilogue2Text);
+                                    expandedProfiles.Add(profile.scenarioId);
+                                    expandButton.text = "▼ 後日談の後日談を隠す";
+                                    epilogue2Label.style.display = DisplayStyle.Flex;
+                                    
+                                    // 表示した時だけタイプライター効果を適用
+                                    if (typewriterEffectManager != null)
+                                    {
+                                        typewriterEffectManager.StartTypewriterEffect(epilogue2Label, epilogue2Text);
+                                    }
                                 }
                                 else
                                 {
-                                    epilogue2Label.text = epilogue2Text;
+                                    expandedProfiles.Remove(profile.scenarioId);
+                                    expandButton.text = "▶ 後日談の後日談を見る";
+                                    epilogue2Label.style.display = DisplayStyle.None;
+                                    
+                                    // 非表示にする際はタイプライターを停止（もし実行中なら）
+                                    // StartTypewriterEffectは同じラベルに対して呼ばれると前のを止めるので
+                                    // ここで明示的に止める必要は必ずしもないが、テキストをクリアしておく
+                                    epilogue2Label.text = "";
                                 }
-                            }
+                            };
                         }
                     }
 
@@ -390,24 +406,6 @@ namespace NovelGame
             container.Add(detailCard);
         }
 
-        /// <summary>
-        /// 後日談の後日談の表示/非表示を切り替え
-        /// </summary>
-        public void ToggleEpilogue2(int scenarioId)
-        {
-            bool wasExpanded = expandedProfiles.Contains(scenarioId);
-            if (wasExpanded)
-            {
-                expandedProfiles.Remove(scenarioId);
-            }
-            else
-            {
-                expandedProfiles.Add(scenarioId);
-            }
-            
-            // プロフィール詳細のみを再生成してUIを更新
-            onProfileDetailUpdate?.Invoke();
-        }
 
         /// <summary>
         /// プロフィール詳細更新時のコールバックを設定
