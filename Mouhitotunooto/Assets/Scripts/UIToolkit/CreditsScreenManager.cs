@@ -53,14 +53,29 @@ namespace NovelGame
             musicSection.style.flexDirection = FlexDirection.Column;
             musicSection.style.alignItems = Align.Center;
 
-            var musicTitle = new Label("エンドクレジット楽曲");
+            var musicTitleText = "エンドクレジット楽曲";
+            var songInfoText = "曲：「もうひとつ」 / 作曲：suno ai v5 / 作詞：Claude sonnet 4.5";
+
+            // ダークモード演出：失われた文字を置換
+            if (GameManager.Instance != null && GameManager.Instance.IsDarkMode())
+            {
+                var lostLetters = GameManager.Instance.GetLostLetters();
+                foreach (char lostLetter in lostLetters)
+                {
+                    string target = lostLetter.ToString();
+                    musicTitleText = musicTitleText.Replace(target, "※");
+                    songInfoText = songInfoText.Replace(target, "※");
+                }
+            }
+
+            var musicTitle = new Label(musicTitleText);
             musicTitle.style.fontSize = 36;
             musicTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
             musicTitle.style.marginBottom = 24;
             musicTitle.style.color = new Color(1f, 0.84f, 0f); // yellow-300
             musicSection.Add(musicTitle);
 
-            var songInfo = new Label("曲：「もうひとつ」 / 作曲：suno ai v5 / 作詞：Claude sonnet 4.5");
+            var songInfo = new Label(songInfoText);
             songInfo.style.fontSize = 24;
             songInfo.style.unityFontStyleAndWeight = FontStyle.Bold;
             songInfo.style.marginBottom = 16;
@@ -184,7 +199,22 @@ namespace NovelGame
             item.style.marginBottom = 16;
             item.style.width = Length.Percent(100);
 
-            var roleLabel = new Label(role);
+            string roleText = role;
+            string nameText = name;
+
+            // ダークモード演出：失われた文字を置換
+            if (GameManager.Instance != null && GameManager.Instance.IsDarkMode())
+            {
+                var lostLetters = GameManager.Instance.GetLostLetters();
+                foreach (char lostLetter in lostLetters)
+                {
+                    string target = lostLetter.ToString();
+                    roleText = roleText.Replace(target, "※");
+                    nameText = nameText.Replace(target, "※");
+                }
+            }
+
+            var roleLabel = new Label(roleText);
             roleLabel.style.fontSize = 24;
             roleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             roleLabel.style.marginBottom = 8;
@@ -193,7 +223,7 @@ namespace NovelGame
             roleLabel.style.maxWidth = Length.Percent(100);
             item.Add(roleLabel);
 
-            var nameLabel = new Label(name);
+            var nameLabel = new Label(nameText);
             nameLabel.style.fontSize = 20;
             nameLabel.style.whiteSpace = WhiteSpace.Normal;
             nameLabel.style.maxWidth = Length.Percent(100);
