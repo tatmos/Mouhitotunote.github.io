@@ -1,4 +1,4 @@
-﻿<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441132597879392&amp;guid=129863cdc8fc8a64386b92878645c775&amp;type=3#GameStyles"/>
     <ui:VisualElement name="MouhitotsuScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;"/>
@@ -7,7 +7,7 @@
             <ui:ScrollView name="MouhitotsuScrollView" style="flex-grow: 1;">
                 <ui:VisualElement name="MouhitotsuContainer" style="flex-direction: column; align-items: center; width: 100%; padding: 20px;"/>
             </ui:ScrollView>
-            <ui:Button name="BackToSelectionButtonFromMouhitotsu" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center;"/>
+            <ui:Button name="BackToSelectionButtonFromMouhitotsu" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0);"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

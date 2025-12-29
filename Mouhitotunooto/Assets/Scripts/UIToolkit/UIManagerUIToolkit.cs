@@ -280,10 +280,10 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
+                string text = "v1.3.0 (2025-12-29)";
                 var lostLetters = gameManager.GetLostLetters();
                 if (lostLetters.Count > 0)
                 {
-                    string text = "v1.1.0 (2025-12-29)";
                     foreach (char lostLetter in lostLetters)
                     {
                         text = text.Replace(lostLetter.ToString(), "※");
@@ -292,7 +292,7 @@ namespace NovelGame
                 }
                 else
                 {
-                    versionText.text = "v1.1.0 (2025-12-29)";
+                    versionText.text = text;
                 }
             }
             

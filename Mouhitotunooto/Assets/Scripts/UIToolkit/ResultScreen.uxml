@@ -14,7 +14,7 @@
                 <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 20px;"/>
                 <ui:Label name="WordFoundMessage" text="" style="font-size: 24px; -unity-font-style: bold; color: rgb(16, 185, 129); margin-bottom: 20px; display: none;"/>
                 <ui:Label name="WordFailedMessage" text="残念...【もうひとつ】は出ませんでした" style="font-size: 24px; -unity-font-style: bold; color: rgb(239, 68, 68); margin-bottom: 20px; display: none;"/>
-                <ui:VisualElement name="EpilogueContainer" class="epilogue-box" style="width: 100%; margin-bottom: 20px;">
+                <ui:VisualElement name="EpilogueContainer" class="epilogue-box" style="width: 100%; margin-bottom: 20px; background-image: url(&quot;project://database/Assets/Images/EpilogueTitle.png?fileID=21300000&amp;guid=ee71dd6e7e358d142bbbf1e0e3cf60e8&amp;type=3#EpilogueTitle&quot;); background-color: rgba(55, 55, 55, 0);">
                     <ui:Label name="EpilogueTitle" text="後日談" class="epilogue-title" style="margin-bottom: 4px;"/>
                     <ui:Label name="EpilogueText" text="後日談" style="font-size: 16px; white-space: normal; max-width: 800px;"/>
                 </ui:VisualElement>
