@@ -50,20 +50,6 @@ namespace NovelGame
             container.Clear();
 
             var scenarios = gameManager.GetScenarios();
-            int totalCompleted = 0;
-            foreach (var scenario in scenarios)
-            {
-                if (gameManager.IsScenarioCompleted(scenario.id))
-                {
-                    totalCompleted++;
-                }
-            }
-
-            // 全シナリオクリア後のみ表示
-            if (totalCompleted < scenarios.Count)
-            {
-                return;
-            }
 
             var gridContainer = new VisualElement();
             gridContainer.style.flexDirection = FlexDirection.Row;
