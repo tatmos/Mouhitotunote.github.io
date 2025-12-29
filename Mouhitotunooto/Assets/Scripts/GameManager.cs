@@ -442,9 +442,59 @@ namespace NovelGame
         /// </summary>
         public int GetStoryProgressPercentage()
         {
-            int clearedCount = GetClearedDivisionsCount();
-            int totalDivisions = 5; // A, B, C, D, E
-            return Mathf.Clamp((int)((float)clearedCount / totalDivisions * 100), 0, 100);
+            float percentage = 0;
+
+            // 各ディビジョンの基本進捗 (計 5段階想定)
+            // A: 20%, B: 40%, C: 60%, D: 80%, E: 100%
+            
+            // 1. Division A 以前 (通常クリア)
+            if (!IsDivisionCleared("A"))
+            {
+                // シナリオ1-6のクリア状況 (最大6つ)
+                int completed = 0;
+                for (int i = 1; i <= 6; i++)
+                {
+                    if (completedScenarios.Contains(i)) completed++;
+                }
+                percentage = (completed / 6f) * 20f;
+            }
+            else if (!IsDivisionCleared("B"))
+            {
+                // 2. Division B 以前 (スコア7以上、不正発覚)
+                percentage = 20f;
+                // スコア7を目指す進捗 (現状のスコア / 7)
+                float subProgress = Mathf.Clamp01(score / 7f);
+                percentage += subProgress * 20f;
+            }
+            else if (!IsDivisionCleared("C"))
+            {
+                // 3. Division C 以前 (ダークモードですべての文字を失う)
+                percentage = 40f;
+                // ダークモードでのクリア状況 (シナリオ1-6)
+                int darkCompleted = completedScenariosInDarkMode.Count;
+                float subProgress = Mathf.Clamp01(darkCompleted / 6f);
+                percentage += subProgress * 20f;
+            }
+            else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
+            {
+                // 4. Division D/E 以前 (3周目、文字の復元)
+                percentage = 60f;
+                // 復元した文字数 (最大5つ)
+                float subProgress = Mathf.Clamp01(restoredLetters.Count / 5f);
+                // 3周目のシナリオ6クリアで一気に100%に近づくため、ここでは80%まで
+                percentage += subProgress * 20f;
+            }
+            else
+            {
+                // 5. 最終段階
+                percentage = 80f;
+                if (IsDivisionCleared("D") || IsDivisionCleared("E"))
+                {
+                    percentage = 100f;
+                }
+            }
+
+            return Mathf.Clamp((int)percentage, 0, 100);
         }
 
         public bool IsThirdLoop()
