@@ -45,7 +45,7 @@ namespace NovelGame
         private const float NormalPitch = 1.0f;
         private const float LoweredPitch = 0.5f;
         private const float SelectionBGMNormalVolume = 1.0f;
-        private const float SelectionBGMLoweredVolume = 0.5f;
+        private const float SelectionBGMLoweredVolume = 0.75f;
 
         private void Awake()
         {
@@ -182,18 +182,22 @@ namespace NovelGame
 
         private IEnumerator FadeOutAudioCoroutine(float duration)
         {
-            float startVolume = bgmAudioSource.volume;
-            float elapsed = 0f;
-            while (elapsed < duration)
+            if (bgmAudioSource.isPlaying)
             {
-                elapsed += Time.deltaTime;
-                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / duration);
-                yield return null;
+                float startVolume = bgmAudioSource.volume;
+                float elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / duration);
+                    yield return null;
+                }
+
+                bgmAudioSource.Stop();
+                bgmAudioSource.volume = startVolume;
+                fadeOutCoroutine = null;
+                StartCoroutine(CheckAndFadeInAmbientAfterBGM());
             }
-            bgmAudioSource.Stop();
-            bgmAudioSource.volume = startVolume;
-            fadeOutCoroutine = null;
-            StartCoroutine(CheckAndFadeInAmbientAfterBGM());
         }
 
         private IEnumerator CheckAndFadeInAmbientAfterBGM()

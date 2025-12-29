@@ -1398,7 +1398,7 @@ namespace NovelGame
             FadeOutAudioOnSceneChange();
             // 環境音を長めにフェードアウト（結果画面に移行）
             FadeOutAmbientSoundForResult();
-            HideAllScreens();
+            HideAllScreens(true);
             
             if (resultScreenDocument == null)
             {
@@ -1789,7 +1789,7 @@ namespace NovelGame
                 }
                 
                 // シナリオ選択BGMの一時停止時刻の記録などはAudioManager側で行われる
-                if (audioManager != null)
+                if (!keepBgm && audioManager != null)
                 {
                     audioManager.PauseSelectionBGM();
                 }
