@@ -268,89 +268,6 @@ namespace NovelGame
             {
                 mysteryVoiceText.style.display = DisplayStyle.None;
             }
-
-            // メニューボタンコンテナを取得
-            var menuButtonContainer = root.Q<VisualElement>("MenuButtonContainer");
-            if (menuButtonContainer == null)
-            {
-                // TitleScreen.uxml に MenuButtonContainer がない場合は作成して追加
-                menuButtonContainer = new VisualElement();
-                menuButtonContainer.name = "MenuButtonContainer";
-                menuButtonContainer.style.flexDirection = FlexDirection.Row;
-                menuButtonContainer.style.justifyContent = Justify.Center;
-                menuButtonContainer.style.alignItems = Align.Center;
-                menuButtonContainer.style.width = Length.Percent(100);
-                menuButtonContainer.style.marginTop = 20;
-                menuButtonContainer.style.flexWrap = Wrap.Wrap;
-                
-                var content = root.Q<VisualElement>("Content");
-                if (content != null)
-                {
-                    content.Add(menuButtonContainer);
-                }
-            }
-
-            if (menuButtonContainer != null)
-            {
-                menuButtonContainer.Clear();
-
-                // 実績ボタン（全シナリオクリア後のみ表示）
-                var scenarios = gameManager.GetScenarios();
-                int totalCompleted = 0;
-                foreach (var scenario in scenarios)
-                {
-                    if (gameManager.IsScenarioCompleted(scenario.id))
-                    {
-                        totalCompleted++;
-                    }
-                }
-
-                if (totalCompleted >= scenarios.Count)
-                {
-                    // 実績ボタン
-                    Button showAchievementsButton = new Button();
-                    showAchievementsButton.name = "ShowAchievementsButton";
-                    showAchievementsButton.AddToClassList("button-gradient");
-                    showAchievementsButton.style.minWidth = 200;
-                    showAchievementsButton.style.minHeight = 40;
-                    showAchievementsButton.style.marginRight = 10;
-                    SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧");
-                    showAchievementsButton.clicked += ShowAchievementsScreen;
-                    showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                    menuButtonContainer.Add(showAchievementsButton);
-
-                    // 「もうひとつ」ボタン
-                    Button showMouhitotsuButton = new Button();
-                    showMouhitotsuButton.name = "ShowMouhitotsuButton";
-                    showMouhitotsuButton.AddToClassList("button-gradient-indigo");
-                    showMouhitotsuButton.style.minWidth = 200;
-                    showMouhitotsuButton.style.minHeight = 40;
-                    showMouhitotsuButton.style.marginLeft = 10;
-                    showMouhitotsuButton.text = "「もうひとつ」";
-                    showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
-                    showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                    menuButtonContainer.Add(showMouhitotsuButton);
-
-                    // 3周目の場合は特別版エンドクレジットボタンも表示
-                    if (gameManager.IsThirdLoop() && gameManager.GetScenarioResult(6) != null)
-                    {
-                        Button showSpecialCreditsButton = new Button();
-                        showSpecialCreditsButton.name = "ShowSpecialCreditsButton";
-                        showSpecialCreditsButton.AddToClassList("button-gradient-dark");
-                        showSpecialCreditsButton.style.minWidth = 200;
-                        showSpecialCreditsButton.style.minHeight = 40;
-                        showSpecialCreditsButton.style.marginTop = 10;
-                        showSpecialCreditsButton.text = "特別エンドクレジット";
-                        showSpecialCreditsButton.clicked += () => {
-                            ShowConfirmationDialog("ここから先に進むともう戻れませんがよろしいですか？", () => {
-                                StartCoroutine(ShowSpecialCreditsTransition());
-                            });
-                        };
-                        showSpecialCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                        menuButtonContainer.Add(showSpecialCreditsButton);
-                    }
-                }
-            }
             
             // バージョン情報の表示（3周目などで伏字にする）
             var versionText = root.Q<Label>("VersionText");
@@ -559,57 +476,23 @@ namespace NovelGame
                 }
             }
 
-            // 実績ボタンの設定（全シナリオクリア後のみ表示）
+            // 実績ボタンの設定
             var showAchievementsButton = root.Q<Button>("ShowAchievementsButton");
             if (showAchievementsButton != null)
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
-                
-                var scenarios = gameManager.GetScenarios();
-                int totalCompleted = 0;
-                foreach (var scenario in scenarios)
-                {
-                    if (gameManager.IsScenarioCompleted(scenario.id))
-                    {
-                        totalCompleted++;
-                    }
-                }
-                
-                if (totalCompleted >= scenarios.Count)
-                {
-                    showAchievementsButton.style.display = DisplayStyle.Flex;
-                    showAchievementsButton.clicked += ShowAchievementsScreen;
-                }
-                else
-                {
-                    showAchievementsButton.style.display = DisplayStyle.None;
-                }
+            
+                showAchievementsButton.style.display = DisplayStyle.Flex;
+                showAchievementsButton.clicked += ShowAchievementsScreen;
             }
 
-            // 「もうひとつ」ボタンの設定（実績ボタンが表示されるタイミングと同じ、または全シナリオクリア後）
+            // 「もうひとつ」ボタンの設定
             var showMouhitotsuButtonInFadeIn = root.Q<Button>("ShowMouhitotsuButton");
             if (showMouhitotsuButtonInFadeIn != null)
             {
-                var scenarios = gameManager.GetScenarios();
-                int totalCompleted = 0;
-                foreach (var scenario in scenarios)
-                {
-                    if (gameManager.IsScenarioCompleted(scenario.id))
-                    {
-                        totalCompleted++;
-                    }
-                }
-
-                if (totalCompleted >= scenarios.Count)
-                {
-                    showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.Flex;
-                    showMouhitotsuButtonInFadeIn.clicked += ShowMouhitotsuScreen;
-                }
-                else
-                {
-                    showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.None;
-                }
+                showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.Flex;
+                showMouhitotsuButtonInFadeIn.clicked += ShowMouhitotsuScreen;
             }
 
             // スコア表示を更新
@@ -1054,59 +937,24 @@ namespace NovelGame
                 }
             }
 
-            // 実績ボタンの設定（全シナリオクリア後のみ表示）
+            // 実績ボタンの設定（常に表示）
             var showAchievementsButton = root.Q<Button>("ShowAchievementsButton");
             if (showAchievementsButton != null)
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
                 showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                
-                var scenarios = gameManager.GetScenarios();
-                int totalCompleted = 0;
-                foreach (var scenario in scenarios)
-                {
-                    if (gameManager.IsScenarioCompleted(scenario.id))
-                    {
-                        totalCompleted++;
-                    }
-                }
-                
-                if (totalCompleted >= scenarios.Count)
-                {
-                    showAchievementsButton.style.display = DisplayStyle.Flex;
-                    showAchievementsButton.clicked += ShowAchievementsScreen;
-                }
-                else
-                {
-                    showAchievementsButton.style.display = DisplayStyle.None;
-                }
+                showAchievementsButton.style.display = DisplayStyle.Flex;
+                showAchievementsButton.clicked += ShowAchievementsScreen;
             }
 
-            // 「もうひとつ」ボタンの設定
+            // 「もうひとつ」ボタンの設定（常に表示）
             var showMouhitotsuButton = root.Q<Button>("ShowMouhitotsuButton");
             if (showMouhitotsuButton != null)
             {
                 showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                var scenarios = gameManager.GetScenarios();
-                int totalCompleted = 0;
-                foreach (var scenario in scenarios)
-                {
-                    if (gameManager.IsScenarioCompleted(scenario.id))
-                    {
-                        totalCompleted++;
-                    }
-                }
-
-                if (totalCompleted >= scenarios.Count)
-                {
-                    showMouhitotsuButton.style.display = DisplayStyle.Flex;
-                    showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
-                }
-                else
-                {
-                    showMouhitotsuButton.style.display = DisplayStyle.None;
-                }
+                showMouhitotsuButton.style.display = DisplayStyle.Flex;
+                showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
             }
 
             UpdateScoreDisplay();

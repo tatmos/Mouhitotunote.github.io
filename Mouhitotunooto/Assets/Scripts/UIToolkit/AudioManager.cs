@@ -28,6 +28,7 @@ namespace NovelGame
         [SerializeField] private UnityEngine.Audio.AudioMixerGroup ambientMixerGroup;
 
         private AudioSource bgmAudioSource;
+        private AudioSource creditBgmAudioSource;
         private AudioSource sfxAudioSource;
         private AudioSource ambientAudioSource;
         private AudioLowPassFilter bgmLowPassFilter;
@@ -80,6 +81,14 @@ namespace NovelGame
             bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
             bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
             bgmLowPassFilter.enabled = true;
+            
+            // クレジットBGM専用のGameObject
+            GameObject creditBgmObject = new GameObject("CreditBGMPlayer");
+            creditBgmObject.transform.SetParent(this.transform);
+            creditBgmAudioSource = bgmObject.AddComponent<AudioSource>();
+            creditBgmAudioSource.playOnAwake = false;
+            creditBgmAudioSource.volume = 1f;
+            creditBgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
             
             // 効果音専用のGameObject
             GameObject sfxObject = new GameObject("SFXPlayer");
@@ -161,14 +170,14 @@ namespace NovelGame
 
         public void PlayCreditsBGM()
         {
-            if (creditsBGM != null && bgmAudioSource != null)
+            if (creditsBGM != null && creditBgmAudioSource != null)
             {
                 StopFadeOutBGM();
                 FadeOutAmbientSound();
-                bgmAudioSource.clip = creditsBGM;
-                bgmAudioSource.loop = true;
-                bgmAudioSource.volume = 1f;
-                bgmAudioSource.Play();
+                creditBgmAudioSource.clip = creditsBGM;
+                creditBgmAudioSource.loop = true;
+                creditBgmAudioSource.volume = 1f;
+                creditBgmAudioSource.Play();
             }
         }
 
@@ -300,7 +309,6 @@ namespace NovelGame
                 yield return null;
             }
             selectionBGMPausedTime = bgmAudioSource.time;
-            bgmAudioSource.Pause();
             isSelectionBGMPlaying = false;
         }
 
