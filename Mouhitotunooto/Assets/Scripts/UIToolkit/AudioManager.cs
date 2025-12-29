@@ -181,6 +181,14 @@ namespace NovelGame
             }
         }
 
+        public void StopCreditBgm()
+        {
+            if (creditBgmAudioSource != null && creditBgmAudioSource.isPlaying)
+            {
+                creditBgmAudioSource.Stop();
+            }
+        }
+
         public void FadeOutBGM(float duration)
         {
             if (bgmAudioSource == null) return;

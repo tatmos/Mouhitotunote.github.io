@@ -854,7 +854,10 @@ namespace NovelGame
         {
             FadeOutAudioOnSceneChange();
             HideAllScreens(true);
-            
+
+            // クレジットBGMを停止
+            audioManager.StopCreditBgm();
+
             if (selectionScreenDocument == null)
             {
                 Debug.LogError("SelectionScreenDocumentがアサインされていません！");
@@ -863,7 +866,7 @@ namespace NovelGame
 
             selectionScreenDocument.gameObject.SetActive(true);
             currentDocument = selectionScreenDocument;
-            
+
             // シナリオ選択BGMをフェードインして再生
             StartSelectionBGM();
             
