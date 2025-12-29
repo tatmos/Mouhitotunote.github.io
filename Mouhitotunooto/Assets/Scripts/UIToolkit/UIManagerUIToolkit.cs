@@ -36,6 +36,9 @@ namespace NovelGame
         [SerializeField] private Sprite selectionScreenBackground;
         [SerializeField] private Sprite profileScreenBackground;
         
+        [Header("Effects")]
+        [SerializeField] private Material distortionMaterial;
+        
         [Header("Audio")]
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
@@ -236,6 +239,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
             
@@ -881,6 +887,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
 
@@ -1150,6 +1159,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(profileScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
 
@@ -2254,8 +2266,80 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(scenarioBackgrounds[backgroundIndex]);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
+        }
+
+        /// <summary>
+        /// 背景の歪み演出を適用または解除する
+        /// </summary>
+        private void ApplyBackgroundDistortion(VisualElement backgroundImage)
+        {
+            if (backgroundImage == null) return;
+
+            bool isDarkMode = gameManager != null && gameManager.IsDarkMode();
+
+            // 注意: UI Toolkitの標準的なVisualElementには直接Materialをセットするプロパティはありません。
+            // 代わりに、カスタムマテリアルを使用するための隠しプロパティや、
+            // 新しいUnityバージョンでの対応状況を確認しながら実装します。
+            // ここでは、Shader Graph等で作成したマテリアルを適用するために generateVisualContent を再度試みます。
+            
+            if (isDarkMode && distortionMaterial != null)
+            {
+                backgroundImage.generateVisualContent -= OnGenerateVisualContentDistortion;
+                backgroundImage.generateVisualContent += OnGenerateVisualContentDistortion;
+            }
+            else
+            {
+                backgroundImage.generateVisualContent -= OnGenerateVisualContentDistortion;
+            }
+            backgroundImage.MarkDirtyRepaint();
+        }
+
+        private void OnGenerateVisualContentDistortion(MeshGenerationContext mgc)
+        {
+            var element = mgc.visualElement;
+            if (element == null || distortionMaterial == null) return;
+
+            var bgImage = element.resolvedStyle.backgroundImage;
+            if (bgImage == null || bgImage.texture == null) return;
+
+            var rect = element.contentRect;
+            
+            // Unity 6 では Allocate に Material を渡すことができます。
+            // パラメータ順序や型を確認：Allocate(int, int, Texture, Material, MeshFlags)
+            // もしくは Allocate(int, int, Texture) だけの場合、UIのデフォルトマテリアルが使われます。
+            
+            // もし Allocate(int, int, Material) が通らない場合は、
+            // 内部的なプロパティ _Material がある場合がありますが、非推奨です。
+            
+            // 最新の情報を元に：MeshWriteData には material プロパティがあるはずです（一部のUnityバージョン）。
+            // もしくは、Allocate の第3引数に Texture を渡し、その後マテリアルを指定する方法を模索します。
+            
+            distortionMaterial.mainTexture = bgImage.texture;
+            var mesh = mgc.Allocate(4, 6, bgImage.texture);
+            
+            // リフレクションを使って material プロパティがあるか確認し、あればセットする
+            var prop = mesh.GetType().GetProperty("material");
+            if (prop != null)
+            {
+                prop.SetValue(mesh, distortionMaterial);
+            }
+
+            mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMin, rect.yMax, Vertex.nearZ), uv = new Vector2(0, 0), tint = Color.white });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMin, rect.yMin, Vertex.nearZ), uv = new Vector2(0, 1), tint = Color.white });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMax, rect.yMin, Vertex.nearZ), uv = new Vector2(1, 1), tint = Color.white });
+            mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMax, rect.yMax, Vertex.nearZ), uv = new Vector2(1, 0), tint = Color.white });
+
+            mesh.SetNextIndex(0);
+            mesh.SetNextIndex(1);
+            mesh.SetNextIndex(2);
+            mesh.SetNextIndex(2);
+            mesh.SetNextIndex(3);
+            mesh.SetNextIndex(0);
         }
 
         public void ShowAchievementsScreen()
@@ -2284,6 +2368,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
             
@@ -2349,6 +2436,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
             
@@ -2466,6 +2556,9 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // ダークモード時は背景を歪ませる
+                    ApplyBackgroundDistortion(backgroundImage);
                 }
             }
 
