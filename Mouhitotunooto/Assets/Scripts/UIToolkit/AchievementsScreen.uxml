@@ -7,7 +7,7 @@
             <ui:ScrollView name="AchievementsScrollView" style="flex-grow: 1;">
                 <ui:VisualElement name="AchievementsContainer" style="flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%; padding: 20px;"/>
             </ui:ScrollView>
-            <ui:Button name="BackToSelectionButtonFromAchievements" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0);"/>
+            <ui:Button name="BackToSelectionButtonFromAchievements" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
