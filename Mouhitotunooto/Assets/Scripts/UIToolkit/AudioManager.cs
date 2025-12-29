@@ -22,6 +22,11 @@ namespace NovelGame
         private AudioClip thunderSound;
         private AudioClip[] ambientSounds;
 
+        [Header("Audio Mixer")]
+        [SerializeField] private UnityEngine.Audio.AudioMixerGroup bgmMixerGroup;
+        [SerializeField] private UnityEngine.Audio.AudioMixerGroup sfxMixerGroup;
+        [SerializeField] private UnityEngine.Audio.AudioMixerGroup ambientMixerGroup;
+
         private AudioSource bgmAudioSource;
         private AudioSource sfxAudioSource;
         private AudioSource ambientAudioSource;
@@ -70,6 +75,7 @@ namespace NovelGame
             bgmAudioSource = bgmObject.AddComponent<AudioSource>();
             bgmAudioSource.playOnAwake = false;
             bgmAudioSource.volume = 1f;
+            bgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
             
             bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
             bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
@@ -81,6 +87,7 @@ namespace NovelGame
             sfxAudioSource = sfxObject.AddComponent<AudioSource>();
             sfxAudioSource.playOnAwake = false;
             sfxAudioSource.volume = 1f;
+            sfxAudioSource.outputAudioMixerGroup = sfxMixerGroup;
             
             // 環境音専用のGameObject
             GameObject ambientObject = new GameObject("AmbientPlayer");
@@ -89,6 +96,7 @@ namespace NovelGame
             ambientAudioSource.playOnAwake = false;
             ambientAudioSource.volume = 0.5f;
             ambientAudioSource.loop = true;
+            ambientAudioSource.outputAudioMixerGroup = ambientMixerGroup;
         }
 
         public void SetAudioClips(

@@ -785,6 +785,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1315741628}
   - component: {fileID: 1315741627}
+  - component: {fileID: 1315741629}
   m_Layer: 0
   m_Name: UIManagerUIToolkit
   m_TagString: Untagged
@@ -868,6 +869,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1315741629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1315741626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93927b487f204870b751c86f4efb764e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NovelGame.AudioManager
+  bgmMixerGroup: {fileID: -5593014175342409267, guid: bfeec8ac461ad1b43b11098e25510102, type: 2}
+  sfxMixerGroup: {fileID: -4450024444049180897, guid: bfeec8ac461ad1b43b11098e25510102, type: 2}
+  ambientMixerGroup: {fileID: 3062318215661007234, guid: bfeec8ac461ad1b43b11098e25510102, type: 2}
 --- !u!1 &1337415255
 GameObject:
   m_ObjectHideFlags: 0
