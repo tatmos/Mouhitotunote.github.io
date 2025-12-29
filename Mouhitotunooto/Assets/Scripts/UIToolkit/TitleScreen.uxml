@@ -6,6 +6,6 @@
             <ui:Button name="StartButton" text="もうひとつ" class="button-gradient" style="min-width: 300px; min-height: 60px; font-size: 24px; background-color: rgb(139, 171, 246);"/>
             <ui:VisualElement name="MysteryVoiceText" style="flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: 800px; margin-top: 40px; display: none;"/>
         </ui:VisualElement>
-        <ui:Label name="VersionText" text="v1.1.0 (2025-12-29)" style="position: absolute; right: 20px; bottom: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.5);"/>
+        <ui:Label name="VersionText" text="v1.2.0 (2025-12-29)" style="position: absolute; right: 20px; bottom: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.5);"/>
     </ui:VisualElement>
 </ui:UXML>

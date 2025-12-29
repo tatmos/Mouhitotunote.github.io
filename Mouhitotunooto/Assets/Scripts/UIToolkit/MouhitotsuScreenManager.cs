@@ -106,9 +106,7 @@ namespace NovelGame
                 oldProgress.parent.Remove(oldProgress);
             }
 
-            int clearedCount = gameManager.GetClearedDivisionsCount();
-            int totalDivisions = 5; // A, B, C, D, E
-            int percentage = Mathf.Clamp((int)((float)clearedCount / totalDivisions * 100), 0, 100);
+            int percentage = gameManager.GetStoryProgressPercentage();
 
             var progressLabel = new Label($"物語の解明度: {percentage}%");
             progressLabel.name = "MouhitotsuProgress";

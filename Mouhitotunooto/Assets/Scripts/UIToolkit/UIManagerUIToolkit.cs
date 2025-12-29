@@ -1368,6 +1368,7 @@ namespace NovelGame
             }
 
             CreateChoiceButtons(root, scenario);
+            UpdateScoreDisplay();
 
             // トランジション開始（シナリオ画面のみスケールアニメーションあり）
             if (screenTransitionManager != null)
@@ -1772,6 +1773,7 @@ namespace NovelGame
             }
 
             // トランジション開始
+            UpdateScoreDisplay();
             if (screenTransitionManager != null)
             {
                 screenTransitionManager.StartScreenTransition(root);
@@ -1896,57 +1898,12 @@ namespace NovelGame
                 }
                 else
                 {
+                    // 選択画面以外（シナリオ、リザルト）でも適切なスタイルが適用されるようにする
+                    // USSで .score-text が定義されている
                     scoreLabel.AddToClassList("score-text");
                 }
             }
             
-            // 選択画面のスコアも更新
-            if (selectionScreenDocument != null && selectionScreenDocument.gameObject.activeSelf)
-            {
-                var root = selectionScreenDocument.rootVisualElement;
-                if (root != null)
-                {
-                    var selectionScoreLabel = root.Q<Label>("ScoreText");
-                    if (selectionScoreLabel != null && gameManager != null)
-                    {
-                        int totalScenarios = gameManager.GetScenarios().Count;
-                        
-                        // ダークモードで失われた文字を取得
-                        var lostLetters = gameManager.GetLostLetters();
-                        string scoreText = "【もうひとつ】ワードゲット数";
-                        
-                        // 失われた文字を※に置き換え
-                        if (lostLetters.Count > 0)
-                        {
-                            foreach (char lostLetter in lostLetters)
-                            {
-                                scoreText = scoreText.Replace(lostLetter.ToString(), "※");
-                            }
-                        }
-                        
-                        if (scoreIncreased)
-                        {
-                            StartCoroutine(AnimateScoreCountUp(selectionScoreLabel, scoreText, previousScore, currentScore, totalScenarios));
-                        }
-                        else
-                        {
-                            selectionScoreLabel.text = $"{scoreText}: {currentScore} / {totalScenarios}";
-                        }
-                        
-                        // 異常なスコアの場合はスタイルを適用
-                        selectionScoreLabel.ClearClassList();
-                        if (currentScore > totalScenarios || lostLetters.Count > 0)
-                        {
-                            selectionScoreLabel.AddToClassList("score-text-anomaly");
-                        }
-                        else
-                        {
-                            selectionScoreLabel.AddToClassList("score-text");
-                        }
-                    }
-                }
-            }
-
             // スコアを更新
             previousScore = currentScore;
         }
@@ -2597,9 +2554,7 @@ namespace NovelGame
             // 30秒待機してから進捗度を表示
             yield return new WaitForSeconds(30f);
 
-            int clearedCount = gameManager.GetClearedDivisionsCount();
-            int totalDivisions = 5; // A, B, C, D, E
-            int percentage = Mathf.Clamp((int)((float)clearedCount / totalDivisions * 100), 0, 100);
+            int percentage = gameManager.GetStoryProgressPercentage();
 
             var progressLabel = new Label($"物語の解明度: {percentage}%");
             progressLabel.name = "EndGameProgressLabel";
