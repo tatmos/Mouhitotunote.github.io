@@ -85,7 +85,7 @@ namespace NovelGame
             // クレジットBGM専用のGameObject
             GameObject creditBgmObject = new GameObject("CreditBGMPlayer");
             creditBgmObject.transform.SetParent(this.transform);
-            creditBgmAudioSource = bgmObject.AddComponent<AudioSource>();
+            creditBgmAudioSource = creditBgmObject.AddComponent<AudioSource>();
             creditBgmAudioSource.playOnAwake = false;
             creditBgmAudioSource.volume = 1f;
             creditBgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
@@ -189,6 +189,28 @@ namespace NovelGame
             }
         }
 
+        public void FadeOutCreditBGM(float duration)
+        {
+            if (creditBgmAudioSource != null && creditBgmAudioSource.isPlaying)
+            {
+                StartCoroutine(FadeOutCreditAudioCoroutine(duration));
+            }
+        }
+
+        private IEnumerator FadeOutCreditAudioCoroutine(float duration)
+        {
+            float startVolume = creditBgmAudioSource.volume;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                creditBgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / duration);
+                yield return null;
+            }
+            creditBgmAudioSource.Stop();
+            creditBgmAudioSource.volume = startVolume;
+        }
+
         public void FadeOutBGM(float duration)
         {
             if (bgmAudioSource == null) return;
@@ -285,6 +307,9 @@ namespace NovelGame
         {
             if (selectionBGM == null || bgmAudioSource == null) return;
             if (bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying) return;
+
+            // 既存のフェードアウトを停止
+            StopFadeOutBGM();
 
             bgmAudioSource.clip = selectionBGM;
             bgmAudioSource.loop = true;

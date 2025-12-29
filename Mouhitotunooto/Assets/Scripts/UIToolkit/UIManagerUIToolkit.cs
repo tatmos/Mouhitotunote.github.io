@@ -72,6 +72,7 @@ namespace NovelGame
         
         // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
+        private int previousScore = 0; // 前回のスコアを保持（演出用）
         
         private void Start()
         {
@@ -855,8 +856,8 @@ namespace NovelGame
             FadeOutAudioOnSceneChange();
             HideAllScreens(true);
 
-            // クレジットBGMを停止
-            audioManager.StopCreditBgm();
+            // クレジットBGMをフェードアウト停止（急な停止を避ける）
+            audioManager.FadeOutCreditBGM(1.0f);
 
             if (selectionScreenDocument == null)
             {
@@ -988,11 +989,11 @@ namespace NovelGame
             // 少し待つ
             yield return new WaitForSeconds(0.5f);
 
-            // 「もうひとつ」ボタンを探す
-            var showMouhitotsuButton = root.Q<Button>("ShowMouhitotsuButton");
-            if (showMouhitotsuButton == null) yield break;
+            // 「もうひとつ」ワードゲット数（ScoreText）を探す
+            var scoreLabel = root.Q<Label>("ScoreText");
+            if (scoreLabel == null) yield break;
 
-            // ボタンの座標を取得（レイアウト確定を待つ）
+            // 座標を取得（レイアウト確定を待つ）
             yield return null; 
             
             // 演出用のコンテナ（最前面）
@@ -1005,8 +1006,8 @@ namespace NovelGame
             effectContainer.pickingMode = PickingMode.Ignore;
             root.Add(effectContainer);
 
-            // 「もうひとつ」の文字を分解して飛ばす演出（簡易的にボタンの位置から光が出る演出にする）
-            Vector2 startPos = showMouhitotsuButton.worldBound.center;
+            // 「もうひとつ」ワードゲット数の位置から光が出るように変更
+            Vector2 startPos = scoreLabel.worldBound.center;
             
             // シナリオ6ボタンの位置を特定するために、一旦ボタンを作成して非表示で追加する
             var buttonContainer = root.Q<VisualElement>("ScenarioButtonContainer");
@@ -1350,6 +1351,12 @@ namespace NovelGame
                             
                             // 選択肢ボタンを順次表示
                             StartCoroutine(ShowChoicesSequentially(root));
+
+                            // スコア表示へ光が飛んでいく演出を開始
+                            if (!isDarkMode && !isThirdLoop)
+                            {
+                                StartCoroutine(ShowLetterGetAnimation(pos));
+                            }
                         }
                     });
                 }
@@ -1673,6 +1680,12 @@ namespace NovelGame
                             
                             // 綺麗な演出とともに一呼吸してから表示
                             StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel, pos));
+            
+                            // スコア表示へ光が飛んでいく演出を開始（posがクリック位置 = 【もうひとつ】の位置）
+                            if (!isDarkMode)
+                            {
+                                StartCoroutine(ShowLetterGetAnimation(pos));
+                            }
                         }
                     });
                     }
@@ -1844,10 +1857,12 @@ namespace NovelGame
         {
             if (currentDocument == null || currentDocument.rootVisualElement == null) return;
 
+            int currentScore = gameManager.GetScore();
+            bool scoreIncreased = currentScore > previousScore;
+            
             var scoreLabel = currentDocument.rootVisualElement.Q<Label>("ScoreText");
             if (scoreLabel != null && gameManager != null)
             {
-                int score = gameManager.GetScore();
                 int totalScenarios = gameManager.GetScenarios().Count;
                 
                 // ダークモードで失われた文字を取得
@@ -1857,22 +1872,25 @@ namespace NovelGame
                 // 失われた文字を※に置き換え
                 if (lostLetters.Count > 0)
                 {
-                    List<string> lostLettersList = new List<string>();
-                    foreach (char c in lostLetters) lostLettersList.Add(c.ToString());
-                    Debug.Log($"[UpdateScoreDisplay] 失われた文字数: {lostLetters.Count}, 文字: {string.Join(", ", lostLettersList.ToArray())}");
-                    Debug.Log($"[UpdateScoreDisplay] 置き換え前: {scoreText}");
                     foreach (char lostLetter in lostLetters)
                     {
                         scoreText = scoreText.Replace(lostLetter.ToString(), "※");
                     }
-                    Debug.Log($"[UpdateScoreDisplay] 置き換え後: {scoreText}");
                 }
                 
-                scoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
+                if (scoreIncreased)
+                {
+                    // カウントアップ演出
+                    StartCoroutine(AnimateScoreCountUp(scoreLabel, scoreText, previousScore, currentScore, totalScenarios));
+                }
+                else
+                {
+                    scoreLabel.text = $"{scoreText}: {currentScore} / {totalScenarios}";
+                }
                 
                 // 異常なスコアの場合はスタイルを適用
                 scoreLabel.ClearClassList();
-                if (score > totalScenarios || lostLetters.Count > 0)
+                if (currentScore > totalScenarios || lostLetters.Count > 0)
                 {
                     scoreLabel.AddToClassList("score-text-anomaly");
                 }
@@ -1891,7 +1909,6 @@ namespace NovelGame
                     var selectionScoreLabel = root.Q<Label>("ScoreText");
                     if (selectionScoreLabel != null && gameManager != null)
                     {
-                        int score = gameManager.GetScore();
                         int totalScenarios = gameManager.GetScenarios().Count;
                         
                         // ダークモードで失われた文字を取得
@@ -1901,22 +1918,24 @@ namespace NovelGame
                         // 失われた文字を※に置き換え
                         if (lostLetters.Count > 0)
                         {
-                            List<string> lostLettersList = new List<string>();
-                            foreach (char c in lostLetters) lostLettersList.Add(c.ToString());
-                            Debug.Log($"[UpdateScoreDisplay-Selection] 失われた文字数: {lostLetters.Count}, 文字: {string.Join(", ", lostLettersList.ToArray())}");
-                            Debug.Log($"[UpdateScoreDisplay-Selection] 置き換え前: {scoreText}");
                             foreach (char lostLetter in lostLetters)
                             {
                                 scoreText = scoreText.Replace(lostLetter.ToString(), "※");
                             }
-                            Debug.Log($"[UpdateScoreDisplay-Selection] 置き換え後: {scoreText}");
                         }
                         
-                        selectionScoreLabel.text = $"{scoreText}: {score} / {totalScenarios}";
+                        if (scoreIncreased)
+                        {
+                            StartCoroutine(AnimateScoreCountUp(selectionScoreLabel, scoreText, previousScore, currentScore, totalScenarios));
+                        }
+                        else
+                        {
+                            selectionScoreLabel.text = $"{scoreText}: {currentScore} / {totalScenarios}";
+                        }
                         
                         // 異常なスコアの場合はスタイルを適用
                         selectionScoreLabel.ClearClassList();
-                        if (score > totalScenarios || lostLetters.Count > 0)
+                        if (currentScore > totalScenarios || lostLetters.Count > 0)
                         {
                             selectionScoreLabel.AddToClassList("score-text-anomaly");
                         }
@@ -1927,6 +1946,23 @@ namespace NovelGame
                     }
                 }
             }
+
+            // スコアを更新
+            previousScore = currentScore;
+        }
+
+        private IEnumerator AnimateScoreCountUp(Label label, string baseText, int start, int end, int total)
+        {
+            float duration = 0.5f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                int current = (int)Mathf.Lerp(start, end, elapsed / duration);
+                label.text = $"{baseText}: {current} / {total}";
+                yield return null;
+            }
+            label.text = $"{baseText}: {end} / {total}";
         }
 
         private void CreateScenarioButtons(VisualElement root)
@@ -3056,6 +3092,104 @@ namespace NovelGame
             }
             
             container.Add(horizontalContainer);
+        }
+
+        /// <summary>
+        /// ワード取得時に、結果画面からスコア表示へ光が飛んでいく演出
+        /// </summary>
+        private IEnumerator ShowLetterGetAnimation(Vector2 startPos)
+        {
+            if (currentDocument == null || currentDocument.rootVisualElement == null) yield break;
+            var root = currentDocument.rootVisualElement;
+
+            // スコア表示（ScoreText）を探す
+            var scoreLabel = root.Q<Label>("ScoreText");
+            if (scoreLabel == null) yield break;
+
+            // 座標確定待ち
+            yield return null;
+            Vector2 endPos = scoreLabel.worldBound.center;
+
+            // 演出用コンテナ
+            var effectContainer = new VisualElement();
+            effectContainer.style.position = Position.Absolute;
+            effectContainer.style.left = 0;
+            effectContainer.style.top = 0;
+            effectContainer.style.right = 0;
+            effectContainer.style.bottom = 0;
+            effectContainer.pickingMode = PickingMode.Ignore;
+            root.Add(effectContainer);
+
+            // 光の粒子演出
+            int particleCount = 10;
+            List<VisualElement> particles = new List<VisualElement>();
+            for (int i = 0; i < particleCount; i++)
+            {
+                var p = new VisualElement();
+                p.style.position = Position.Absolute;
+                p.style.width = 8;
+                p.style.height = 8;
+                p.style.backgroundColor = Color.white;
+                p.style.borderTopLeftRadius = 4;
+                p.style.borderTopRightRadius = 4;
+                p.style.borderBottomLeftRadius = 4;
+                p.style.borderBottomRightRadius = 4;
+                p.style.left = startPos.x;
+                p.style.top = startPos.y;
+                effectContainer.Add(p);
+                particles.Add(p);
+            }
+
+            audioManager.PlaySparkleSound();
+
+            float duration = 0.8f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                float easeT = Mathf.SmoothStep(0, 1, t);
+
+                for (int i = 0; i < particleCount; i++)
+                {
+                    float angle = (i / (float)particleCount) * Mathf.PI * 2 + (t * 5f);
+                    float spread = (1 - t) * 30f;
+                    Vector2 currentPos = Vector2.Lerp(startPos, endPos, easeT);
+                    particles[i].style.left = currentPos.x + Mathf.Cos(angle) * spread;
+                    particles[i].style.top = currentPos.y + Mathf.Sin(angle) * spread;
+                    particles[i].style.opacity = 1.0f - (t * 0.3f);
+                }
+                yield return null;
+            }
+
+            // 到着時の小さなフラッシュ
+            var flash = new VisualElement();
+            flash.style.position = Position.Absolute;
+            flash.style.left = endPos.x - 20;
+            flash.style.top = endPos.y - 20;
+            flash.style.width = 40;
+            flash.style.height = 40;
+            flash.style.backgroundColor = Color.white;
+            flash.style.borderTopLeftRadius = 20;
+            flash.style.borderTopRightRadius = 20;
+            flash.style.borderBottomLeftRadius = 20;
+            flash.style.borderBottomRightRadius = 20;
+            effectContainer.Add(flash);
+
+            float flashDuration = 0.2f;
+            elapsed = 0f;
+            while (elapsed < flashDuration)
+            {
+                elapsed += Time.deltaTime;
+                flash.style.opacity = 1.0f - (elapsed / flashDuration);
+                flash.style.scale = new StyleScale(new Scale(Vector3.one * (1.0f + elapsed * 5f)));
+                yield return null;
+            }
+
+            root.Remove(effectContainer);
+            
+            // スコア表示の更新（カウントアップ開始）
+            UpdateScoreDisplay();
         }
     }
 }
