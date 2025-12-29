@@ -968,6 +968,160 @@ namespace NovelGame
             {
                 screenTransitionManager.StartScreenTransition(root);
             }
+
+            // シナリオ6解放演出のチェック
+            // 注意：CreateScenarioButtons() の前に呼ぶと、ボタンが生成されないため、
+            // 内部フラグをチェックして演出が必要ならコルーチンを開始する。
+            // 実際には CheckAndConsumeScenario6Unlocked は初回のみ true を返す。
+            if (!gameManager.IsScenario6Unlocked() && gameManager.CanAccessScenario(6))
+            {
+                // まだ演出していないがアクセス可能な場合
+                if (gameManager.CheckAndConsumeScenario6Unlocked())
+                {
+                    StartCoroutine(ShowScenario6UnlockAnimation(root));
+                }
+            }
+        }
+
+        private IEnumerator ShowScenario6UnlockAnimation(VisualElement root)
+        {
+            // 少し待つ
+            yield return new WaitForSeconds(0.5f);
+
+            // 「もうひとつ」ボタンを探す
+            var showMouhitotsuButton = root.Q<Button>("ShowMouhitotsuButton");
+            if (showMouhitotsuButton == null) yield break;
+
+            // ボタンの座標を取得（レイアウト確定を待つ）
+            yield return null; 
+            
+            // 演出用のコンテナ（最前面）
+            var effectContainer = new VisualElement();
+            effectContainer.style.position = Position.Absolute;
+            effectContainer.style.left = 0;
+            effectContainer.style.top = 0;
+            effectContainer.style.right = 0;
+            effectContainer.style.bottom = 0;
+            effectContainer.pickingMode = PickingMode.Ignore;
+            root.Add(effectContainer);
+
+            // 「もうひとつ」の文字を分解して飛ばす演出（簡易的にボタンの位置から光が出る演出にする）
+            Vector2 startPos = showMouhitotsuButton.worldBound.center;
+            
+            // シナリオ6ボタンの位置を特定するために、一旦ボタンを作成して非表示で追加する
+            var buttonContainer = root.Q<VisualElement>("ScenarioButtonContainer");
+            if (buttonContainer == null) yield break;
+
+            // シナリオ6ボタン（演出用）
+            var scenario6 = gameManager.GetScenarios().Find(s => s.id == 6);
+            if (scenario6 == null) yield break;
+
+            // 本来のボタン生成ロジックを流用したいが、アニメーションのために個別に制御
+            Button targetButton = new Button();
+            targetButton.AddToClassList("scenario-button");
+            targetButton.style.opacity = 0;
+            
+            var buttonContent = new VisualElement();
+            buttonContent.style.flexDirection = FlexDirection.Column;
+            buttonContent.Add(new Label(scenario6.title) { style = { fontSize = 20, unityFontStyleAndWeight = FontStyle.Bold } });
+            buttonContent.Add(new Label(scenario6.setup) { style = { fontSize = 14, opacity = 0.9f } });
+            targetButton.Add(buttonContent);
+            
+            int scenarioId = scenario6.id;
+            targetButton.clicked += () => OnScenarioSelected(scenarioId);
+            targetButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            
+            // コンテナの最後に追加
+            buttonContainer.Add(targetButton);
+            
+            // レイアウト確定を待つ
+            yield return null;
+            Vector2 endPos = targetButton.worldBound.center;
+
+            // 光の粒子演出
+            int particleCount = 20;
+            List<VisualElement> particles = new List<VisualElement>();
+            for (int i = 0; i < particleCount; i++)
+            {
+                var p = new VisualElement();
+                p.style.position = Position.Absolute;
+                p.style.width = 10;
+                p.style.height = 10;
+                p.style.backgroundColor = Color.white;
+                p.style.borderTopLeftRadius = 5;
+                p.style.borderTopRightRadius = 5;
+                p.style.borderBottomLeftRadius = 5;
+                p.style.borderBottomRightRadius = 5;
+                p.style.left = startPos.x;
+                p.style.top = startPos.y;
+                effectContainer.Add(p);
+                particles.Add(p);
+            }
+
+            // SE
+            audioManager.PlaySparkleSound();
+
+            // アニメーション：集まってから飛んでいく
+            float duration = 1.0f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                float easeT = Mathf.SmoothStep(0, 1, t);
+
+                for (int i = 0; i < particleCount; i++)
+                {
+                    // 少しバラけさせながら移動
+                    float angle = (i / (float)particleCount) * Mathf.PI * 2;
+                    float spread = (1 - t) * 50f;
+                    Vector2 currentPos = Vector2.Lerp(startPos, endPos, easeT);
+                    particles[i].style.left = currentPos.x + Mathf.Cos(angle) * spread;
+                    particles[i].style.top = currentPos.y + Mathf.Sin(angle) * spread;
+                    particles[i].style.opacity = 1.0f - (t * 0.5f);
+                    particles[i].style.scale = new StyleScale(new Scale(Vector3.one * (1.5f - t)));
+                }
+                yield return null;
+            }
+
+            // 最後に大きな光
+            var flash = new VisualElement();
+            flash.style.position = Position.Absolute;
+            flash.style.left = endPos.x - 50;
+            flash.style.top = endPos.y - 50;
+            flash.style.width = 100;
+            flash.style.height = 100;
+            flash.style.backgroundColor = Color.white;
+            flash.style.borderTopLeftRadius = 50;
+            flash.style.borderTopRightRadius = 50;
+            flash.style.borderBottomLeftRadius = 50;
+            flash.style.borderBottomRightRadius = 50;
+            flash.style.opacity = 1f;
+            effectContainer.Add(flash);
+
+            audioManager.PlaySparkleSound();
+
+            float flashDuration = 0.5f;
+            elapsed = 0f;
+            while (elapsed < flashDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / flashDuration;
+                flash.style.opacity = 1.0f - t;
+                flash.style.scale = new StyleScale(new Scale(Vector3.one * (1f + t * 2f)));
+                
+                // ボタンをフェードイン
+                targetButton.style.opacity = t;
+                yield return null;
+            }
+
+            targetButton.style.opacity = 1f;
+            effectContainer.RemoveFromHierarchy();
+            
+            // 元々の CreateScenarioButtons で作成されるボタンと重複しないように、
+            // もし CreateScenarioButtons を再度呼ぶ必要があるなら呼ぶが、
+            // ここではすでに追加済みなので、そのままにする。
+            // ただし、もしユーザーがこの画面を開き直した場合は CreateScenarioButtons が正常に呼ばれる。
         }
 
         public void ShowProfileScreen()
@@ -1789,9 +1943,23 @@ namespace NovelGame
             foreach (var scenario in scenarios)
             {
                 // シナリオ6は最初の5つをクリアするまで表示しない
-                if (scenario.id == 6 && !gameManager.CanAccessScenario(6))
+                if (scenario.id == 6)
                 {
-                    continue;
+                    if (!gameManager.CanAccessScenario(6))
+                    {
+                        continue;
+                    }
+                    
+                    // 解放直後の演出中はここでは作成しない（ShowScenario6UnlockAnimation内で作成される）
+                    // ただし、演出が完了した後は普通に表示される必要がある。
+                    // 演出中かどうかを判断するために、GameManagerのフラグを見る。
+                    // 解放済みだが「まだ演出を消費していない」場合は、ここではスキップ。
+                    // (演出終了後に再描画はしないが、演出内でボタンを追加している)
+                    // ただし、このメソッドが演出の前に呼ばれることを想定。
+                    if (!gameManager.IsScenario6Unlocked()) // まだ演出をしていないならスキップ
+                    {
+                        continue;
+                    }
                 }
 
                 // ボタンを作成

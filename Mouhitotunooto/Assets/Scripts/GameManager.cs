@@ -22,6 +22,7 @@ namespace NovelGame
         private bool isDarkMode = false;
         private bool isThirdLoop = false;
         private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
+        private bool isScenario6Unlocked = false; // シナリオ6が解放されたかどうか（演出用フラグ）
         
         // タイムトラッキング
         private DateTime gameStartTime;
@@ -428,6 +429,28 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// シナリオ6が解放されたかどうか（演出用）をチェックし、フラグを更新する
+        /// </summary>
+        /// <returns>今回初めて解放された場合はtrue</returns>
+        public bool CheckAndConsumeScenario6Unlocked()
+        {
+            if (CanAccessScenario(6) && !isScenario6Unlocked)
+            {
+                isScenario6Unlocked = true;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// シナリオ6の解放演出がすでに実行されたかどうか（UIManager用）
+        /// </summary>
+        public bool IsScenario6Unlocked()
+        {
+            return isScenario6Unlocked;
+        }
+
+        /// <summary>
         /// Divisionのクリア状況を取得
         /// </summary>
         public bool IsDivisionCleared(string divisionId)
@@ -464,11 +487,13 @@ namespace NovelGame
                     }
                     // シナリオ6もクリア済みにすることでダークモード条件を満たす
                     isDarkMode = false;
+                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
                     break;
                 case "C":
                     // ダークモード、全文字消失直前
                     Debug.Log("[GameManager] Division C を開始します。");
                     isDarkMode = true;
+                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
                     for (int i = 1; i <= 5; i++)
                     {
                         completedScenarios.Add(i);
@@ -480,11 +505,13 @@ namespace NovelGame
                 case "D":
                     // 3周目、開始状態
                     Debug.Log("[GameManager] Division D を開始します。");
+                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
                     TriggerThirdLoop();
                     break;
                 case "E":
                     // 3周目、全文字復活直前
                     Debug.Log("[GameManager] Division E を開始します。");
+                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
                     TriggerThirdLoop();
                     for (int i = 1; i <= 5; i++)
                     {
@@ -628,6 +655,7 @@ namespace NovelGame
             isDarkMode = false;
             isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
             pendingDarkMode = false;
+            isScenario6Unlocked = false;
             currentScenarioIndex = -1;
             gameStartTime = DateTime.Now;
             OnScoreChanged?.Invoke();
