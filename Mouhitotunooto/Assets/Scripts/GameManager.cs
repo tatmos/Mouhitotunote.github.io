@@ -37,6 +37,9 @@ namespace NovelGame
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
         private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
 
+        // 設定：物語の解明度表示ON/OFF
+        private bool showStoryProgress = true;
+
         public event Action OnScoreChanged;
         public event Action OnScenarioCompleted;
 
@@ -57,6 +60,26 @@ namespace NovelGame
         {
             InitializeScenarios();
             gameStartTime = DateTime.Now;
+            // 設定をPlayerPrefsから読み込み
+            showStoryProgress = PlayerPrefs.GetInt("ShowStoryProgress", 1) == 1;
+        }
+
+        /// <summary>
+        /// 物語の解明度表示ON/OFFを設定
+        /// </summary>
+        public void SetShowStoryProgress(bool show)
+        {
+            showStoryProgress = show;
+            PlayerPrefs.SetInt("ShowStoryProgress", show ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// 物語の解明度表示ON/OFFを取得
+        /// </summary>
+        public bool GetShowStoryProgress()
+        {
+            return showStoryProgress;
         }
 
         public DateTime GetGameStartTime() => gameStartTime;

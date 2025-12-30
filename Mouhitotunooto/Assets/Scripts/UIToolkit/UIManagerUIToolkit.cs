@@ -243,6 +243,12 @@ namespace NovelGame
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
                     
+                    // 背景テクスチャを事前にキャッシュ
+                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
+                    }
+                    
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
                 }
@@ -891,6 +897,12 @@ namespace NovelGame
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
                     
+                    // 背景テクスチャを事前にキャッシュ
+                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
+                    }
+                    
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
                 }
@@ -974,6 +986,7 @@ namespace NovelGame
             }
 
             UpdateScoreDisplay();
+            UpdateStoryProgressDisplay(root);
             CreateScenarioButtons(root);
             
             // トランジション開始
@@ -1162,6 +1175,12 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(profileScreenBackground);
+                    
+                    // 背景テクスチャを事前にキャッシュ
+                    if (profileScreenBackground != null && profileScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = profileScreenBackground.texture;
+                    }
                     
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
@@ -1915,12 +1934,66 @@ namespace NovelGame
                 {
                     // 選択画面以外（シナリオ、リザルト）でも適切なスタイルが適用されるようにする
                     // USSで .score-text が定義されている
-                    scoreLabel.AddToClassList("score-text");
                 }
             }
             
-            // スコアを更新
-            previousScore = currentScore;
+            // 選択画面の場合、物語の解明度も更新
+            if (currentDocument == selectionScreenDocument)
+            {
+                UpdateStoryProgressDisplay();
+            }
+        }
+
+        /// <summary>
+        /// 物語の解明度表示を更新（選択画面のみ）
+        /// </summary>
+        private void UpdateStoryProgressDisplay(VisualElement root = null)
+        {
+            // 選択画面でない場合は何もしない
+            if (currentDocument != selectionScreenDocument) return;
+            
+            if (root == null)
+            {
+                if (currentDocument == null || currentDocument.rootVisualElement == null) return;
+                root = currentDocument.rootVisualElement;
+            }
+
+            // 物語の解明度表示がOFFの場合は非表示にする
+            if (!gameManager.GetShowStoryProgress())
+            {
+                var existingProgress = root.Q<Label>("StoryProgressLabel");
+                if (existingProgress != null)
+                {
+                    existingProgress.style.display = DisplayStyle.None;
+                }
+                return;
+            }
+
+            // 既存の物語の解明度ラベルを探す
+            var storyProgressLabel = root.Q<Label>("StoryProgressLabel");
+            if (storyProgressLabel == null)
+            {
+                // ラベルが存在しない場合は作成
+                storyProgressLabel = new Label();
+                storyProgressLabel.name = "StoryProgressLabel";
+                storyProgressLabel.style.fontSize = 20;
+                storyProgressLabel.style.marginBottom = 20;
+                storyProgressLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                storyProgressLabel.style.color = new Color(0.8f, 0.8f, 1f);
+
+                // ScoreTextの下に挿入
+                var scoreLabel = root.Q<Label>("ScoreText");
+                if (scoreLabel != null && scoreLabel.parent != null)
+                {
+                    int insertIndex = scoreLabel.parent.IndexOf(scoreLabel) + 1;
+                    scoreLabel.parent.Insert(insertIndex, storyProgressLabel);
+                }
+            }
+
+            // 物語の解明度を更新
+            int percentage = gameManager.GetStoryProgressPercentage();
+            storyProgressLabel.text = $"物語の解明度: {percentage}%";
+            storyProgressLabel.style.display = DisplayStyle.Flex;
         }
 
         private IEnumerator AnimateScoreCountUp(Label label, string baseText, int start, int end, int total)
@@ -2226,7 +2299,14 @@ namespace NovelGame
                 var backgroundImage = currentDocument.rootVisualElement.Q<VisualElement>("BackgroundImage");
                 if (backgroundImage != null)
                 {
-                    backgroundImage.style.backgroundImage = new StyleBackground(scenarioBackgrounds[backgroundIndex]);
+                    var scenarioBg = scenarioBackgrounds[backgroundIndex];
+                    backgroundImage.style.backgroundImage = new StyleBackground(scenarioBg);
+                    
+                    // 背景テクスチャを事前にキャッシュ
+                    if (scenarioBg != null && scenarioBg.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = scenarioBg.texture;
+                    }
                     
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
@@ -2248,22 +2328,27 @@ namespace NovelGame
             bool isDarkMode = gameManager != null && gameManager.IsDarkMode();
             Debug.Log($"[ApplyBackgroundDistortion] isDarkMode: {isDarkMode}, distortionMaterial: {(distortionMaterial != null ? "exists" : "null")}");
 
-            // 背景テクスチャをキャッシュに保存
-            Texture2D cachedTexture = null;
-            var styleBg = backgroundImage.style.backgroundImage;
-            if (styleBg != null && styleBg.value != null)
+            // テクスチャがまだキャッシュされていない場合は、style.backgroundImageから取得を試みる
+            if (!backgroundTextureCache.ContainsKey(backgroundImage))
             {
-                cachedTexture = styleBg.value.texture;
-            }
-            
-            if (cachedTexture != null)
-            {
-                backgroundTextureCache[backgroundImage] = cachedTexture;
-                Debug.Log($"[ApplyBackgroundDistortion] Cached texture: {cachedTexture.name}");
-            }
-            else
-            {
-                Debug.LogWarning("[ApplyBackgroundDistortion] Could not cache texture from style.backgroundImage");
+                Texture2D cachedTexture = null;
+                var styleBg = backgroundImage.style.backgroundImage;
+                if (styleBg != null && styleBg.value != null)
+                {
+                    var bg = styleBg.value;
+                    // Backgroundオブジェクトからテクスチャを取得
+                    if (bg.texture != null)
+                    {
+                        cachedTexture = bg.texture;
+                    }
+                }
+                
+                if (cachedTexture != null)
+                {
+                    backgroundTextureCache[backgroundImage] = cachedTexture;
+                    Debug.Log($"[ApplyBackgroundDistortion] Cached texture from style: {cachedTexture.name}");
+                }
+                // キャッシュされていない場合は、OnGenerateVisualContentDistortionで再試行される
             }
 
             // 既存のハンドラを削除
@@ -2464,6 +2549,12 @@ namespace NovelGame
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
                     
+                    // 背景テクスチャを事前にキャッシュ
+                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
+                    }
+                    
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
                 }
@@ -2531,6 +2622,12 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // 背景テクスチャを事前にキャッシュ
+                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
+                    }
                     
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
@@ -2651,6 +2748,12 @@ namespace NovelGame
                 if (backgroundImage != null)
                 {
                     backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
+                    
+                    // 背景テクスチャを事前にキャッシュ
+                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
+                    {
+                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
+                    }
                     
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);

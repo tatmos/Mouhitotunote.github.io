@@ -75,7 +75,9 @@ namespace NovelGame
             bgmObject.transform.SetParent(this.transform);
             bgmAudioSource = bgmObject.AddComponent<AudioSource>();
             bgmAudioSource.playOnAwake = false;
-            bgmAudioSource.volume = 1f;
+            // 保存された音量を復元（デフォルトは1.0）
+            float savedVolume = PlayerPrefs.GetFloat("BGMVolume", 1.0f);
+            bgmAudioSource.volume = savedVolume;
             bgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
             
             bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
@@ -498,6 +500,35 @@ namespace NovelGame
         }
 
         public AudioSource GetBgmAudioSource() => bgmAudioSource;
+
+        /// <summary>
+        /// BGM音量を設定（0.0～1.0）
+        /// </summary>
+        public void SetBGMVolume(float volume)
+        {
+            volume = Mathf.Clamp01(volume);
+            if (bgmAudioSource != null)
+            {
+                bgmAudioSource.volume = volume;
+            }
+            // 音量をPlayerPrefsに保存
+            PlayerPrefs.SetFloat("BGMVolume", volume);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// BGM音量を取得（0.0～1.0）
+        /// </summary>
+        public float GetBGMVolume()
+        {
+            if (bgmAudioSource != null)
+            {
+                return bgmAudioSource.volume;
+            }
+            // PlayerPrefsから読み込み（デフォルトは1.0）
+            return PlayerPrefs.GetFloat("BGMVolume", 1.0f);
+        }
+
         public AudioClip GetCreditsBGM() => creditsBGM;
         public AudioClip GetSelectionBGM() => selectionBGM;
         public AudioClip GetTypewriterSound() => typewriterSound;
