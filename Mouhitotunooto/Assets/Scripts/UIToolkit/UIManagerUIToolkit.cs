@@ -39,6 +39,9 @@ namespace NovelGame
         [Header("Effects")]
         [SerializeField] private Material distortionMaterial;
         
+        // 背景テクスチャのキャッシュ（VisualElement → Texture2D）
+        private Dictionary<VisualElement, Texture2D> backgroundTextureCache = new Dictionary<VisualElement, Texture2D>();
+        
         [Header("Audio")]
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
         [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
@@ -2064,50 +2067,8 @@ namespace NovelGame
             buttonContainer.Clear();
 
             bool isDarkMode = gameManager.IsDarkMode();
-            List<Choice> choices;
-            
-            if (isDarkMode)
-            {
-                // ダークモード時の選択肢（2回目の伏字）
-                choices = scenario.id switch
-                {
-                    1 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「何かがおかしい...」と感じる", preview = "私：「も...もど...」" },
-                        new Choice { id = 2, text = "「何が起きているのか」確認する", preview = "私：「この世界は...何が起きている...」" }
-                    },
-                    2 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「何も見えない...」と混乱する", preview = "私：「う...うみ...？」" },
-                        new Choice { id = 2, text = "「何か間違いがある」と気づく", preview = "私：「データが...崩壊している...」" }
-                    },
-                    3 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「何か思い出せない...」と不安になる", preview = "私：「ひ...ひろ...？」" },
-                        new Choice { id = 2, text = "「何かが欠けている」と感じる", preview = "私：「過去のデータが...消えていく...」" }
-                    },
-                    4 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「何も起こらない...」と困惑する", preview = "私：「と...とおる...？」" },
-                        new Choice { id = 2, text = "「何かが壊れている」と理解する", preview = "私：「コードが...エラーを起こしている...」" }
-                    },
-                    5 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「何かが足りない...」と焦る", preview = "私：「つ...つばさ...？」" },
-                        new Choice { id = 2, text = "「何も完成しない」と諦める", preview = "私：「永遠に...完成できない...」" }
-                    },
-                    6 => new List<Choice> 
-                    { 
-                        new Choice { id = 1, text = "「申し訳ありません...」と詫びる", preview = "私：「壊してしまって..." },
-                        new Choice { id = 2, text = "「これはどういうことですか？」と尋ねる", preview = "私：「この世界は..." }
-                    },
-                    _ => scenario.choices
-                };
-            }
-            else
-            {
-                choices = scenario.choices;
-            }
+            // ScenarioChoiceProviderを使用して選択肢を取得
+            List<Choice> choices = ScenarioChoiceProvider.GetChoices(scenario, isDarkMode);
 
             var lostLetters = gameManager.GetLostLetters();
 
@@ -2278,57 +2239,191 @@ namespace NovelGame
         /// </summary>
         private void ApplyBackgroundDistortion(VisualElement backgroundImage)
         {
-            if (backgroundImage == null) return;
+            if (backgroundImage == null)
+            {
+                Debug.LogWarning("[ApplyBackgroundDistortion] backgroundImage is null");
+                return;
+            }
 
             bool isDarkMode = gameManager != null && gameManager.IsDarkMode();
+            Debug.Log($"[ApplyBackgroundDistortion] isDarkMode: {isDarkMode}, distortionMaterial: {(distortionMaterial != null ? "exists" : "null")}");
 
-            // 注意: UI Toolkitの標準的なVisualElementには直接Materialをセットするプロパティはありません。
-            // 代わりに、カスタムマテリアルを使用するための隠しプロパティや、
-            // 新しいUnityバージョンでの対応状況を確認しながら実装します。
-            // ここでは、Shader Graph等で作成したマテリアルを適用するために generateVisualContent を再度試みます。
-            
-            if (isDarkMode && distortionMaterial != null)
+            // 背景テクスチャをキャッシュに保存
+            Texture2D cachedTexture = null;
+            var styleBg = backgroundImage.style.backgroundImage;
+            if (styleBg != null && styleBg.value != null)
             {
-                backgroundImage.generateVisualContent -= OnGenerateVisualContentDistortion;
-                backgroundImage.generateVisualContent += OnGenerateVisualContentDistortion;
+                cachedTexture = styleBg.value.texture;
+            }
+            
+            if (cachedTexture != null)
+            {
+                backgroundTextureCache[backgroundImage] = cachedTexture;
+                Debug.Log($"[ApplyBackgroundDistortion] Cached texture: {cachedTexture.name}");
             }
             else
             {
-                backgroundImage.generateVisualContent -= OnGenerateVisualContentDistortion;
+                Debug.LogWarning("[ApplyBackgroundDistortion] Could not cache texture from style.backgroundImage");
             }
+
+            // 既存のハンドラを削除
+            backgroundImage.generateVisualContent -= OnGenerateVisualContentDistortion;
+            
+            if (isDarkMode && distortionMaterial != null)
+            {
+                // ダークモード時のみ、カスタム描画ハンドラを追加
+                backgroundImage.generateVisualContent += OnGenerateVisualContentDistortion;
+                Debug.Log("[ApplyBackgroundDistortion] Distortion handler registered");
+            }
+            else
+            {
+                // ハンドラを削除する際に、キャッシュもクリア
+                backgroundTextureCache.Remove(backgroundImage);
+                Debug.Log("[ApplyBackgroundDistortion] Distortion handler removed");
+            }
+            
+            // 再描画をトリガー
             backgroundImage.MarkDirtyRepaint();
         }
 
         private void OnGenerateVisualContentDistortion(MeshGenerationContext mgc)
         {
             var element = mgc.visualElement;
-            if (element == null || distortionMaterial == null) return;
+            if (element == null || distortionMaterial == null)
+            {
+                Debug.LogWarning("[ApplyBackgroundDistortion] element or distortionMaterial is null");
+                return;
+            }
 
-            var bgImage = element.resolvedStyle.backgroundImage;
-            if (bgImage == null || bgImage.texture == null) return;
+            // キャッシュからテクスチャを取得
+            Texture2D texture = null;
+            if (backgroundTextureCache.TryGetValue(element, out texture) && texture != null)
+            {
+                // キャッシュから取得成功
+                Debug.Log($"[OnGenerateVisualContentDistortion] Using cached texture: {texture.name}");
+            }
+            else
+            {
+                // キャッシュにない場合、resolvedStyleまたはstyleから取得を試みる
+                Background bgImage = element.resolvedStyle.backgroundImage;
+                if (bgImage != null && bgImage.texture != null)
+                {
+                    texture = bgImage.texture;
+                    // キャッシュに保存
+                    backgroundTextureCache[element] = texture;
+                    Debug.Log($"[OnGenerateVisualContentDistortion] Got texture from resolvedStyle: {texture.name}");
+                }
+                else
+                {
+                    // resolvedStyleが利用できない場合、styleから直接取得
+                    var styleBgImage = element.style.backgroundImage;
+                    if (styleBgImage != null && styleBgImage.value != null)
+                    {
+                        var bg = styleBgImage.value;
+                        texture = bg.texture;
+                        if (texture != null)
+                        {
+                            // キャッシュに保存
+                            backgroundTextureCache[element] = texture;
+                            Debug.Log($"[OnGenerateVisualContentDistortion] Got texture from style: {texture.name}");
+                        }
+                    }
+                }
+            }
+
+            if (texture == null)
+            {
+                // デバッグ情報を追加
+                var resolvedBg = element.resolvedStyle.backgroundImage;
+                var styleBg = element.style.backgroundImage;
+                Debug.LogWarning($"[OnGenerateVisualContentDistortion] texture is null. Cache: {backgroundTextureCache.ContainsKey(element)}, resolvedStyle: {(resolvedBg != null ? "exists" : "null")}, style: {(styleBg != null && styleBg.value != null ? styleBg.value.texture?.name : "null")}");
+                return;
+            }
 
             var rect = element.contentRect;
             
-            // Unity 6 では Allocate に Material を渡すことができます。
-            // パラメータ順序や型を確認：Allocate(int, int, Texture, Material, MeshFlags)
-            // もしくは Allocate(int, int, Texture) だけの場合、UIのデフォルトマテリアルが使われます。
+            // マテリアルのメインテクスチャを設定
+            distortionMaterial.mainTexture = texture;
             
-            // もし Allocate(int, int, Material) が通らない場合は、
-            // 内部的なプロパティ _Material がある場合がありますが、非推奨です。
+            // Unity UI Toolkitでカスタムマテリアルを使用する方法
+            // AllocateメソッドにMaterialを渡す方法を試す（Unity 2021.2以降対応）
+            MeshWriteData mesh;
             
-            // 最新の情報を元に：MeshWriteData には material プロパティがあるはずです（一部のUnityバージョン）。
-            // もしくは、Allocate の第3引数に Texture を渡し、その後マテリアルを指定する方法を模索します。
+            // UnityのバージョンによってAllocateメソッドのシグネチャが異なるため、
+            // リフレクションを使って適切なオーバーロードを呼び出す
+            var allocateMethods = typeof(MeshGenerationContext).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            System.Reflection.MethodInfo allocateWithMaterial = null;
             
-            distortionMaterial.mainTexture = bgImage.texture;
-            var mesh = mgc.Allocate(4, 6, bgImage.texture);
-            
-            // リフレクションを使って material プロパティがあるか確認し、あればセットする
-            var prop = mesh.GetType().GetProperty("material");
-            if (prop != null)
+            // Allocate(int, int, Texture, Material)のオーバーロードを探す
+            foreach (var method in allocateMethods)
             {
-                prop.SetValue(mesh, distortionMaterial);
+                if (method.Name == "Allocate")
+                {
+                    var parameters = method.GetParameters();
+                    if (parameters.Length == 4 && 
+                        parameters[0].ParameterType == typeof(int) &&
+                        parameters[1].ParameterType == typeof(int) &&
+                        parameters[2].ParameterType == typeof(Texture) &&
+                        parameters[3].ParameterType == typeof(Material))
+                    {
+                        allocateWithMaterial = method;
+                        break;
+                    }
+                }
+            }
+            
+            if (allocateWithMaterial != null)
+            {
+                    // Allocate(int, int, Texture, Material)が利用可能な場合
+                try
+                {
+                    mesh = (MeshWriteData)allocateWithMaterial.Invoke(mgc, new object[] { 4, 6, texture, distortionMaterial });
+                    Debug.Log("[ApplyBackgroundDistortion] Using Allocate with Material parameter");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[ApplyBackgroundDistortion] Failed to allocate mesh with material: {ex.Message}");
+                    return;
+                }
+            }
+            else
+            {
+                // Allocate(int, int, Texture)を使用し、リフレクションでmaterialを設定
+                try
+                {
+                    mesh = mgc.Allocate(4, 6, texture);
+                    
+                    // リフレクションを使ってmaterialプロパティを設定
+                    var materialProp = mesh.GetType().GetProperty("material", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (materialProp != null && materialProp.CanWrite)
+                    {
+                        materialProp.SetValue(mesh, distortionMaterial);
+                        Debug.Log("[ApplyBackgroundDistortion] Material set via property");
+                    }
+                    else
+                    {
+                        // materialプロパティが無い場合は、フィールドを試す
+                        var materialField = mesh.GetType().GetField("m_Material", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        if (materialField != null)
+                        {
+                            materialField.SetValue(mesh, distortionMaterial);
+                            Debug.Log("[ApplyBackgroundDistortion] Material set via field");
+                        }
+                        else
+                        {
+                            Debug.LogWarning("[ApplyBackgroundDistortion] Could not set material on MeshWriteData. Material may not be applied.");
+                            // マテリアルが設定できない場合でも、メッシュは生成する
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[ApplyBackgroundDistortion] Failed to allocate mesh: {ex.Message}");
+                    return;
+                }
             }
 
+            // 頂点とインデックスを設定
             mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMin, rect.yMax, Vertex.nearZ), uv = new Vector2(0, 0), tint = Color.white });
             mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMin, rect.yMin, Vertex.nearZ), uv = new Vector2(0, 1), tint = Color.white });
             mesh.SetNextVertex(new Vertex { position = new Vector3(rect.xMax, rect.yMin, Vertex.nearZ), uv = new Vector2(1, 1), tint = Color.white });
