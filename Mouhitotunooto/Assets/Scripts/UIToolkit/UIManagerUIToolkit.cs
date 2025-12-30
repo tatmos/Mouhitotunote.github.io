@@ -893,11 +893,26 @@ namespace NovelGame
             // 演出としては一瞬暗くなってから新しい画面が表示されるので、これで十分か。
         }
 
+        public bool CheckAndGoToDivisionC()
+        {
+            // ダークモード中にシナリオを選択した際、スコアが6に戻っていればDivision Cへ強制転送
+            if (gameManager.IsDarkMode() && !gameManager.isThirdLoop && gameManager.score <= 6)
+            {
+                gameManager.LogDivision("C", "文字をいくつか失った状態でシナリオ6クリア -> 3周目へ強制移行");
+                
+                Debug.Log("[GameManager] 不正なデータが修正されました。システムを強制再起動します。");
+                // 3周目への移行
+                UIManagerUIToolkit.Instance.TriggerDivisionCTransition(gameManager.score);
+                return true;
+            }
+            return false;
+        }
+
         public void ShowSelectionScreen()
         {
             FadeOutAudioOnSceneChange();
             HideAllScreens(true);
-
+            
             // クレジットBGMをフェードアウト停止（急な停止を避ける）
             audioManager.FadeOutCreditBGM(1.0f);
 
@@ -906,7 +921,17 @@ namespace NovelGame
                 Debug.LogError("SelectionScreenDocumentがアサインされていません！");
                 return;
             }
+            
+            if (CheckAndGoToDivisionC())
+            {
+                return;
+            }
 
+            if (CheckAndGoToEndCredits())
+            {
+                return;
+            }
+            
             selectionScreenDocument.gameObject.SetActive(true);
             currentDocument = selectionScreenDocument;
 
@@ -1438,7 +1463,7 @@ namespace NovelGame
             }
         }
 
-        public void ShowResultScreen()
+        public bool CheckAndGoToEndCredits()
         {
             var currentScenario = gameManager.GetCurrentScenario();
             if (currentScenario != null && currentScenario.id == 6)
@@ -1453,7 +1478,7 @@ namespace NovelGame
                         // 3周目かつシナリオ6クリア（ワード取得成功）
                         // 暗転演出を挟んでから特別版エンドクレジットを表示
                         StartCoroutine(ShowSpecialCreditsTransition());
-                        return;
+                        return true;
                     }
                     // ワード未取得の場合は通常のリザルト画面へ（後で共通処理へ）
                 }
@@ -1464,11 +1489,16 @@ namespace NovelGame
                     {
                         // ダークモードですべての文字を消失した状態でクリア
                         StartCoroutine(ShowThirdLoopCutscene());
-                        return;
+                        return true;
                     }
                 }
             }
 
+            return false;
+        }
+
+        public void ShowResultScreen()
+        {
             FadeOutAudioOnSceneChange();
             // 環境音を長めにフェードアウト（結果画面に移行）
             FadeOutAmbientSoundForResult();

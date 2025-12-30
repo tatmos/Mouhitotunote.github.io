@@ -12,7 +12,7 @@ namespace NovelGame
         [SerializeField] private NovelGameData gameData;
         private List<Scenario> scenarios = new List<Scenario>();
         
-        private int score = 0;
+        internal int score = 0;
         private HashSet<int> completedScenarios = new HashSet<int>();
         private HashSet<int> completedScenariosInDarkMode = new HashSet<int>(); // ダークモード中にクリアしたシナリオ
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
@@ -21,7 +21,7 @@ namespace NovelGame
         private HashSet<char> lastLostLetters = new HashSet<char>();
         private int currentScenarioIndex = -1;
         private bool isDarkMode = false;
-        private bool isThirdLoop = false;
+        internal bool isThirdLoop = false;
         private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
         private bool isScenario6Unlocked = false; // シナリオ6が解放されたかどうか（演出用フラグ）
         
@@ -142,14 +142,6 @@ namespace NovelGame
         {
             var scenarios = GetScenarios();
             currentScenarioIndex = scenarios.FindIndex(s => s.id == scenarioId);
-            
-            // ダークモード中にシナリオを選択した際、スコアが6に戻っていればDivision Cへ強制転送
-            if (IsDarkMode() && !isThirdLoop && score <= 6)
-            {
-                Debug.Log("[GameManager] 不正なデータが修正されました。システムを強制再起動します。");
-                // 3周目への移行（Division C相当の処理）
-                UIManagerUIToolkit.Instance.TriggerDivisionCTransition(score);
-            }
             
             CheckLostLettersUpdate();
         }
@@ -293,37 +285,28 @@ namespace NovelGame
         /// </summary>
         private void UpdateAndLogDivisionStatus(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
         {
-            // ボードNo1にスコア123.45fを送信する。
-            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
-            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
-            
-            if (scenarioId != 6) return;
-
             if (!isThirdLoop)
             {
                 // 以前の状態が通常モードだった場合
                 if (!playedInDarkMode)
                 {
+                    if (scenarioId != 6) return;
                     if (score < 7)
                     {
-                        LogDivision("A", "伏字なしモードでクリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
+                        LogDivision("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
                     }
                     else
                     {
-                        LogDivision("B", "伏字なしモードでクリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
+                        LogDivision("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
                     }
                 }
                 else if (isActuallyDarkMode)
                 {
-                    // ダークモード中の判定
-                    if (AreAllLettersLost())
-                    {
-                        LogDivision("C", "すべての文字を失った状態でシナリオ6クリア -> 3周目へ強制移行");
-                    }
                 }
             }
             else if (isThirdLoop)
             {
+                if (scenarioId != 6) return;
                 if (score < 7)
                 {
                     LogDivision("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
@@ -333,9 +316,13 @@ namespace NovelGame
                     LogDivision("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                 }
             }
+            
+            // ボードNo1にスコア123.45fを送信する。
+            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
+            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
         }
 
-        private void LogDivision(string divisionId, string message)
+        public void LogDivision(string divisionId, string message)
         {
             if (!clearedDivisions.Contains(divisionId))
             {
@@ -483,25 +470,31 @@ namespace NovelGame
             }
             else if (!IsDivisionCleared("B"))
             {
-                // 2. Division B 以前 (スコア7以上、不正発覚)
                 percentage = 20f;
-                // スコア7を目指す進捗 (現状のスコア / 7)
-                float subProgress = Mathf.Clamp01(score / 7f);
-                percentage += subProgress * 20f;
+                
+               
             }
             else if (!IsDivisionCleared("C"))
             {
-                // 3. Division C 以前 (ダークモードですべての文字を失う)
+                // 2. Division B 以前 (スコア7以上、不正発覚)
                 percentage = 40f;
-                // ダークモードでのクリア状況 (シナリオ1-6)
-                int darkCompleted = completedScenariosInDarkMode.Count;
-                float subProgress = Mathf.Clamp01(darkCompleted / 6f);
-                percentage += subProgress * 20f;
+                
+                // ダークモード
+                // 足りない数で計算
+                if (score == 6)
+                {
+                    percentage += 20f;
+                }
+                else if (score > 6)
+                {
+                    percentage += ((score - 6) * 20f) / 6.0f ;
+                }
             }
             else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
             {
-                // 4. Division D/E 以前 (3周目、文字の復元)
+                // 3. Division C (3周目、文字の復元)
                 percentage = 60f;
+                
                 // 復元した文字数 (最大5つ)
                 float subProgress = Mathf.Clamp01(restoredLetters.Count / 5f);
                 // 3周目のシナリオ6クリアで一気に100%に近づくため、ここでは80%まで
@@ -510,8 +503,11 @@ namespace NovelGame
             else
             {
                 // 5. 最終段階
+                // 4. Division D/E クリア
                 percentage = 80f;
-                if (IsDivisionCleared("D") || IsDivisionCleared("E"))
+                
+                // Dのみクリア（不正なしなら）
+                if (IsDivisionCleared("D") && !IsDivisionCleared("E"))
                 {
                     percentage = 100f;
                 }
