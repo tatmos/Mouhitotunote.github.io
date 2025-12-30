@@ -73,15 +73,22 @@ namespace NovelGame
         /// <param name="displayedChar">実際に表示された文字</param>
         private void PlayTypewriterSound(char displayedChar)
         {
-            if (audioSource == null) return;
-
             AudioClip clipToPlay = (displayedChar == '※') ? lostLetterSound : typewriterSound;
             if (clipToPlay == null) return;
 
             // 短い間隔で連続して鳴りすぎないように調整
             if (Time.time - lastSoundTime >= soundInterval)
             {
-                audioSource.PlayOneShot(clipToPlay);
+                // AudioManager経由で再生（ピッチ変動対応）
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySEWithPitchVariation(clipToPlay);
+                }
+                else if (audioSource != null)
+                {
+                    // AudioManagerが利用できない場合は通常通り再生
+                    audioSource.PlayOneShot(clipToPlay);
+                }
                 lastSoundTime = Time.time;
             }
         }

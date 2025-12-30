@@ -52,6 +52,15 @@ namespace NovelGame
         private const float LoweredPitch = 0.5f;
         private const float SelectionBGMNormalVolume = 1.0f;
         private const float SelectionBGMLoweredVolume = 0.75f;
+        
+        // 歪み効果のピッチ変動用パラメータ（歪みシェーダーと同期）
+        private const float DistortionSpeed = 1.0f; // 歪みシェーダーの_DistortionSpeedと同じ値
+        private const float DistortionFrequency = 10.0f; // 歪みシェーダーの_DistortionFrequencyと同じ値
+        private const float PitchVariationSemitones = 1.0f; // 1半音の変動
+        private const float SemitoneRatio = 1.059463094359f; // 2^(1/12) ≈ 1.059（1半音の周波数比）
+        
+        // ピッチ変動中のSE用AudioSourceのリスト
+        private List<AudioSource> pitchVariationAudioSources = new List<AudioSource>();
 
         private void Awake()
         {
@@ -140,7 +149,7 @@ namespace NovelGame
                 AudioClip selectedSound = wordGetSounds[randomIndex];
                 if (selectedSound != null)
                 {
-                    sfxAudioSource.PlayOneShot(selectedSound);
+                    PlaySoundWithPitchVariation(selectedSound);
                     FadeOutAmbientSound();
                 }
             }
@@ -150,7 +159,7 @@ namespace NovelGame
         {
             if (sparkleSound != null && sfxAudioSource != null)
             {
-                sfxAudioSource.PlayOneShot(sparkleSound);
+                PlaySoundWithPitchVariation(sparkleSound);
             }
         }
 
@@ -158,7 +167,7 @@ namespace NovelGame
         {
             if (buttonHoverSound != null && sfxAudioSource != null)
             {
-                sfxAudioSource.PlayOneShot(buttonHoverSound);
+                PlaySoundWithPitchVariation(buttonHoverSound);
             }
         }
 
@@ -166,7 +175,74 @@ namespace NovelGame
         {
             if (thunderSound != null && sfxAudioSource != null)
             {
-                sfxAudioSource.PlayOneShot(thunderSound);
+                PlaySoundWithPitchVariation(thunderSound);
+            }
+        }
+
+        /// <summary>
+        /// SEを再生し、ダークモード時はピッチを歪みに合わせて揺らす
+        /// </summary>
+        private void PlaySoundWithPitchVariation(AudioClip clip)
+        {
+            bool isDarkMode = GameManager.Instance != null && GameManager.Instance.IsDarkMode();
+            
+            if (isDarkMode)
+            {
+                // ダークモード時は、専用のAudioSourceを作成してピッチ変動を適用
+                GameObject seObject = new GameObject("SEPlayer_PitchVariation");
+                seObject.transform.SetParent(this.transform);
+                AudioSource seAudioSource = seObject.AddComponent<AudioSource>();
+                seAudioSource.playOnAwake = false;
+                seAudioSource.volume = sfxAudioSource.volume;
+                seAudioSource.outputAudioMixerGroup = sfxMixerGroup;
+                seAudioSource.clip = clip;
+                seAudioSource.Play();
+                
+                pitchVariationAudioSources.Add(seAudioSource);
+                StartCoroutine(ApplyPitchVariationToSE(seAudioSource, clip.length));
+            }
+            else
+            {
+                // 通常モード時は通常通り再生
+                sfxAudioSource.PlayOneShot(clip);
+            }
+        }
+
+        /// <summary>
+        /// SEのピッチを歪みに合わせて揺らすコルーチン
+        /// </summary>
+        private IEnumerator ApplyPitchVariationToSE(AudioSource audioSource, float duration)
+        {
+            float startTime = Time.time;
+            
+            while (audioSource != null && audioSource.isPlaying && (Time.time - startTime) < duration)
+            {
+                // 歪みシェーダーと同じ時間計算を使用
+                float time = Time.time * DistortionSpeed;
+                
+                // 歪みシェーダーと同じ周波数でピッチを変動させる
+                // sinとcosを組み合わせて、より自然な揺らぎを作る
+                float pitchVariation = Mathf.Sin(time * DistortionFrequency) * 0.5f + 
+                                       Mathf.Cos(time * DistortionFrequency * 0.7f) * 0.5f;
+                
+                // 1半音の変動幅に変換（±1半音 = ±5.9%）
+                // pitchVariationは-1～1の範囲なので、それを±1半音に変換
+                float pitchOffset = pitchVariation * PitchVariationSemitones;
+                
+                // 半音を周波数比に変換（1半音上 = ×1.059, 1半音下 = ÷1.059）
+                float pitchMultiplier = Mathf.Pow(SemitoneRatio, pitchOffset);
+                
+                // ピッチを適用（1.0を基準に変動）
+                audioSource.pitch = pitchMultiplier;
+                
+                yield return null;
+            }
+            
+            // 再生終了後、AudioSourceをクリーンアップ
+            if (audioSource != null)
+            {
+                pitchVariationAudioSources.Remove(audioSource);
+                Destroy(audioSource.gameObject);
             }
         }
 
@@ -533,5 +609,16 @@ namespace NovelGame
         public AudioClip GetSelectionBGM() => selectionBGM;
         public AudioClip GetTypewriterSound() => typewriterSound;
         public AudioClip GetLostLetterSound() => lostLetterSound;
+
+        /// <summary>
+        /// 外部からSEを再生する際に使用（ピッチ変動対応）
+        /// </summary>
+        public void PlaySEWithPitchVariation(AudioClip clip)
+        {
+            if (clip != null)
+            {
+                PlaySoundWithPitchVariation(clip);
+            }
+        }
     }
 }
