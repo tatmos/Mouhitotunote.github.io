@@ -105,10 +105,24 @@ namespace NovelGame
                 thanksLabel.style.fontSize = 40;
                 thanksLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 thanksLabel.style.marginTop = 100;
-                thanksLabel.style.marginBottom = 100;
+                thanksLabel.style.marginBottom = 50;
                 thanksLabel.style.color = Color.white;
                 thanksLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
                 container.Add(thanksLabel);
+
+                // 物語の解明度を表示
+                if (GameManager.Instance != null)
+                {
+                    int storyProgress = GameManager.Instance.GetStoryProgressPercentage();
+                    var progressLabel = new Label($"物語の解明度: {storyProgress}%");
+                    progressLabel.style.fontSize = 32;
+                    progressLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    progressLabel.style.marginTop = 30;
+                    progressLabel.style.marginBottom = 100;
+                    progressLabel.style.color = new Color(0.2f, 0.6f, 1.0f); // 青色
+                    progressLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                    container.Add(progressLabel);
+                }
             }
 
             // スクロールを開始
