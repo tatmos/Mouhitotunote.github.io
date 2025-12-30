@@ -280,7 +280,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.3.0 (2025-12-29)";
+                string text = "v1.3.0 (2025-12-30)";
                 var lostLetters = gameManager.GetLostLetters();
                 if (lostLetters.Count > 0)
                 {
@@ -2068,38 +2068,38 @@ namespace NovelGame
             
             if (isDarkMode)
             {
-                // ダークモード時の選択肢
+                // ダークモード時の選択肢（2回目の伏字）
                 choices = scenario.id switch
                 {
                     1 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「データが壊れている...」と呟く", preview = "私：「も...もど...」" },
-                        new Choice { id = 2, text = "「修復できるか？」と試みる", preview = "私：「この世界は...何が起きている...」" }
+                        new Choice { id = 1, text = "「何かがおかしい...」と感じる", preview = "私：「も...もど...」" },
+                        new Choice { id = 2, text = "「何が起きているのか」確認する", preview = "私：「この世界は...何が起きている...」" }
                     },
                     2 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「メニューが読めない...」と困惑する", preview = "私：「う...うみ...？」" },
-                        new Choice { id = 2, text = "「システムエラーを報告する」", preview = "私：「データが...崩壊している...」" }
+                        new Choice { id = 1, text = "「何も見えない...」と混乱する", preview = "私：「う...うみ...？」" },
+                        new Choice { id = 2, text = "「何か間違いがある」と気づく", preview = "私：「データが...崩壊している...」" }
                     },
                     3 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「記憶が歪んでいる...」と気づく", preview = "私：「ひ...ひろ...？」" },
-                        new Choice { id = 2, text = "「データを修復しようとする」", preview = "私：「過去のデータが...消えていく...」" }
+                        new Choice { id = 1, text = "「何か思い出せない...」と不安になる", preview = "私：「ひ...ひろ...？」" },
+                        new Choice { id = 2, text = "「何かが欠けている」と感じる", preview = "私：「過去のデータが...消えていく...」" }
                     },
                     4 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「魔法が機能しない...」と混乱する", preview = "私：「と...とおる...？」" },
-                        new Choice { id = 2, text = "「システムの整合性を確認する」", preview = "私：「コードが...エラーを起こしている...」" }
+                        new Choice { id = 1, text = "「何も起こらない...」と困惑する", preview = "私：「と...とおる...？」" },
+                        new Choice { id = 2, text = "「何かが壊れている」と理解する", preview = "私：「コードが...エラーを起こしている...」" }
                     },
                     5 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「ピースが足りない...」と絶望する", preview = "私：「つ...つばさ...？」" },
-                        new Choice { id = 2, text = "「完成できないことに気づく」", preview = "私：「永遠に...完成できない...」" }
+                        new Choice { id = 1, text = "「何かが足りない...」と焦る", preview = "私：「つ...つばさ...？」" },
+                        new Choice { id = 2, text = "「何も完成しない」と諦める", preview = "私：「永遠に...完成できない...」" }
                     },
                     6 => new List<Choice> 
                     { 
-                        new Choice { id = 1, text = "「すみません...」と謝る", preview = "私：「壊してしまって..." },
-                        new Choice { id = 2, text = "「これは何ですか？」と問う", preview = "私：「この世界は..." }
+                        new Choice { id = 1, text = "「申し訳ありません...」と詫びる", preview = "私：「壊してしまって..." },
+                        new Choice { id = 2, text = "「これはどういうことですか？」と尋ねる", preview = "私：「この世界は..." }
                     },
                     _ => scenario.choices
                 };
