@@ -297,7 +297,7 @@ Button:disabled {
 /* シナリオボタン（グリッド用の固定サイズ） */
 .scenario-button {
     width: 300px;
-    min-height: 120px;
+    min-height: 180px;
     font-size: 20px;
     flex-shrink: 0;
     /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */

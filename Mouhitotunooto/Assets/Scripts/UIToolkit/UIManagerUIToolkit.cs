@@ -1904,6 +1904,19 @@ namespace NovelGame
                 else
                 {
                     resultText = scenario.branches[result.choiceId].text;
+                    
+                    // シナリオ2（不思議なレストラン）の場合、選択肢1（本日のおすすめ）を選んだ時に料理に対するセリフを追加
+                    if (scenario.id == 2 && result.choiceId == 1)
+                    {
+                        string todayRecommendation = RestaurantMenuManager.GetTodayRecommendation();
+                        string comment = RestaurantCommentManager.GetCommentForDish(todayRecommendation);
+                        
+                        // 結果テキストの最後にセリフを追加
+                        if (!string.IsNullOrEmpty(comment))
+                        {
+                            resultText += $"\n\n{comment}";
+                        }
+                    }
                 }
                 
                 // 結果テキストをVisualElementに変更して「もうひとつ」をクリッカブルにする
@@ -2506,12 +2519,12 @@ namespace NovelGame
                 titleLabel.style.marginBottom = 5;
                 buttonContent.Add(titleLabel);
                 
-                // シナリオの説明を追加（2行まで）
+                // シナリオの説明を追加（3行まで）
                 var descriptionLabel = new Label(scenarioDescriptionText);
                 descriptionLabel.style.fontSize = 14;
                 descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
                 descriptionLabel.style.opacity = 0.9f;
-                descriptionLabel.style.maxHeight = 40; // 2行分の高さに制限
+                descriptionLabel.style.maxHeight = 60; // 3行分の高さに制限
                 descriptionLabel.style.overflow = Overflow.Hidden;
                 buttonContent.Add(descriptionLabel);
                 

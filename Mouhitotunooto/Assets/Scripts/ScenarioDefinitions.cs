@@ -128,13 +128,16 @@ namespace NovelGame
 
         private static Scenario CreateScenario2(int loopCount = 1)
         {
+            // 本日のおすすめのメニュー名を取得
+            string todayRecommendation = RestaurantMenuManager.GetTodayRecommendation();
+            
             var scenario = new Scenario
             {
                 id = 2,
                 title = "不思議なレストラン",
-                setup = loopCount >= 3 ? "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。\nうみシェフは、あなたを見て何かを感じ取ったような表情を浮かべています。\n「今日は、特別な日になりそうね」と、うみシェフが微笑みます。" 
-                    : loopCount >= 2 ? "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。\n今日のおすすめは、特別な食材を使った限定メニューのようです。" 
-                    : "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。",
+                setup = loopCount >= 3 ? $"メニューには「本日のおすすめ：{todayRecommendation}」と「シェフのきまぐれ」があります。\nうみシェフは、あなたを見て何かを感じ取ったような表情を浮かべています。\n「今日は、特別な日になりそうね」と、うみシェフが微笑みます。" 
+                    : loopCount >= 2 ? $"メニューには「本日のおすすめ：{todayRecommendation}」と「シェフのきまぐれ」があります。\n今日のおすすめは、特別な食材を使った限定メニューのようです。" 
+                    : $"メニューには「本日のおすすめ：{todayRecommendation}」と「シェフのきまぐれ」があります。",
                 choices = loopCount >= 3 ? new List<Choice>
                 {
                     new Choice { id = 1, text = "うみシェフに今日の特別な意味を尋ねる", preview = "私：「今日は特別な日というのは..." },
