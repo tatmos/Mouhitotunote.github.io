@@ -56,5 +56,8 @@
         "temp/": true,
         "Temp/": true,
     },
-    "dotnet.defaultSolution": "Mouhitotunooto.sln"
+    "dotnet.defaultSolution": "Mouhitotunooto.sln",
+    "dotrush.roslyn.projectOrSolutionFiles": [
+        "d:\\git\\Mouhitotunote.github.io\\Mouhitotunooto\\Mouhitotunooto.sln"
+    ]
 }
