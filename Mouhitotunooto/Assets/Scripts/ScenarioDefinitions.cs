@@ -15,19 +15,32 @@ namespace NovelGame
         {
             var scenarios = new List<Scenario>();
             
-            // 周回数を取得（GameManagerが存在する場合）
-            int loopCount = 1;
-            if (GameManager.Instance != null)
+            // 各シナリオごとに周回数を取得（GameManagerが存在する場合）
+            GameManager gameManager = GameManager.Instance;
+            
+            int loopCount1 = 1;
+            int loopCount2 = 1;
+            int loopCount3 = 1;
+            int loopCount4 = 1;
+            int loopCount5 = 1;
+            int loopCount6 = 1;
+            
+            if (gameManager != null)
             {
-                loopCount = GameManager.Instance.GetLoopCount();
+                loopCount1 = gameManager.GetScenarioLoopCount(1);
+                loopCount2 = gameManager.GetScenarioLoopCount(2);
+                loopCount3 = gameManager.GetScenarioLoopCount(3);
+                loopCount4 = gameManager.GetScenarioLoopCount(4);
+                loopCount5 = gameManager.GetScenarioLoopCount(5);
+                loopCount6 = gameManager.GetScenarioLoopCount(6);
             }
 
-            scenarios.Add(CreateScenario1(loopCount));
-            scenarios.Add(CreateScenario2(loopCount));
-            scenarios.Add(CreateScenario3(loopCount));
-            scenarios.Add(CreateScenario4(loopCount));
-            scenarios.Add(CreateScenario5(loopCount));
-            scenarios.Add(CreateScenario6(loopCount));
+            scenarios.Add(CreateScenario1(loopCount1));
+            scenarios.Add(CreateScenario2(loopCount2));
+            scenarios.Add(CreateScenario3(loopCount3));
+            scenarios.Add(CreateScenario4(loopCount4));
+            scenarios.Add(CreateScenario5(loopCount5));
+            scenarios.Add(CreateScenario6(loopCount6));
 
             return scenarios;
         }

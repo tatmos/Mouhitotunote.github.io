@@ -25,6 +25,9 @@ namespace NovelGame
         private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
         private bool hasCompletedFirstLoop = false; // 1周目をクリアしたかどうか
         private bool isScenario6Unlocked = false; // シナリオ6が解放されたかどうか（演出用フラグ）
+        // 各シナリオの2周目クリア回数（シナリオID -> 2周目クリア回数）
+        // 2周目でクリアした回数が1回 = 3周目、2回 = 4周目、というように増えていく
+        private Dictionary<int, int> scenarioThirdLoopCounts = new Dictionary<int, int>();
         
         // タイムトラッキング
         private DateTime gameStartTime;
@@ -251,7 +254,7 @@ namespace NovelGame
                 CheckLostLettersUpdate();
             }
 
-            // 3周目の場合は、シナリオIDに対応する文字を復活させる
+            // 2周目以降（isThirdLoop == true）の場合は、シナリオIDに対応する文字を復活させる
             if (isThirdLoop && hasWord)
             {
                 char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
@@ -260,6 +263,14 @@ namespace NovelGame
                 {
                     RestoreLetter(letters[letterIndex]);
                 }
+                
+                // 2周目でクリアした回数をカウント（3周目以降の判定に使用）
+                if (!scenarioThirdLoopCounts.ContainsKey(scenarioId))
+                {
+                    scenarioThirdLoopCounts[scenarioId] = 0;
+                }
+                scenarioThirdLoopCounts[scenarioId]++;
+                Debug.Log($"[GameManager] シナリオ{scenarioId}を2周目でクリアしました。現在の2周目クリア回数: {scenarioThirdLoopCounts[scenarioId]}（周回数: {scenarioThirdLoopCounts[scenarioId] + 2}）");
             }
 
             // ダークモード中に False エンド（ワード取得失敗）を選んでスコアが6に戻った場合も、Division Cへの移行を検討
@@ -547,20 +558,41 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// 2周目かどうかを判定（1周目をクリアして、3周目に入る前）
+        /// 2周目かどうかを判定（isThirdLoopがtrueの時点で2周目）
         /// </summary>
         public bool IsSecondLoop()
         {
-            return hasCompletedFirstLoop && !isThirdLoop;
+            return isThirdLoop;
         }
 
         /// <summary>
-        /// 現在の周回数を取得（1, 2, 3）
+        /// 指定されたシナリオの現在の周回数を取得（1, 2, 3以上）
         /// </summary>
+        /// <param name="scenarioId">シナリオID</param>
+        /// <returns>1: 1周目, 2: 2周目（isThirdLoop == trueの最初のプレイ）, 3以上: 3周目以降（2周目でクリアした回数+2）</returns>
+        public int GetScenarioLoopCount(int scenarioId)
+        {
+            if (!isThirdLoop) return 1; // 1周目
+            
+            // 2周目以降の場合、そのシナリオを2周目でクリアした回数を取得
+            if (scenarioThirdLoopCounts.ContainsKey(scenarioId))
+            {
+                // 2周目でクリアした回数が1回 = 3周目、2回 = 4周目、というように増えていく
+                return scenarioThirdLoopCounts[scenarioId] + 2;
+            }
+            
+            // 2周目でまだクリアしていない場合は2周目
+            return 2;
+        }
+
+        /// <summary>
+        /// 現在の周回数を取得（後方互換性のため残すが、シナリオ単位の周回数には対応していない）
+        /// </summary>
+        [System.Obsolete("GetScenarioLoopCount(int scenarioId)を使用してください")]
         public int GetLoopCount()
         {
-            if (isThirdLoop) return 3;
-            if (hasCompletedFirstLoop) return 2;
+            if (isThirdLoop) return 2; // isThirdLoop == true の時点で2周目
+            if (hasCompletedFirstLoop) return 2; // 後方互換性のため
             return 1;
         }
 
@@ -689,10 +721,10 @@ namespace NovelGame
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             currentScenarioIndex = -1;
-            isDarkMode = false; // 3周目開始時は破損状態をリセットし、伏字のみの状態にする
-            isThirdLoop = true;
+            isDarkMode = false; // 2周目開始時は破損状態をリセットし、伏字のみの状態にする
+            isThirdLoop = true; // 2周目開始（isThirdLoop == true の時点で2周目）
             pendingDarkMode = false;
-            // 3周目に入る時点では、1周目クリアフラグは維持（2周目を判定するため）
+            // scenarioThirdLoopCountsはクリアしない（各シナリオの3周目以降のカウントを維持）
             OnScoreChanged?.Invoke();
         }
 
@@ -790,11 +822,12 @@ namespace NovelGame
             lastLostLetters.Clear();
             seenEndsByMode.Clear();
             isDarkMode = false;
-            isThirdLoop = false; // 通常のリセットでは3周目フラグも落とす
+            isThirdLoop = false; // 通常のリセットでは2周目フラグも落とす
             pendingDarkMode = false;
             isScenario6Unlocked = false;
             currentScenarioIndex = -1;
             hasCompletedFirstLoop = false; // リセット時は1周目クリアフラグもリセット
+            scenarioThirdLoopCounts.Clear(); // リセット時は各シナリオの2周目クリア回数もリセット
             gameStartTime = DateTime.Now;
             OnScoreChanged?.Invoke();
         }
