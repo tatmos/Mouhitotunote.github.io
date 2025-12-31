@@ -36,6 +36,12 @@ namespace NovelGame
         [SerializeField] private Sprite selectionScreenBackground;
         [SerializeField] private Sprite profileScreenBackground;
         
+        [Header("Scenario Button Images")]
+        [Tooltip("クリア前のシナリオボタン画像（9-slice対応）。Unityエディタで画像を選択し、Sprite Editorで9-sliceを設定してください。")]
+        [SerializeField] private Sprite scenarioButtonNormalImage; // クリア前のシナリオボタン画像（9-slice対応）
+        [Tooltip("クリア後のシナリオボタン画像（9-slice対応）。Unityエディタで画像を選択し、Sprite Editorで9-sliceを設定してください。")]
+        [SerializeField] private Sprite scenarioButtonCompletedImage; // クリア後のシナリオボタン画像（9-slice対応）
+        
         [Header("Effects")]
         [SerializeField] private Material distortionMaterial;
         
@@ -316,7 +322,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.4.0 (2025-12-30)";
+                string text = "v1.5.0 (2025-12-31)";
                 var lostLetters = gameManager.GetLostLetters();
                 if (lostLetters.Count > 0)
                 {
@@ -2117,6 +2123,10 @@ namespace NovelGame
                     }
                 }
 
+                // 文字色の定義
+                Color normalTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                Color completedTextColor = new Color(0x1A / 255f, 0x1A / 255f, 0x1A / 255f, 1f); // #1A1A1A（黒寄り）
+
                 var titleLabel = new Label(scenarioTitleText);
                 titleLabel.style.fontSize = 20;
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -2146,21 +2156,44 @@ namespace NovelGame
                     lockLabel.style.marginTop = 5;
                     buttonContent.Add(lockLabel);
                     button.AddToClassList("scenario-button-locked");
+                    // ロック状態の文字色も設定
+                    titleLabel.style.color = normalTextColor;
+                    descriptionLabel.style.color = normalTextColor;
+                    lockLabel.style.color = normalTextColor;
                 }
                 else if (isCompleted)
                 {
                     button.AddToClassList("scenario-button-completed");
+                    // クリア後の画像を設定（9-slice対応）
+                    if (scenarioButtonCompletedImage != null && scenarioButtonCompletedImage.texture != null)
+                    {
+                        button.style.backgroundImage = new StyleBackground(scenarioButtonCompletedImage.texture);
+                        button.style.backgroundColor = Color.clear; // 背景色をクリア
+                    }
                     // 完了マークを追加
                     var completedMark = new Label("✓");
                     completedMark.style.fontSize = 16;
                     completedMark.style.position = Position.Absolute;
                     completedMark.style.top = 5;
                     completedMark.style.right = 5;
+                    completedMark.style.color = completedTextColor;
                     button.Add(completedMark);
+                    // クリア後の文字色を設定
+                    titleLabel.style.color = completedTextColor;
+                    descriptionLabel.style.color = completedTextColor;
                 }
                 else
                 {
                     button.AddToClassList("scenario-button-normal");
+                    // クリア前の画像を設定（9-slice対応）
+                    if (scenarioButtonNormalImage != null && scenarioButtonNormalImage.texture != null)
+                    {
+                        button.style.backgroundImage = new StyleBackground(scenarioButtonNormalImage.texture);
+                        button.style.backgroundColor = Color.clear; // 背景色をクリア
+                    }
+                    // クリア前の文字色を設定
+                    titleLabel.style.color = normalTextColor;
+                    descriptionLabel.style.color = normalTextColor;
                 }
 
                 int scenarioId = scenario.id;

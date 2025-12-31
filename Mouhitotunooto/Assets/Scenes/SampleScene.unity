@@ -829,6 +829,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: c82dbf72459299d4aa43bc89edd8b8ba, type: 3}
   selectionScreenBackground: {fileID: 21300000, guid: 177f5023fb09abd4ca114c81d8d80700, type: 3}
   profileScreenBackground: {fileID: 21300000, guid: beed6f7a533820243bde9f559d996f6e, type: 3}
+  scenarioButtonNormalImage: {fileID: 21300000, guid: 798e530e7509cbb4aa442b131682e843, type: 3}
+  scenarioButtonCompletedImage: {fileID: 21300000, guid: 1ffeffa49ba2a434ab6bb1c495d147bb, type: 3}
   distortionMaterial: {fileID: 2100000, guid: 24985ac6264dc2949b165aa5bcbd70e3, type: 2}
   wordGetSounds:
   - {fileID: 8300000, guid: 535f6fa8017f39448bb8998a895b79ac, type: 3}
