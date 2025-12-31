@@ -424,13 +424,14 @@ namespace NovelGame
                     label.text = displayedText + currentLineText;
 
                     // 空白文字および記号・句読点以外の場合に音を鳴らす
-                    if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
+                    // ※の場合は特別に音を鳴らす（lostLetterSound）
+                    if (charToDisplay == '※' || (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c)))
                     {
                         PlayTypewriterSound(charToDisplay);
                     }
 
-                    // 記号や句読点の場合は待機時間を長くする
-                    float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
+                    // 記号や句読点の場合は待機時間を長くする（※は除く）
+                    float delay = (charToDisplay == '※' || IsPunctuationOrSymbol(c)) ? charDelay * 2.0f : charDelay;
                     yield return new WaitForSeconds(delay);
                 }
 

@@ -229,10 +229,9 @@ Button:disabled {
     background-color: rgb(218, 165, 32); /* 金色系（フォールバック） */
     border-radius: 8px;
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, box-shadow, background-color;
+    transition-property: margin-top, margin-left, background-color;
     /* 背景画像はコード側で設定（9-slice対応） */
-    /* 浮き上がり効果（質感重視） */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 .button-gradient:hover {
