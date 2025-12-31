@@ -115,7 +115,6 @@ namespace NovelGame
         
         // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
-        private int previousScore = 0; // 前回のスコアを保持（演出用）
         
         private void Start()
         {
@@ -1196,13 +1195,58 @@ namespace NovelGame
             // 本来のボタン生成ロジックを流用したいが、アニメーションのために個別に制御
             Button targetButton = new Button();
             targetButton.AddToClassList("scenario-button");
+            targetButton.AddToClassList("scenario-button-normal");
             targetButton.style.opacity = 0;
             
+            // ボタンの内容を構造化（CreateScenarioButtonsと同じスタイル）
             var buttonContent = new VisualElement();
             buttonContent.style.flexDirection = FlexDirection.Column;
-            buttonContent.Add(new Label(scenario6.title) { style = { fontSize = 20, unityFontStyleAndWeight = FontStyle.Bold } });
-            buttonContent.Add(new Label(scenario6.setup) { style = { fontSize = 14, opacity = 0.9f } });
+            buttonContent.style.alignItems = Align.FlexStart;
+            buttonContent.style.width = Length.Percent(100);
+            
+            // 失われた文字を置換
+            var lostLetters = gameManager.GetLostLetters();
+            string scenarioTitleText = scenario6.title;
+            string scenarioDescriptionText = scenario6.setup;
+            if (lostLetters.Count > 0)
+            {
+                foreach (char lostLetter in lostLetters)
+                {
+                    string target = lostLetter.ToString();
+                    scenarioTitleText = scenarioTitleText.Replace(target, "※");
+                    scenarioDescriptionText = scenarioDescriptionText.Replace(target, "※");
+                }
+            }
+            
+            // 文字色の定義
+            Color normalTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+            
+            var titleLabel = new Label(scenarioTitleText);
+            titleLabel.style.fontSize = 20;
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.whiteSpace = WhiteSpace.Normal;
+            titleLabel.style.marginBottom = 5;
+            titleLabel.style.color = normalTextColor;
+            buttonContent.Add(titleLabel);
+            
+            // シナリオの説明を追加（2行まで、文字あふれ防止）
+            var descriptionLabel = new Label(scenarioDescriptionText);
+            descriptionLabel.style.fontSize = 14;
+            descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
+            descriptionLabel.style.opacity = 0.9f;
+            descriptionLabel.style.maxHeight = 40; // 2行分の高さに制限
+            descriptionLabel.style.overflow = Overflow.Hidden;
+            descriptionLabel.style.color = normalTextColor;
+            buttonContent.Add(descriptionLabel);
+            
             targetButton.Add(buttonContent);
+            
+            // クリア前の画像を設定（9-slice対応）
+            if (scenarioButtonNormalImage != null && scenarioButtonNormalImage.texture != null)
+            {
+                targetButton.style.backgroundImage = new StyleBackground(scenarioButtonNormalImage.texture);
+                targetButton.style.backgroundColor = Color.clear; // 背景色をクリア
+            }
             
             int scenarioId = scenario6.id;
             targetButton.clicked += () => OnScenarioSelected(scenarioId);
@@ -1215,7 +1259,7 @@ namespace NovelGame
             yield return null;
             Vector2 endPos = targetButton.worldBound.center;
 
-            // 光の粒子演出
+            // 光の粒子演出（金色系に変更）
             int particleCount = 20;
             List<VisualElement> particles = new List<VisualElement>();
             for (int i = 0; i < particleCount; i++)
@@ -1224,7 +1268,7 @@ namespace NovelGame
                 p.style.position = Position.Absolute;
                 p.style.width = 10;
                 p.style.height = 10;
-                p.style.backgroundColor = Color.white;
+                p.style.backgroundColor = new Color(1f, 0.84f, 0f); // 金色系
                 p.style.borderTopLeftRadius = 5;
                 p.style.borderTopRightRadius = 5;
                 p.style.borderBottomLeftRadius = 5;
@@ -1261,14 +1305,14 @@ namespace NovelGame
                 yield return null;
             }
 
-            // 最後に大きな光
+            // 最後に大きな光（金色系に変更）
             var flash = new VisualElement();
             flash.style.position = Position.Absolute;
             flash.style.left = endPos.x - 50;
             flash.style.top = endPos.y - 50;
             flash.style.width = 100;
             flash.style.height = 100;
-            flash.style.backgroundColor = Color.white;
+            flash.style.backgroundColor = new Color(1f, 0.84f, 0f); // 金色系
             flash.style.borderTopLeftRadius = 50;
             flash.style.borderTopRightRadius = 50;
             flash.style.borderBottomLeftRadius = 50;
@@ -2149,10 +2193,19 @@ namespace NovelGame
             string text = "【もうひとつ】ワードゲット!";
             if (gameManager == null) return text;
 
-            var lostLetters = gameManager.GetLostLetters();
-            foreach (char lostLetter in lostLetters)
+            // 3周目の場合は「もうひとつ」を「※※※※※」に置換
+            if (gameManager.IsThirdLoop())
             {
-                text = text.Replace(lostLetter.ToString(), "※");
+                text = "【※※※※※】ワードゲット!";
+            }
+            else
+            {
+                // ダークモード：失われた文字を置換
+                var lostLetters = gameManager.GetLostLetters();
+                foreach (char lostLetter in lostLetters)
+                {
+                    text = text.Replace(lostLetter.ToString(), "※");
+                }
             }
             return text;
         }
@@ -2194,12 +2247,20 @@ namespace NovelGame
                 var lostLetters = gameManager.GetLostLetters();
                 string scoreText = "【もうひとつ】ワードゲット数";
                 
-                // 失われた文字を※に置き換え
-                if (lostLetters.Count > 0)
+                // 3周目の場合は「もうひとつ」を「※※※※※」に置換
+                if (gameManager.IsThirdLoop())
                 {
-                    foreach (char lostLetter in lostLetters)
+                    scoreText = "【※※※※※】ワードゲット数";
+                }
+                else
+                {
+                    // 失われた文字を※に置き換え
+                    if (lostLetters.Count > 0)
                     {
-                        scoreText = scoreText.Replace(lostLetter.ToString(), "※");
+                        foreach (char lostLetter in lostLetters)
+                        {
+                            scoreText = scoreText.Replace(lostLetter.ToString(), "※");
+                        }
                     }
                 }
                 
@@ -3413,14 +3474,14 @@ namespace NovelGame
         /// </summary>
         private IEnumerator ShowWordGetWithEffect(VisualElement root, bool isDarkMode, Scenario scenario, ScenarioResult result, VisualElement epilogueContainer, Label epilogueLabel, Vector2 clickPosition = default)
         {
-            // 演出用のオーバーレイを作成
+            // 演出用のオーバーレイを作成（生成り系に変更）
             var effectOverlay = new VisualElement();
             effectOverlay.style.position = Position.Absolute;
             effectOverlay.style.left = 0;
             effectOverlay.style.top = 0;
             effectOverlay.style.right = 0;
             effectOverlay.style.bottom = 0;
-            effectOverlay.style.backgroundColor = new Color(1f, 1f, 1f, 0f);
+            effectOverlay.style.backgroundColor = new Color(0.93f, 0.84f, 0.71f, 0f); // 生成り系
             
             // clickPositionが指定されていない場合のみ中央揃えにする
             if (clickPosition == default)
@@ -3491,9 +3552,9 @@ namespace NovelGame
                 float alpha = Mathf.Lerp(0.8f, 0f, t);
                 glowEffect.style.backgroundColor = new Color(1f, 0.84f, 0f, alpha);
                 
-                // 背景も少し明るく
+                // 背景も少し明るく（生成り系に変更）
                 float bgAlpha = Mathf.Lerp(0f, 0.3f, Mathf.Sin(t * Mathf.PI));
-                effectOverlay.style.backgroundColor = new Color(1f, 1f, 1f, bgAlpha);
+                effectOverlay.style.backgroundColor = new Color(0.93f, 0.84f, 0.71f, bgAlpha); // 生成り系
                 
                 yield return null;
             }

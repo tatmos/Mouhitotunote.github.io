@@ -190,11 +190,12 @@ namespace NovelGame
                         detailCard.AddToClassList("profile-card-voice");
                         break;
                 }
-                detailCard.style.backgroundColor = profile.profileColor;
+                // ブラウン/セピア/生成り系の背景色に変更（質感重視）
+                detailCard.style.backgroundColor = new Color(0.93f, 0.84f, 0.71f); // 生成り系
             }
             else
             {
-                detailCard.style.backgroundColor = new Color(0.8f, 0.8f, 0.8f);
+                detailCard.style.backgroundColor = new Color(0.4f, 0.26f, 0.13f); // ブラウン/セピア系
             }
 
             detailCard.style.paddingTop = 20;
@@ -213,7 +214,8 @@ namespace NovelGame
             detailCard.style.borderBottomRightRadius = 8;
 
             // ボーダー幅を各方向に設定
-            var borderColor = isUnlocked ? profile.borderColor : new Color(0.2f, 0.2f, 0.2f);
+            // ボーダー色を金色系に変更（質感重視）
+            var borderColor = isUnlocked ? new Color(0.72f, 0.53f, 0.04f) : new Color(0.4f, 0.26f, 0.13f); // 金色系 / ブラウン系
             detailCard.style.borderTopWidth = 2;
             detailCard.style.borderRightWidth = 2;
             detailCard.style.borderBottomWidth = 2;
