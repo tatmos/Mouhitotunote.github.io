@@ -133,6 +133,32 @@ namespace NovelGame
             InitializeAnimals();
             return animals.Select(a => a.name).ToList();
         }
+        
+        /// <summary>
+        /// 保存された動物名を取得（GameManagerから）
+        /// </summary>
+        /// <returns>保存された動物名。見つからない場合は生成してから返す</returns>
+        public static string GetAnimalName()
+        {
+            GameManager gameManager = GameManager.Instance;
+            if (gameManager != null)
+            {
+                string savedName = gameManager.GetScenarioRandomData(4, "animalName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+                // 保存されていない場合は生成してから取得
+                gameManager.GenerateScenarioRandomData();
+                savedName = gameManager.GetScenarioRandomData(4, "animalName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+            }
+            // フォールバック：ランダムな動物名を返す
+            return GetRandomAnimalName();
+        }
     }
 }
 

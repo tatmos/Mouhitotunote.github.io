@@ -985,6 +985,12 @@ namespace NovelGame
             FadeOutAudioOnSceneChange();
             HideAllScreens(true);
             
+            // シナリオごとのランダム要素を生成（シナリオ選択画面で1回だけ生成）
+            if (gameManager != null)
+            {
+                gameManager.GenerateScenarioRandomData();
+            }
+            
             // クレジットBGMをフェードアウト停止（急な停止を避ける）
             audioManager.FadeOutCreditBGM(1.0f);
 
@@ -1790,6 +1796,27 @@ namespace NovelGame
                 else
                 {
                     epilogueText = result.epilogue;
+                    
+                    // シナリオ4（魔法学校の試験）の場合、失敗時（hasWord = false）に動物にゆかりのある話題を追加
+                    if (scenario.id == 4 && !result.hasWord)
+                    {
+                        // シナリオのsetupから動物名を抽出（「試験官：「{animalName}を出現させなさい」」の形式）
+                        string animalName = ExtractAnimalNameFromSetup(scenario.setup);
+                        
+                        if (!string.IsNullOrEmpty(animalName))
+                        {
+                            string relatedTopic = AnimalNameManager.GetRelatedTopic(animalName);
+                            if (!string.IsNullOrEmpty(relatedTopic))
+                            {
+                                // epilogueに既に動物の話題が含まれていない場合のみ追加
+                                if (!epilogueText.Contains(relatedTopic))
+                                {
+                                    epilogueText += $"\n\n試験官が何か言いかけた。\n試験官：「ところで、{animalName}について...{relatedTopic}」";
+                                }
+                            }
+                        }
+                    }
+                    
                     epilogueLabel.AddToClassList("epilogue-text");
                 }
             }
@@ -2493,6 +2520,8 @@ namespace NovelGame
                 buttonContent.style.flexDirection = FlexDirection.Column;
                 buttonContent.style.alignItems = Align.FlexStart;
                 buttonContent.style.width = Length.Percent(100);
+                buttonContent.style.height = Length.Percent(100);
+                buttonContent.style.flexGrow = 1;
                 
                 string scenarioTitleText = scenario.title;
                 string scenarioDescriptionText = scenario.setup;
@@ -2524,7 +2553,8 @@ namespace NovelGame
                 descriptionLabel.style.fontSize = 14;
                 descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
                 descriptionLabel.style.opacity = 0.9f;
-                descriptionLabel.style.maxHeight = 60; // 3行分の高さに制限
+                descriptionLabel.style.maxHeight = 120; // 3行分の高さに制限（ボタンの高さに合わせて拡張）
+                descriptionLabel.style.flexGrow = 1; // 利用可能なスペースを埋める
                 descriptionLabel.style.overflow = Overflow.Hidden;
                 buttonContent.Add(descriptionLabel);
                 
@@ -4078,6 +4108,53 @@ namespace NovelGame
             
             // スコア表示の更新（カウントアップ開始）
             UpdateScoreDisplay();
+        }
+        
+        /// <summary>
+        /// シナリオのsetupテキストから動物名を抽出（保存された値を使用）
+        /// </summary>
+        /// <param name="setupText">シナリオのsetupテキスト</param>
+        /// <returns>抽出された動物名。見つからない場合は保存された値を使用</returns>
+        private string ExtractAnimalNameFromSetup(string setupText)
+        {
+            // まず保存された値を取得
+            if (gameManager != null)
+            {
+                string savedName = gameManager.GetScenarioRandomData(4, "animalName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+            }
+            
+            // 保存されていない場合はテキストから抽出を試みる
+            if (string.IsNullOrEmpty(setupText))
+            {
+                return "";
+            }
+            
+            // 「試験官：「{animalName}を出現させなさい」」の形式から動物名を抽出
+            int startIndex = setupText.IndexOf("「");
+            if (startIndex < 0) return "";
+            
+            int endIndex = setupText.IndexOf("を出現させなさい", startIndex);
+            if (endIndex < 0) return "";
+            
+            // 「の後の文字列を取得
+            string animalName = setupText.Substring(startIndex + 1, endIndex - startIndex - 1);
+            
+            // すべての動物名リストと照合して、正確な動物名を返す
+            var allAnimalNames = AnimalNameManager.GetAllAnimalNames();
+            foreach (string name in allAnimalNames)
+            {
+                if (animalName.Contains(name))
+                {
+                    return name;
+                }
+            }
+            
+            // 見つからない場合は抽出した文字列をそのまま返す
+            return animalName.Trim();
         }
     }
 }

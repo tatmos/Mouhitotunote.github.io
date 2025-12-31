@@ -102,6 +102,32 @@ namespace NovelGame
             InitializeBuildingNames();
             return new List<string>(buildingNames);
         }
+        
+        /// <summary>
+        /// 保存された建物名を取得（GameManagerから）
+        /// </summary>
+        /// <returns>保存された建物名。見つからない場合は生成してから返す</returns>
+        public static string GetBuildingName()
+        {
+            GameManager gameManager = GameManager.Instance;
+            if (gameManager != null)
+            {
+                string savedName = gameManager.GetScenarioRandomData(1, "buildingName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+                // 保存されていない場合は生成してから取得
+                gameManager.GenerateScenarioRandomData();
+                savedName = gameManager.GetScenarioRandomData(1, "buildingName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+            }
+            // フォールバック：ランダムな建物名を返す
+            return GetRandomBuildingName();
+        }
     }
 }
 

@@ -40,6 +40,10 @@ namespace NovelGame
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
         private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
+        
+        // シナリオごとのランダム要素を保存（シナリオID -> 要素名 -> 値）
+        // 例: {1: {"buildingName": "旧市庁舎"}, {4: {"animalName": "ウサギ"}}, {2: {"menuName": "おせち"}}}
+        private Dictionary<int, Dictionary<string, string>> scenarioRandomData = new Dictionary<int, Dictionary<string, string>>();
 
         // 設定：物語の解明度表示ON/OFF
         private bool showStoryProgress = true;
@@ -125,6 +129,12 @@ namespace NovelGame
 
         public List<Scenario> GetScenarios()
         {
+            // ランダム要素が生成されていない場合は生成する（初回呼び出し時など）
+            if (scenarioRandomData.Count == 0)
+            {
+                GenerateScenarioRandomData();
+            }
+            
             // 周回数が変わった可能性があるため、常に最新のシナリオを生成
             // （ScenarioDefinitions.CreateScenarios()が最新の周回数を取得するため）
             // 直接ScenarioDefinitions.CreateScenarios()を呼び出して、常に最新のシナリオを取得
@@ -816,8 +826,75 @@ namespace NovelGame
             currentScenarioIndex = -1;
             hasCompletedFirstLoop = false; // リセット時は1周目クリアフラグもリセット
             scenarioThirdLoopCounts.Clear(); // リセット時は各シナリオの2周目クリア回数もリセット
+            scenarioRandomData.Clear(); // リセット時はランダム要素もクリア
             gameStartTime = DateTime.Now;
             OnScoreChanged?.Invoke();
+        }
+        
+        /// <summary>
+        /// シナリオごとのランダム要素を生成して保存
+        /// 既にデータが存在する場合は生成しない（一度生成したら保持）
+        /// </summary>
+        public void GenerateScenarioRandomData()
+        {
+            // 既にデータが存在する場合は生成しない
+            if (scenarioRandomData.Count > 0)
+            {
+                return;
+            }
+            
+            // シナリオ1: 建物名と失踪人物名
+            if (!scenarioRandomData.ContainsKey(1))
+            {
+                scenarioRandomData[1] = new Dictionary<string, string>();
+            }
+            scenarioRandomData[1]["buildingName"] = BuildingNameManager.GetRandomBuildingName();
+            scenarioRandomData[1]["missingPersonName"] = MissingPersonNameManager.GetRandomMissingPersonName();
+            
+            // シナリオ2: メニュー名（日付ベースなので毎回同じだが、念のため保存）
+            if (!scenarioRandomData.ContainsKey(2))
+            {
+                scenarioRandomData[2] = new Dictionary<string, string>();
+            }
+            scenarioRandomData[2]["menuName"] = RestaurantMenuManager.GetTodayRecommendation();
+            
+            // シナリオ3: タイムカプセルアイテム
+            if (!scenarioRandomData.ContainsKey(3))
+            {
+                scenarioRandomData[3] = new Dictionary<string, string>();
+            }
+            scenarioRandomData[3]["timeCapsuleItem"] = TimeCapsuleItemManager.GetRandomTimeCapsuleItem();
+            
+            // シナリオ4: 動物名
+            if (!scenarioRandomData.ContainsKey(4))
+            {
+                scenarioRandomData[4] = new Dictionary<string, string>();
+            }
+            scenarioRandomData[4]["animalName"] = AnimalNameManager.GetRandomAnimalName();
+            
+            // シナリオ5: パズル絵の内容とリアクション
+            if (!scenarioRandomData.ContainsKey(5))
+            {
+                scenarioRandomData[5] = new Dictionary<string, string>();
+            }
+            var puzzleImage = PuzzleImageManager.GetRandomPuzzleImage();
+            scenarioRandomData[5]["puzzleImage"] = puzzleImage.ImageDescription;
+            scenarioRandomData[5]["puzzleReaction"] = puzzleImage.Reaction;
+        }
+        
+        /// <summary>
+        /// シナリオのランダム要素を取得
+        /// </summary>
+        /// <param name="scenarioId">シナリオID</param>
+        /// <param name="key">要素名（"buildingName", "animalName", "menuName"など）</param>
+        /// <returns>ランダム要素の値。見つからない場合はnull</returns>
+        public string GetScenarioRandomData(int scenarioId, string key)
+        {
+            if (scenarioRandomData.ContainsKey(scenarioId) && scenarioRandomData[scenarioId].ContainsKey(key))
+            {
+                return scenarioRandomData[scenarioId][key];
+            }
+            return null;
         }
     }
 

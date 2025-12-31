@@ -385,6 +385,32 @@ namespace NovelGame
                 "ブロッコリーのオムレツ"
             };
         }
+        
+        /// <summary>
+        /// 保存されたメニュー名を取得（GameManagerから）
+        /// </summary>
+        /// <returns>保存されたメニュー名。見つからない場合は生成してから返す</returns>
+        public static string GetMenuName()
+        {
+            GameManager gameManager = GameManager.Instance;
+            if (gameManager != null)
+            {
+                string savedName = gameManager.GetScenarioRandomData(2, "menuName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+                // 保存されていない場合は生成してから取得
+                gameManager.GenerateScenarioRandomData();
+                savedName = gameManager.GetScenarioRandomData(2, "menuName");
+                if (!string.IsNullOrEmpty(savedName))
+                {
+                    return savedName;
+                }
+            }
+            // フォールバック：本日のおすすめを返す
+            return GetTodayRecommendation();
+        }
     }
 }
 
