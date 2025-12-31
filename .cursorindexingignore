@@ -1,0 +1,5 @@
+# Unity固有のファイルを除外
+**/*.meta
+**/*.prefab
+**/*.unity
+**/*.asset
