@@ -42,6 +42,14 @@ namespace NovelGame
         [Tooltip("クリア後のシナリオボタン画像（9-slice対応）。Unityエディタで画像を選択し、Sprite Editorで9-sliceを設定してください。")]
         [SerializeField] private Sprite scenarioButtonCompletedImage; // クリア後のシナリオボタン画像（9-slice対応）
         
+        [Header("UI Button Images")]
+        [Tooltip("通常のUIボタン画像（9-slice対応）。選択肢ボタン、スタートボタン、戻るボタンなどに使用されます。")]
+        [SerializeField] private Sprite uiButtonNormalImage; // 通常のUIボタン画像（9-slice対応）
+        [Tooltip("ダークモード用のUIボタン画像（9-slice対応）。ダークモード時の選択肢ボタンに使用されます。")]
+        [SerializeField] private Sprite uiButtonDarkImage; // ダークモード用のUIボタン画像（9-slice対応）
+        [Tooltip("インディゴ系のUIボタン画像（9-slice対応）。確認ダイアログのキャンセルボタンなどに使用されます。")]
+        [SerializeField] private Sprite uiButtonIndigoImage; // インディゴ系のUIボタン画像（9-slice対応）
+        
         [Header("Effects")]
         [SerializeField] private Material distortionMaterial;
         
@@ -309,6 +317,10 @@ namespace NovelGame
                 {
                     startButton.text = "もうひとつを探す";
                 }
+                
+                // スタートボタンに画像を適用
+                Color startButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(startButton, uiButtonNormalImage, startButtonTextColor);
             }
             
             // 謎の声テキストを非表示に設定
@@ -830,6 +842,9 @@ namespace NovelGame
             okButton.style.flexGrow = 1;
             okButton.style.marginRight = 10;
             okButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            // OKボタンに画像を適用
+            Color okButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+            ApplyButtonImage(okButton, uiButtonNormalImage, okButtonTextColor);
             buttonContainer.Add(okButton);
             
             // キャンセルボタン
@@ -841,6 +856,9 @@ namespace NovelGame
             cancelButton.style.flexGrow = 1;
             cancelButton.style.marginLeft = 10;
             cancelButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+            // キャンセルボタンに画像を適用
+            Color cancelButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+            ApplyButtonImage(cancelButton, uiButtonIndigoImage, cancelButtonTextColor);
             buttonContainer.Add(cancelButton);
             
             dialog.Add(buttonContainer);
@@ -1272,6 +1290,9 @@ namespace NovelGame
             {
                 backButton.clicked += ShowSelectionScreen;
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
             // タイトル画面に戻るボタン（もしあれば）
@@ -1280,6 +1301,9 @@ namespace NovelGame
             {
                 backToTitleButton.clicked += ShowTitleScreenWithFade;
                 backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // タイトルに戻るボタンに画像を適用
+                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
             
             // トランジション開始
@@ -1855,6 +1879,9 @@ namespace NovelGame
                     gameManager.ActivatePendingDarkMode();
                     ShowSelectionScreen();
                 };
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
             // タイトル画面に戻るボタン（もしあれば。最初は非表示）
@@ -1867,6 +1894,9 @@ namespace NovelGame
                     gameManager.ActivatePendingDarkMode();
                     ShowTitleScreenWithFade();
                 };
+                // タイトルに戻るボタンに画像を適用
+                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
             // トランジション開始
@@ -2064,6 +2094,36 @@ namespace NovelGame
             label.text = $"{baseText}: {end} / {total}";
         }
 
+        /// <summary>
+        /// UIボタンに画像を適用するヘルパーメソッド
+        /// </summary>
+        private void ApplyButtonImage(Button button, Sprite image, Color textColor)
+        {
+            if (button == null) return;
+            
+            if (image != null && image.texture != null)
+            {
+                button.style.backgroundImage = new StyleBackground(image.texture);
+                button.style.backgroundColor = Color.clear; // 背景色をクリア
+            }
+            
+            // ボタン内のテキストの色を設定
+            if (button.text != null)
+            {
+                button.style.color = textColor;
+            }
+            
+            // ボタン内の子要素（Labelなど）の色も設定
+            var children = button.Children();
+            foreach (var child in children)
+            {
+                if (child is Label label)
+                {
+                    label.style.color = textColor;
+                }
+            }
+        }
+
         private void CreateScenarioButtons(VisualElement root)
         {
             var buttonContainer = root.Q<VisualElement>("ScenarioButtonContainer");
@@ -2232,13 +2292,27 @@ namespace NovelGame
                 Button button = new Button();
                 
                 // ダークモードの場合はダークスタイルを適用
+                Color choiceTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 if (isDarkMode)
                 {
                     button.AddToClassList("choice-button-dark");
+                    // ダークモード用の画像を適用
+                    if (uiButtonDarkImage != null && uiButtonDarkImage.texture != null)
+                    {
+                        button.style.backgroundImage = new StyleBackground(uiButtonDarkImage.texture);
+                        button.style.backgroundColor = Color.clear;
+                    }
+                    choiceTextColor = Color.white; // ダークモード時は白文字
                 }
                 else
                 {
                     button.AddToClassList("choice-button");
+                    // 通常の画像を適用
+                    if (uiButtonNormalImage != null && uiButtonNormalImage.texture != null)
+                    {
+                        button.style.backgroundImage = new StyleBackground(uiButtonNormalImage.texture);
+                        button.style.backgroundColor = Color.clear;
+                    }
                 }
                 
                 string choiceLabelText = $"選択肢{choice.id}：{choice.text}";
@@ -2265,6 +2339,10 @@ namespace NovelGame
                 previewText.style.fontSize = 14;
                 previewText.style.opacity = 0.8f;
                 previewText.style.whiteSpace = WhiteSpace.Normal;
+                
+                // 文字色を設定（buttonTextとpreviewTextが作成された後）
+                buttonText.style.color = choiceTextColor;
+                previewText.style.color = choiceTextColor;
 
                 var buttonContent = new VisualElement();
                 buttonContent.style.flexDirection = FlexDirection.Column;
@@ -2291,6 +2369,9 @@ namespace NovelGame
                 backButton.clicked += ShowSelectionScreen;
                 // マウスオーバー時の音を設定
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
                 // 最初は非表示
                 backButton.style.display = DisplayStyle.None;
             }
@@ -2340,6 +2421,9 @@ namespace NovelGame
                     gameManager.ActivatePendingDarkMode();
                     ShowTitleScreenWithFade();
                 };
+                // タイトルに戻るボタンに画像を適用
+                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backToTitleButtonFromScenario, uiButtonNormalImage, backToTitleButtonTextColor);
             }
         }
 
@@ -2615,6 +2699,9 @@ namespace NovelGame
             {
                 backButton.clicked += ShowSelectionScreen;
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
             // タイトル画面に戻るボタン（もしあれば）
@@ -2623,6 +2710,9 @@ namespace NovelGame
             {
                 backToTitleButton.clicked += ShowTitleScreenWithFade;
                 backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // タイトルに戻るボタンに画像を適用
+                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
             // トランジション開始
@@ -2686,6 +2776,9 @@ namespace NovelGame
             {
                 backButton.clicked += ShowSelectionScreen;
                 backButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
             // タイトル画面に戻るボタン（もしあれば）
@@ -2694,6 +2787,9 @@ namespace NovelGame
             {
                 backToTitleButton.clicked += ShowTitleScreenWithFade;
                 backToTitleButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // タイトルに戻るボタンに画像を適用
+                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
             // トランジション開始
@@ -2817,6 +2913,9 @@ namespace NovelGame
                 // 特別版の場合は非表示
                 backButton.style.display = isSpecial ? DisplayStyle.None : DisplayStyle.Flex;
                 backButton.clicked += ShowSelectionScreen;
+                // 戻るボタンに画像を適用
+                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
             // トランジション開始

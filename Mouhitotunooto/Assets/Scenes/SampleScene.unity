@@ -831,6 +831,9 @@ MonoBehaviour:
   profileScreenBackground: {fileID: 21300000, guid: beed6f7a533820243bde9f559d996f6e, type: 3}
   scenarioButtonNormalImage: {fileID: 21300000, guid: 798e530e7509cbb4aa442b131682e843, type: 3}
   scenarioButtonCompletedImage: {fileID: 21300000, guid: 1ffeffa49ba2a434ab6bb1c495d147bb, type: 3}
+  uiButtonNormalImage: {fileID: 21300000, guid: 7dde6c30576a9104ba7ea5d322c6d1b8, type: 3}
+  uiButtonDarkImage: {fileID: 21300000, guid: 7d49026a1bb0df1458c16ca777c11b91, type: 3}
+  uiButtonIndigoImage: {fileID: 21300000, guid: de83a0fbf179b0c4d9ce7a8658c3a661, type: 3}
   distortionMaterial: {fileID: 2100000, guid: 24985ac6264dc2949b165aa5bcbd70e3, type: 2}
   wordGetSounds:
   - {fileID: 8300000, guid: 535f6fa8017f39448bb8998a895b79ac, type: 3}

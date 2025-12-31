@@ -220,22 +220,27 @@ Button:disabled {
 }
 
 /* グラデーションボタン（index.htmlのbg-gradient-to-r from-purple-500 to-blue-500に近づける） */
+/* 注意：背景画像が設定されている場合は、コード側で背景色をColor.clearに設定しています */
 .button-gradient {
-    background-color: rgb(139, 92, 246); /* purple-500 */
+    background-color: rgb(139, 92, 246); /* purple-500（フォールバック） */
     border-radius: 8px;
     transition-duration: 0.2s;
+    /* 背景画像はコード側で設定（9-slice対応） */
 }
 
 .button-gradient:hover {
+    /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     background-color: rgb(124, 58, 237); /* purple-600 */
 }
 
 .button-gradient-indigo {
-    background-color: rgb(99, 102, 241); /* indigo-500 */
+    background-color: rgb(99, 102, 241); /* indigo-500（フォールバック） */
     border-radius: 8px;
+    /* 背景画像はコード側で設定（9-slice対応） */
 }
 
 .button-gradient-indigo:hover {
+    /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     background-color: rgb(79, 70, 229); /* indigo-600 */
 }
 
@@ -287,31 +292,35 @@ Button:disabled {
 }
 
 /* 選択肢ボタン */
+/* 注意：背景画像が設定されている場合は、コード側で背景色をColor.clearに設定しています */
 .choice-button {
     min-width: 780px;
     min-height: 120px;
     font-size: 20px;
     flex-direction: column;
     align-items: flex-start;
-    background-color: rgb(139, 92, 246); /* purple-500 */
+    background-color: rgb(139, 92, 246); /* purple-500（フォールバック） */
     border-radius: 8px;
-    color: rgb(255, 255, 255);
     padding: 16px 24px;
+    /* 背景画像はコード側で設定（9-slice対応） */
 }
 
 .choice-button:hover {
+    /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
+    /* 画像が設定されていない場合のみ有効 */
     background-color: rgb(124, 58, 237); /* purple-600 */
 }
 
 /* ダークモードの選択肢ボタン */
 .choice-button-dark {
-    background-color: rgb(220, 38, 38); /* red-600 */
+    background-color: rgb(220, 38, 38); /* red-600（フォールバック） */
     border-width: 2px;
     border-color: rgb(248, 113, 113); /* red-400 */
-    color: rgb(255, 255, 255);
+    /* 背景画像はコード側で設定（9-slice対応） */
 }
 
 .choice-button-dark:hover {
+    /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     background-color: rgb(185, 28, 28); /* red-700 */
 }
 
