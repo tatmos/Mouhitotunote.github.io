@@ -14,86 +14,137 @@ namespace NovelGame
         public static List<Scenario> CreateScenarios()
         {
             var scenarios = new List<Scenario>();
+            
+            // 周回数を取得（GameManagerが存在する場合）
+            int loopCount = 1;
+            if (GameManager.Instance != null)
+            {
+                loopCount = GameManager.Instance.GetLoopCount();
+            }
 
-            scenarios.Add(CreateScenario1());
-            scenarios.Add(CreateScenario2());
-            scenarios.Add(CreateScenario3());
-            scenarios.Add(CreateScenario4());
-            scenarios.Add(CreateScenario5());
-            scenarios.Add(CreateScenario6());
+            scenarios.Add(CreateScenario1(loopCount));
+            scenarios.Add(CreateScenario2(loopCount));
+            scenarios.Add(CreateScenario3(loopCount));
+            scenarios.Add(CreateScenario4(loopCount));
+            scenarios.Add(CreateScenario5(loopCount));
+            scenarios.Add(CreateScenario6(loopCount));
 
             return scenarios;
         }
 
-        private static Scenario CreateScenario1()
+        private static Scenario CreateScenario1(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 1,
                 title = "謎の依頼",
-                setup = "あなたは探偵事務所で古い写真を手渡されました。",
+                setup = loopCount >= 2 ? "あなたは探偵事務所で古い写真を手渡されました。\n（前回の経験を踏まえ、あなたは何か違和感を覚えています...）" : "あなたは探偵事務所で古い写真を手渡されました。",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "写真の人物について調べる", preview = "私：「この人物は..." },
                     new Choice { id = 2, text = "写真の背景について調べる", preview = "私：「この建物は..." }
                 }
             };
-            scenario.branches[1] = new Branch
+            if (loopCount >= 2)
             {
-                text = "私：「この人物は10年前に失踪した田中様ですね」\n依頼人：「そう、でも私が知りたいのは・・・」\n私：「失礼しました。【もうひとつ】の手がかりを調べます。背景の建物ですね」\n\n・・・",
-                hasWord = true,
-                epilogue = "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。\n(何かが集まり始めている...「も」という文字を手に入れた)",
-                epilogue2 = "もも子さんは、あなたの探偵としての成長を認めてくれました。\n「あなたは本当に優秀な探偵ね。また何かあったら、お願いします」\nそう言って、もも子さんは笑顔で帰っていきました。\nあなたは、写真の隅にあった小さな文字「も」を大切に保管することにしました。"
-            };
-            scenario.branches[2] = new Branch
+                // 2周目以降の展開
+                scenario.branches[1] = new Branch
+                {
+                    text = "私：「この人物は10年前に失踪した田中様ですね」\n依頼人：「そう、でも私が知りたいのは・・・」\n私：「失礼しました。【もうひとつ】の手がかりを調べます。背景の建物ですね」\n\n（前回と同じ展開だが、あなたは既に答えを知っている。それでも、もも子さんの表情に何か違和感を覚える...）",
+                    hasWord = true,
+                    epilogue = "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。\n(何かが集まり始めている...「も」という文字を手に入れた)\n\n（2周目：あなたは既にこの結末を知っている。しかし、もも子さんの言葉の端々に、前回とは違う何かが隠されている気がする...）",
+                    epilogue2 = "もも子さんは、あなたの探偵としての成長を認めてくれました。\n「あなたは本当に優秀な探偵ね。また何かあったら、お願いします」\nそう言って、もも子さんは笑顔で帰っていきました。\nあなたは、写真の隅にあった小さな文字「も」を大切に保管することにしました。\n\n（2周目：もも子さんの笑顔は前回と同じだったが、その目には一瞬だけ、何か言いたげな表情が浮かんでいた...）"
+                };
+                scenario.branches[2] = new Branch
+                {
+                    text = "私：「この建物は取り壊された旧市庁舎です」\n依頼人：「まさにそこ!ありがとう、探偵さん」\n\n（前回とは違う選択をしてみた。もも子さんの反応は...？）",
+                    hasWord = false,
+                    epilogue = "事件は解決しましたが、何か物足りなさを感じました。\n依頼人は満足していましたが、あなたは写真の人物についてもっと調べたかったのです。\n(もしかしたら、もうひとつの手がかりがあったのかもしれない...)\n\n（2周目：前回とは違う道を選んだが、やはり同じ物足りなさを感じる。もしかしたら、この選択肢にも何か隠された意味があるのかもしれない...）",
+                    hint = "💡 ヒント: もも子さんは「もうひとつ」の手がかりを求めていました。写真の「人物」だけでなく、「背景」にも注目してみましょう。\n\n（2周目：あなたは既に答えを知っている。しかし、このヒントの意味は、もっと深いところにあるのかもしれない...）"
+                };
+            }
+            else
             {
-                text = "私：「この建物は取り壊された旧市庁舎です」\n依頼人：「まさにそこ!ありがとう、探偵さん」",
-                hasWord = false,
-                epilogue = "事件は解決しましたが、何か物足りなさを感じました。\n依頼人は満足していましたが、あなたは写真の人物についてもっと調べたかったのです。\n(もしかしたら、もうひとつの手がかりがあったのかもしれない...)",
-                hint = "💡 ヒント: もも子さんは「もうひとつ」の手がかりを求めていました。写真の「人物」だけでなく、「背景」にも注目してみましょう。"
-            };
+                // 1周目の展開（元の内容）
+                scenario.branches[1] = new Branch
+                {
+                    text = "私：「この人物は10年前に失踪した田中様ですね」\n依頼人：「そう、でも私が知りたいのは・・・」\n私：「失礼しました。【もうひとつ】の手がかりを調べます。背景の建物ですね」\n\n・・・",
+                    hasWord = true,
+                    epilogue = "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。\n(何かが集まり始めている...「も」という文字を手に入れた)",
+                    epilogue2 = "もも子さんは、あなたの探偵としての成長を認めてくれました。\n「あなたは本当に優秀な探偵ね。また何かあったら、お願いします」\nそう言って、もも子さんは笑顔で帰っていきました。\nあなたは、写真の隅にあった小さな文字「も」を大切に保管することにしました。"
+                };
+                scenario.branches[2] = new Branch
+                {
+                    text = "私：「この建物は取り壊された旧市庁舎です」\n依頼人：「まさにそこ!ありがとう、探偵さん」",
+                    hasWord = false,
+                    epilogue = "事件は解決しましたが、何か物足りなさを感じました。\n依頼人は満足していましたが、あなたは写真の人物についてもっと調べたかったのです。\n(もしかしたら、もうひとつの手がかりがあったのかもしれない...)",
+                    hint = "💡 ヒント: もも子さんは「もうひとつ」の手がかりを求めていました。写真の「人物」だけでなく、「背景」にも注目してみましょう。"
+                };
+            }
             scenario.SerializeBranches();
             return scenario;
         }
 
-        private static Scenario CreateScenario2()
+        private static Scenario CreateScenario2(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 2,
                 title = "不思議なレストラン",
-                setup = "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。",
+                setup = loopCount >= 2 ? "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。\n（前回の経験から、あなたはうみシェフの「きまぐれ」に特別な意味があることを知っています...）" : "メニューには「本日のおすすめ」と「シェフのきまぐれ」があります。",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "本日のおすすめを注文する", preview = "シェフ：「お待たせ..." },
                     new Choice { id = 2, text = "シェフのきまぐれを注文する", preview = "シェフ：「お待たせ..." }
                 }
             };
-            scenario.branches[1] = new Branch
+            if (loopCount >= 2)
             {
-                text = "シェフ：「お待たせしました」\n美味しい料理が運ばれてきた。\nシェフ：「お気に召しましたか?」\n私：「はい!」",
-                hasWord = false,
-                epilogue = "料理は美味しかったですが、シェフの「きまぐれ」が気になりました。\n次回は、きまぐれメニューも試してみようと心に決めました。\n(もしかしたら、あの空の皿には何か意味があったのかもしれない...)",
-                hint = "💡 ヒント: うみシェフの「きまぐれ」には特別な意味があります。空の皿の「裏」や「底」に注目してみましょう。"
-            };
-            scenario.branches[2] = new Branch
+                // 2周目以降の展開
+                scenario.branches[1] = new Branch
+                {
+                    text = "シェフ：「お待たせしました」\n美味しい料理が運ばれてきた。\nシェフ：「お気に召しましたか?」\n私：「はい!」\n\n（前回とは違う選択をしてみた。うみシェフの表情に何か変化はあるだろうか...？）",
+                    hasWord = false,
+                    epilogue = "料理は美味しかったですが、シェフの「きまぐれ」が気になりました。\n次回は、きまぐれメニューも試してみようと心に決めました。\n(もしかしたら、あの空の皿には何か意味があったのかもしれない...)\n\n（2周目：前回とは違う道を選んだが、やはり同じ気持ちになる。うみシェフの「きまぐれ」には、もっと深い意味があるのかもしれない...）",
+                    hint = "💡 ヒント: うみシェフの「きまぐれ」には特別な意味があります。空の皿の「裏」や「底」に注目してみましょう。\n\n（2周目：あなたは既に答えを知っている。しかし、このヒントの意味は、もっと深いところにあるのかもしれない...）"
+                };
+                scenario.branches[2] = new Branch
+                {
+                    text = "シェフ：「お待たせしました」\n運ばれてきたのは空の皿。\n私：「あの・・・これは?」\nシェフ：にっこり笑って「今日のきまぐれは『想像の料理』です」\n私：「・・・?」\nシェフ：「冗談です。【もうひとつ】お持ちします」\n\n（前回と同じ展開だが、あなたは既に答えを知っている。それでも、うみシェフの表情に何か違和感を覚える...）",
+                    hasWord = true,
+                    epilogue = "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。\n(また文字を手に入れた...「う」)\n\n（2周目：あなたは既にこの結末を知っている。しかし、うみシェフの言葉の端々に、前回とは違う何かが隠されている気がする...）",
+                    epilogue2 = "うみシェフは、あなたが皿の底の文字に気づいたことを喜んでいました。\n「よく気づいてくれたわね。あれは特別なお客様へのメッセージなの」\nあなたは、うみシェフの遊び心と温かさに、ますますこのレストランが好きになりました。\n「また来てね」と、うみシェフは手を振って見送ってくれました。\n\n（2周目：うみシェフの笑顔は前回と同じだったが、その目には一瞬だけ、何か言いたげな表情が浮かんでいた...）"
+                };
+            }
+            else
             {
-                text = "シェフ：「お待たせしました」\n運ばれてきたのは空の皿。\n私：「あの・・・これは?」\nシェフ：にっこり笑って「今日のきまぐれは『想像の料理』です」\n私：「・・・?」\nシェフ：「冗談です。【もうひとつ】お持ちします」\n",
-                hasWord = true,
-                epilogue = "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。\n(また文字を手に入れた...「う」)",
-                epilogue2 = "うみシェフは、あなたが皿の底の文字に気づいたことを喜んでいました。\n「よく気づいてくれたわね。あれは特別なお客様へのメッセージなの」\nあなたは、うみシェフの遊び心と温かさに、ますますこのレストランが好きになりました。\n「また来てね」と、うみシェフは手を振って見送ってくれました。"
-            };
+                // 1周目の展開（元の内容）
+                scenario.branches[1] = new Branch
+                {
+                    text = "シェフ：「お待たせしました」\n美味しい料理が運ばれてきた。\nシェフ：「お気に召しましたか?」\n私：「はい!」",
+                    hasWord = false,
+                    epilogue = "料理は美味しかったですが、シェフの「きまぐれ」が気になりました。\n次回は、きまぐれメニューも試してみようと心に決めました。\n(もしかしたら、あの空の皿には何か意味があったのかもしれない...)",
+                    hint = "💡 ヒント: うみシェフの「きまぐれ」には特別な意味があります。空の皿の「裏」や「底」に注目してみましょう。"
+                };
+                scenario.branches[2] = new Branch
+                {
+                    text = "シェフ：「お待たせしました」\n運ばれてきたのは空の皿。\n私：「あの・・・これは?」\nシェフ：にっこり笑って「今日のきまぐれは『想像の料理』です」\n私：「・・・?」\nシェフ：「冗談です。【もうひとつ】お持ちします」\n",
+                    hasWord = true,
+                    epilogue = "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。\n(また文字を手に入れた...「う」)",
+                    epilogue2 = "うみシェフは、あなたが皿の底の文字に気づいたことを喜んでいました。\n「よく気づいてくれたわね。あれは特別なお客様へのメッセージなの」\nあなたは、うみシェフの遊び心と温かさに、ますますこのレストランが好きになりました。\n「また来てね」と、うみシェフは手を振って見送ってくれました。"
+                };
+            }
             scenario.SerializeBranches();
             return scenario;
         }
 
-        private static Scenario CreateScenario3()
+        private static Scenario CreateScenario3(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 3,
                 title = "タイムカプセル",
-                setup = "20年前に埋めたタイムカプセルを掘り起こす日がきました。",
+                setup = loopCount >= 2 ? "20年前に埋めたタイムカプセルを掘り起こす日がきました。\n（前回の経験から、あなたはひろが「もうひとつ」の手紙を入れていたことを知っています...）" : "20年前に埋めたタイムカプセルを掘り起こす日がきました。",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "一人で開ける", preview = "中には手紙と壊れた..." },
@@ -118,13 +169,13 @@ namespace NovelGame
             return scenario;
         }
 
-        private static Scenario CreateScenario4()
+        private static Scenario CreateScenario4(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 4,
                 title = "魔法学校の試験",
-                setup = "試験官：「ウサギを出現させなさい」",
+                setup = loopCount >= 2 ? "試験官：「ウサギを出現させなさい」\n（前回の経験から、あなたはとおる試験官が「もうひとつ」消すよう指示することを知っています...）" : "試験官：「ウサギを出現させなさい」",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "呪文を唱える", preview = "パッ!ウサギが2..." },
@@ -149,13 +200,13 @@ namespace NovelGame
             return scenario;
         }
 
-        private static Scenario CreateScenario5()
+        private static Scenario CreateScenario5(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 5,
                 title = "最後のピース",
-                setup = "1000ピースのジグソーパズルがあと1ピースで完成します。",
+                setup = loopCount >= 2 ? "1000ピースのジグソーパズルがあと1ピースで完成します。\n（前回の経験から、あなたはつばさが「もうひとつ」のパズルを用意していたことを知っています...）" : "1000ピースのジグソーパズルがあと1ピースで完成します。",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "最後のピースをはめる", preview = "カチッ。完成した絵は..." },
@@ -180,13 +231,13 @@ namespace NovelGame
             return scenario;
         }
 
-        private static Scenario CreateScenario6()
+        private static Scenario CreateScenario6(int loopCount = 1)
         {
             var scenario = new Scenario
             {
                 id = 6,
                 title = "真実の扉",
-                setup = "5つの「もうひとつ」を集めたあなたの前に、古びた扉が現れました。\n扉には「もうひとつ」という文字が刻まれています。\n謎の声が響きます：「なぜ、あなたは『もうひとつ』を探し続けたのか？」",
+                setup = loopCount >= 2 ? "5つの「もうひとつ」を集めたあなたの前に、古びた扉が現れました。\n扉には「もうひとつ」という文字が刻まれています。\n謎の声が響きます：「なぜ、あなたは『もうひとつ』を探し続けたのか？」\n\n（2周目：あなたは既にこの扉の向こうに何があるかを知っている。しかし、声の響きに、前回とは違う何かが混じっている気がする...）" : "5つの「もうひとつ」を集めたあなたの前に、古びた扉が現れました。\n扉には「もうひとつ」という文字が刻まれています。\n謎の声が響きます：「なぜ、あなたは『もうひとつ』を探し続けたのか？」",
                 choices = new List<Choice>
                 {
                     new Choice { id = 1, text = "「好奇心からです」と答える", preview = "私：「ただ、気になっただけ..." },

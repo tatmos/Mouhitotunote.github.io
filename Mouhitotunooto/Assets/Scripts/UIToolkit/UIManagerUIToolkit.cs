@@ -350,7 +350,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.5.0 (2025-12-31)";
+                string text = "v1.6.0 (2025-12-31)";
                 var lostLetters = gameManager.GetLostLetters();
                 if (lostLetters.Count > 0)
                 {

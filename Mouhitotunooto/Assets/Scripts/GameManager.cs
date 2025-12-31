@@ -23,6 +23,7 @@ namespace NovelGame
         private bool isDarkMode = false;
         internal bool isThirdLoop = false;
         private bool pendingDarkMode = false; // ダークモード突入待ちフラグ
+        private bool hasCompletedFirstLoop = false; // 1周目をクリアしたかどうか
         private bool isScenario6Unlocked = false; // シナリオ6が解放されたかどうか（演出用フラグ）
         
         // タイムトラッキング
@@ -121,9 +122,21 @@ namespace NovelGame
 
         public List<Scenario> GetScenarios()
         {
+            // 周回数が変わった可能性があるため、常に最新のシナリオを生成
+            // （ScenarioDefinitions.CreateScenarios()が最新の周回数を取得するため）
             if (scenarios == null || scenarios.Count == 0)
             {
                 InitializeScenarios();
+            }
+            else
+            {
+                // 既存のシナリオがある場合でも、周回数に応じて再生成
+                // （周回数が変わった可能性があるため）
+                var dataLoader = FindFirstObjectByType<ScenarioDataLoader>();
+                if (dataLoader != null)
+                {
+                    scenarios = dataLoader.GetScenarios();
+                }
             }
             return scenarios;
         }
@@ -218,9 +231,21 @@ namespace NovelGame
                 // ただし、シナリオ6をクリアした瞬間に判定する（既存の仕様を維持しつつ、不意の突入を防ぐ）
                 if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && score >= 7)
                 {
+                    // 1周目をクリアしたことを記録
+                    if (!hasCompletedFirstLoop)
+                    {
+                        hasCompletedFirstLoop = true;
+                        Debug.Log("[GameManager] 1周目をクリアしました。");
+                    }
                     // ダークモード突入を予約（リザルト画面の後に有効化される）
                     pendingDarkMode = true;
                     Debug.Log("[GameManager] 真実の扉で不正を判定されました。修正プログラムを起動します（ダークモード予約）。");
+                }
+                // シナリオ6をクリアした時点で1周目クリアと判定（スコアが7未満でも）
+                else if (!IsDarkMode() && !isThirdLoop && scenarioId == 6 && !hasCompletedFirstLoop)
+                {
+                    hasCompletedFirstLoop = true;
+                    Debug.Log("[GameManager] 1周目をクリアしました。");
                 }
                 
                 CheckLostLettersUpdate();
@@ -522,6 +547,24 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 2周目かどうかを判定（1周目をクリアして、3周目に入る前）
+        /// </summary>
+        public bool IsSecondLoop()
+        {
+            return hasCompletedFirstLoop && !isThirdLoop;
+        }
+
+        /// <summary>
+        /// 現在の周回数を取得（1, 2, 3）
+        /// </summary>
+        public int GetLoopCount()
+        {
+            if (isThirdLoop) return 3;
+            if (hasCompletedFirstLoop) return 2;
+            return 1;
+        }
+
+        /// <summary>
         /// シナリオ6が解放されたかどうか（演出用）をチェックし、フラグを更新する
         /// </summary>
         /// <returns>今回初めて解放された場合はtrue</returns>
@@ -649,6 +692,7 @@ namespace NovelGame
             isDarkMode = false; // 3周目開始時は破損状態をリセットし、伏字のみの状態にする
             isThirdLoop = true;
             pendingDarkMode = false;
+            // 3周目に入る時点では、1周目クリアフラグは維持（2周目を判定するため）
             OnScoreChanged?.Invoke();
         }
 
@@ -750,6 +794,7 @@ namespace NovelGame
             pendingDarkMode = false;
             isScenario6Unlocked = false;
             currentScenarioIndex = -1;
+            hasCompletedFirstLoop = false; // リセット時は1周目クリアフラグもリセット
             gameStartTime = DateTime.Now;
             OnScoreChanged?.Invoke();
         }
