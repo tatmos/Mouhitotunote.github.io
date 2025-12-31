@@ -116,6 +116,9 @@ namespace NovelGame
         // 「もうひとつ」関連
         private bool wordFoundInCurrentScenario = false; // 現在のシナリオで「もうひとつ」を見つけたか
         
+        // スコア減少演出用
+        private int previousScore = -1; // 前回のスコア（-1は初期値）
+        
         private void Start()
         {
             if (Instance == null)
@@ -2232,6 +2235,14 @@ namespace NovelGame
 
             int currentScore = gameManager.GetScore();
             
+            // ダークモードでスコアが減った場合、演出を開始
+            if (gameManager != null && gameManager.IsDarkMode() && previousScore >= 0 && currentScore < previousScore)
+            {
+                StartCoroutine(PlayWordLostAnimation(currentScore, previousScore));
+            }
+            
+            previousScore = currentScore;
+            
             var scoreLabel = currentDocument.rootVisualElement.Q<Label>("ScoreText");
             if (scoreLabel != null && gameManager != null)
             {
@@ -3688,6 +3699,80 @@ namespace NovelGame
             {
                 ShowBackButton();
             }
+        }
+
+        /// <summary>
+        /// ダークモードでワードが奪われる演出（文字が消えていくアニメーション）
+        /// </summary>
+        private System.Collections.IEnumerator PlayWordLostAnimation(int newScore, int oldScore)
+        {
+            if (currentDocument == null || currentDocument.rootVisualElement == null) yield break;
+            if (audioManager == null) yield break;
+            
+            var scoreLabel = currentDocument.rootVisualElement.Q<Label>("ScoreText");
+            if (scoreLabel == null) yield break;
+            
+            // 逆再生の効果音を再生
+            audioManager.PlayWordGetSoundReversed();
+            
+            // 文字が奪われていく演出
+            // 「もうひとつ」の各文字を順番に消していく
+            string[] characters = { "も", "う", "ひ", "と", "つ" };
+            string baseText = "【もうひとつ】ワードゲット数";
+            
+            // 失われた文字を取得
+            var lostLetters = gameManager.GetLostLetters();
+            
+            // 各文字を順番に消していく（0.15秒間隔）
+            for (int i = 0; i < characters.Length; i++)
+            {
+                // 既に失われている文字はスキップ
+                if (lostLetters.Contains(characters[i][0]))
+                {
+                    continue;
+                }
+                
+                // 文字を「※」に置き換え
+                baseText = baseText.Replace(characters[i], "※");
+                
+                // スコア表示を更新（徐々に減らしていく）
+                int totalScenarios = gameManager.GetScenarios().Count;
+                int displayScore = oldScore - (i + 1);
+                scoreLabel.text = $"{baseText}: {displayScore} / {totalScenarios}";
+                
+                // 文字が消えるアニメーション（スケールダウン + 揺れ）
+                // UI Toolkitではstyle.translateとstyle.scaleを使用
+                float shakeDuration = 0.15f;
+                float shakeAmount = 3f;
+                float originalScale = 1.0f;
+                float elapsed = 0f;
+                
+                while (elapsed < shakeDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float progress = elapsed / shakeDuration;
+                    
+                    // 揺れ効果
+                    float offsetX = Mathf.Sin(progress * Mathf.PI * 4) * shakeAmount * (1f - progress);
+                    float offsetY = Mathf.Cos(progress * Mathf.PI * 4) * shakeAmount * (1f - progress);
+                    scoreLabel.style.translate = new StyleTranslate(new Translate(offsetX, offsetY));
+                    
+                    // スケールダウン効果
+                    float scale = Mathf.Lerp(originalScale, 0.95f, progress);
+                    scoreLabel.style.scale = new StyleScale(new Scale(new Vector3(scale, scale, 1f)));
+                    
+                    yield return null;
+                }
+                
+                // 元の位置とスケールに戻す
+                scoreLabel.style.translate = new StyleTranslate(new Translate(0, 0));
+                scoreLabel.style.scale = new StyleScale(new Scale(Vector3.one));
+                
+                // 次の文字まで待機
+                yield return new WaitForSeconds(0.1f);
+            }
+            
+            // 最終的なスコア表示を更新（UpdateScoreDisplayが呼ばれるので、ここでは不要かもしれないが念のため）
         }
 
         /// <summary>

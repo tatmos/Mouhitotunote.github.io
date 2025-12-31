@@ -154,6 +154,87 @@ namespace NovelGame
             }
         }
 
+        /// <summary>
+        /// ワードゲット音を逆再生（ダークモードでワードが奪われる時の効果音）
+        /// </summary>
+        public void PlayWordGetSoundReversed()
+        {
+            if (wordGetSounds != null && wordGetSounds.Length > 0 && sfxAudioSource != null)
+            {
+                int randomIndex = Random.Range(0, wordGetSounds.Length);
+                AudioClip selectedSound = wordGetSounds[randomIndex];
+                if (selectedSound != null)
+                {
+                    // 逆再生用のAudioSourceを作成
+                    GameObject reversedSoundObject = new GameObject("ReversedWordGetSound");
+                    reversedSoundObject.transform.SetParent(this.transform);
+                    AudioSource reversedAudioSource = reversedSoundObject.AddComponent<AudioSource>();
+                    reversedAudioSource.playOnAwake = false;
+                    reversedAudioSource.volume = sfxAudioSource.volume;
+                    reversedAudioSource.outputAudioMixerGroup = sfxMixerGroup;
+                    reversedAudioSource.clip = selectedSound;
+                    
+                    // 逆再生: timeSamplesを最後から開始し、pitchを負の値に設定
+                    reversedAudioSource.timeSamples = selectedSound.samples - 1;
+                    reversedAudioSource.pitch = -1f;
+                    
+                    bool isDarkMode = GameManager.Instance != null && GameManager.Instance.IsDarkMode();
+                    if (isDarkMode)
+                    {
+                        // ダークモード時はピッチ変動を適用
+                        pitchVariationAudioSources.Add(reversedAudioSource);
+                        StartCoroutine(ApplyPitchVariationToReversedSE(reversedAudioSource, selectedSound.length));
+                    }
+                    else
+                    {
+                        reversedAudioSource.Play();
+                    }
+                    
+                    // 再生終了後にGameObjectを削除
+                    StartCoroutine(DestroyAfterPlay(reversedSoundObject, selectedSound.length));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 逆再生SEのピッチを歪みに合わせて揺らすコルーチン
+        /// </summary>
+        private IEnumerator ApplyPitchVariationToReversedSE(AudioSource audioSource, float duration)
+        {
+            float startTime = Time.time;
+            
+            while (audioSource != null && audioSource.isPlaying && (Time.time - startTime) < duration)
+            {
+                float time = Time.time * DistortionSpeed;
+                float pitchVariation = Mathf.Sin(time * DistortionFrequency) * 0.5f + 
+                                       Mathf.Cos(time * DistortionFrequency * 0.7f) * 0.5f;
+                float pitchOffset = pitchVariation * PitchVariationSemitones;
+                float pitchMultiplier = Mathf.Pow(SemitoneRatio, pitchOffset);
+                
+                // 逆再生なので、ベースピッチを-1.0にして変動を適用
+                audioSource.pitch = -1.0f * pitchMultiplier;
+                
+                yield return null;
+            }
+            
+            if (audioSource != null)
+            {
+                pitchVariationAudioSources.Remove(audioSource);
+            }
+        }
+
+        /// <summary>
+        /// 再生終了後にGameObjectを削除するコルーチン
+        /// </summary>
+        private IEnumerator DestroyAfterPlay(GameObject obj, float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            if (obj != null)
+            {
+                Destroy(obj);
+            }
+        }
+
         public void PlaySparkleSound()
         {
             if (sparkleSound != null && sfxAudioSource != null)

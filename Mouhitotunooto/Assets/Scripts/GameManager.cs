@@ -127,20 +127,8 @@ namespace NovelGame
         {
             // 周回数が変わった可能性があるため、常に最新のシナリオを生成
             // （ScenarioDefinitions.CreateScenarios()が最新の周回数を取得するため）
-            if (scenarios == null || scenarios.Count == 0)
-            {
-                InitializeScenarios();
-            }
-            else
-            {
-                // 既存のシナリオがある場合でも、周回数に応じて再生成
-                // （周回数が変わった可能性があるため）
-                var dataLoader = FindFirstObjectByType<ScenarioDataLoader>();
-                if (dataLoader != null)
-                {
-                    scenarios = dataLoader.GetScenarios();
-                }
-            }
+            // 直接ScenarioDefinitions.CreateScenarios()を呼び出して、常に最新のシナリオを取得
+            scenarios = ScenarioDefinitions.CreateScenarios();
             return scenarios;
         }
 
