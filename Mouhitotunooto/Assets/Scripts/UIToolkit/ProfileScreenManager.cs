@@ -16,7 +16,6 @@ namespace NovelGame
         private System.Action onProfileSelected; // プロフィール選択時のコールバック
         private System.Action onProfileDetailUpdate; // プロフィール詳細更新時のコールバック
         private System.Action onHoverSound; // ホバー音再生用のコールバック
-        private bool showEpilogue2 = false; // エピローグ2を表示するかどうか
 
         public ProfileScreenManager(GameManager gameManager)
         {
@@ -190,8 +189,8 @@ namespace NovelGame
                         detailCard.AddToClassList("profile-card-voice");
                         break;
                 }
-                // ブラウン/セピア/生成り系の背景色に変更（質感重視）
-                detailCard.style.backgroundColor = new Color(0.93f, 0.84f, 0.71f); // 生成り系
+                // ブラウン/セピア/生成り系の背景色に変更（質感重視、暗めに調整）
+                detailCard.style.backgroundColor = new Color(0.65f, 0.50f, 0.40f); // 暗めのブラウン/セピア系（文字が見やすく）
             }
             else
             {
@@ -320,6 +319,38 @@ namespace NovelGame
                             var expandButton = new Button();
                             expandButton.text = isExpanded ? "▼ 後日談の後日談を隠す" : "▶ 後日談の後日談を見る";
                             expandButton.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
+                            
+                            // ブラウン/セピア/生成り/金系のスタイルを適用
+                            expandButton.style.backgroundColor = new Color(0.55f, 0.42f, 0.32f); // 暗めのブラウン/セピア系
+                            expandButton.style.borderTopWidth = 1;
+                            expandButton.style.borderRightWidth = 1;
+                            expandButton.style.borderBottomWidth = 1;
+                            expandButton.style.borderLeftWidth = 1;
+                            expandButton.style.borderTopColor = new Color(0.72f, 0.53f, 0.04f); // 金色系のボーダー
+                            expandButton.style.borderRightColor = new Color(0.72f, 0.53f, 0.04f);
+                            expandButton.style.borderBottomColor = new Color(0.72f, 0.53f, 0.04f);
+                            expandButton.style.borderLeftColor = new Color(0.72f, 0.53f, 0.04f);
+                            expandButton.style.borderTopLeftRadius = 4;
+                            expandButton.style.borderTopRightRadius = 4;
+                            expandButton.style.borderBottomLeftRadius = 4;
+                            expandButton.style.borderBottomRightRadius = 4;
+                            expandButton.style.paddingTop = 6;
+                            expandButton.style.paddingBottom = 6;
+                            expandButton.style.paddingLeft = 12;
+                            expandButton.style.paddingRight = 12;
+                            expandButton.style.marginTop = 8;
+                            expandButton.style.marginBottom = 4;
+                            expandButton.style.color = new Color(0.93f, 0.84f, 0.71f); // 生成り系のテキスト色
+                            expandButton.style.fontSize = 12;
+                            
+                            // ホバー時のスタイル
+                            expandButton.RegisterCallback<MouseEnterEvent>(evt => {
+                                expandButton.style.backgroundColor = new Color(0.65f, 0.50f, 0.40f); // 少し明るく
+                            });
+                            expandButton.RegisterCallback<MouseLeaveEvent>(evt => {
+                                expandButton.style.backgroundColor = new Color(0.55f, 0.42f, 0.32f); // 元に戻す
+                            });
+                            
                             detailCard.Add(expandButton);
 
                             string epilogue2Text = isDarkMode ? GetDarkModeEpilogue2(profile.scenarioId) : scenario.branches[result.choiceId].epilogue2;

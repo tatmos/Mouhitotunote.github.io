@@ -43,7 +43,6 @@ namespace NovelGame
         private Coroutine selectionBGMVolumeCoroutine;
 
         private float selectionBGMPausedTime = 0f;
-        private bool isSelectionBGMPlaying = false;
         private int currentAmbientScenarioId = -1;
 
         private const float LowPassNormalCutoff = 22000f;
@@ -394,7 +393,6 @@ namespace NovelGame
             bgmAudioSource.time = selectionBGMPausedTime;
             bgmAudioSource.volume = 0f;
             bgmAudioSource.Play();
-            isSelectionBGMPlaying = true;
             
             if (fadeInCoroutine != null) StopCoroutine(fadeInCoroutine);
             fadeInCoroutine = StartCoroutine(FadeInAudioCoroutine(2f));
@@ -420,7 +418,6 @@ namespace NovelGame
                 yield return null;
             }
             selectionBGMPausedTime = bgmAudioSource.time;
-            isSelectionBGMPlaying = false;
         }
 
         private IEnumerator FadeInAudioCoroutine(float duration)

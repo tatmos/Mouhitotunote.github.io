@@ -28,8 +28,8 @@
 .profile-tab-layout {
     display: flex;
     flex-direction: row;
-    gap: 20px;
     min-height: 500px;
+    /* gapはUnity UI Toolkitでサポートされていないため、marginで代替 */
 }
 
 /* プロフィールリスト（左側） */
@@ -62,7 +62,7 @@
     background-color: rgba(0, 0, 0, 0); /* 透明 */
     border-width: 2px;
     border-color: rgba(184, 134, 11, 0.4); /* 金色系のボーダー（質感重視） */
-    text-align: left;
+    -unity-text-align: upper-left;
     font-size: 16px;
     -unity-font-style: bold;
     color: rgb(237, 215, 181); /* #EDD7B5 ベージュ系の色 */
@@ -106,35 +106,35 @@
     border-color: rgba(0, 0, 0, 0.2);
 }
 
-/* プロフィールカードの色分け（index.htmlの各キャラクターの色に合わせる） */
+/* プロフィールカードの色分け（暗めのブラウン/セピア/生成り/金系） */
 .profile-card-momo {
-    background-color: rgba(255, 241, 242, 0.9); /* from-pink-50 to-rose-50 */
-    border-color: rgba(251, 207, 232, 0.8); /* border-pink-200 */
+    background-color: rgba(101, 67, 50, 0.85); /* 暗めのブラウン系（少しピンクがかった） */
+    border-color: rgba(139, 90, 60, 0.7); /* 暗めのセピア系のボーダー */
 }
 
 .profile-card-umi {
-    background-color: rgba(239, 246, 255, 0.9); /* from-blue-50 to-cyan-50 */
-    border-color: rgba(191, 219, 254, 0.8); /* border-blue-200 */
+    background-color: rgba(90, 70, 55, 0.85); /* 暗めのセピア系（少し青がかった） */
+    border-color: rgba(120, 95, 75, 0.7); /* 暗めのセピア系のボーダー */
 }
 
 .profile-card-hiro {
-    background-color: rgba(255, 251, 235, 0.9); /* from-yellow-50 to-amber-50 */
-    border-color: rgba(254, 240, 138, 0.8); /* border-yellow-200 */
+    background-color: rgba(120, 90, 60, 0.85); /* 暗めの生成り/金色系 */
+    border-color: rgba(160, 120, 80, 0.7); /* 暗めの金色系のボーダー */
 }
 
 .profile-card-toru {
-    background-color: rgba(237, 215, 181, 0.9); /* 生成り系（紫の代わり） */
-    border-color: rgba(184, 134, 11, 0.6); /* 金色系のボーダー（質感重視） */
+    background-color: rgba(110, 85, 65, 0.85); /* 暗めの生成り系 */
+    border-color: rgba(150, 115, 85, 0.7); /* 暗めの金色系のボーダー */
 }
 
 .profile-card-tsubasa {
-    background-color: rgba(240, 253, 244, 0.9); /* from-green-50 to-emerald-50 */
-    border-color: rgba(187, 247, 208, 0.8); /* border-green-200 */
+    background-color: rgba(95, 75, 55, 0.85); /* 暗めのブラウン/セピア系（少し緑がかった） */
+    border-color: rgba(125, 100, 75, 0.7); /* 暗めのセピア系のボーダー */
 }
 
 .profile-card-voice {
-    background-color: rgba(238, 242, 255, 0.9); /* from-indigo-50 to-violet-50 */
-    border-color: rgba(199, 210, 254, 0.8); /* border-indigo-200 */
+    background-color: rgba(100, 80, 60, 0.85); /* 暗めのセピア系 */
+    border-color: rgba(130, 105, 80, 0.7); /* 暗めのセピア系のボーダー */
 }
 
 .profile-name {
@@ -173,8 +173,12 @@
     white-space: normal;
     margin-top: 10px;
     padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
     border-top-width: 1px;
     border-top-color: rgba(184, 134, 11, 0.3); /* 金色系のボーダー（質感重視） */
+    background-color: rgba(80, 60, 45, 0.6); /* 暗めのブラウン/セピア系の背景（文字が見やすく） */
     color: rgb(237, 215, 181); /* #EDD7B5 ベージュ系の色 */
 }
 
@@ -183,7 +187,7 @@
     white-space: normal;
     margin-top: 10px;
     padding: 10px;
-    background-color: rgba(101, 67, 33, 0.4); /* ブラウン/セピア系の背景（質感重視） */
+    background-color: rgba(80, 60, 45, 0.7); /* 暗めのブラウン/セピア系の背景（文字が見やすく） */
     border-left-width: 4px;
     border-left-color: rgba(184, 134, 11, 0.6); /* 金色系のボーダー（質感重視） */
     color: rgb(237, 215, 181); /* #EDD7B5 ベージュ系の色 */
@@ -193,7 +197,7 @@
     font-size: 14px;
     -unity-font-style: italic;
     color: rgb(200, 180, 150); /* 少し薄いベージュ */
-    text-align: center;
+    -unity-text-align: middle-center;
 }
 
 /* ボタンのスタイル */
@@ -234,25 +238,22 @@ Button:disabled {
 .button-gradient:hover {
     /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     background-color: rgb(184, 134, 11); /* より濃い金色 */
-    /* ホバー時により浮き上がる（質感重視） */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 .button-gradient-indigo {
     background-color: rgb(237, 215, 181); /* 生成り系（フォールバック） */
     border-radius: 8px;
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, box-shadow, background-color;
+    transition-property: margin-top, margin-left, background-color;
     /* 背景画像はコード側で設定（9-slice対応） */
-    /* 浮き上がり効果（質感重視） */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 .button-gradient-indigo:hover {
     /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     background-color: rgb(218, 165, 32); /* 金色系 */
-    /* ホバー時により浮き上がる（質感重視） */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 /* シナリオボタンのスタイル */
@@ -291,7 +292,7 @@ Button:disabled {
     align-items: flex-start;
     width: 100%;
     max-width: 960px;
-    gap: 20px;
+    /* gapはUnity UI Toolkitでサポートされていないため、marginで代替 */
 }
 
 /* シナリオボタン（グリッド用の固定サイズ） */
@@ -300,15 +301,13 @@ Button:disabled {
     min-height: 120px;
     font-size: 20px;
     flex-shrink: 0;
-    /* 浮き上がり効果 */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, box-shadow;
+    transition-property: margin-top, margin-left;
 }
 
 .scenario-button:hover {
-    /* ホバー時により浮き上がる */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 /* 選択肢ボタン */
@@ -323,18 +322,16 @@ Button:disabled {
     border-radius: 8px;
     padding: 16px 24px;
     /* 背景画像はコード側で設定（9-slice対応） */
-    /* 浮き上がり効果（質感重視） */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, box-shadow;
+    transition-property: margin-top, margin-left;
 }
 
 .choice-button:hover {
     /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
     /* 画像が設定されていない場合のみ有効 */
     background-color: rgb(184, 134, 11); /* より濃い金色 */
-    /* ホバー時により浮き上がる（質感重視） */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 /* ダークモードの選択肢ボタン */
@@ -389,7 +386,7 @@ Button:disabled {
     color: rgb(101, 67, 33); /* ブラウン系のテキスト */
     -unity-font-style: bold;
     font-size: 20px;
-    text-align: center;
+    -unity-text-align: middle-center;
 }
 
 .word-get-failed {
@@ -400,7 +397,7 @@ Button:disabled {
     padding: 16px;
     color: rgb(237, 215, 181); /* 生成り系のテキスト */
     -unity-font-style: bold;
-    text-align: center;
+    -unity-text-align: middle-center;
 }
 
 .word-get-dark {
@@ -412,7 +409,7 @@ Button:disabled {
     color: rgb(254, 202, 202); /* red-200 */
     -unity-font-style: bold;
     font-size: 20px;
-    text-align: center;
+    -unity-text-align: middle-center;
 }
 
 /* 後日談のスタイル */
@@ -460,11 +457,11 @@ Button:disabled {
 
 /* 実績表示のスタイル */
 .achievement-grid {
-    gap: 16px;
+    /* gapはUnity UI Toolkitでサポートされていないため、marginで代替 */
 }
 
 .achievement-ends-container {
-    gap: 8px;
+    /* gapはUnity UI Toolkitでサポートされていないため、marginで代替 */
 }
 
 .achievement-card {
@@ -517,7 +514,7 @@ Button:disabled {
 
 .credits-title {
     color: rgb(255, 255, 255);
-    text-align: center;
+    -unity-text-align: middle-center;
 }
 
 .credits-content-item {
@@ -530,7 +527,7 @@ Button:disabled {
 .clickable-word {
     border-bottom-width: 1px;
     border-bottom-color: rgba(0.2, 0.6, 1.0, 1.0);
-    cursor: pointer;
+    /* cursorはUnity UI Toolkitでサポートされていないため削除 */
 }
 
 /* カウントダウンコンテナ */
