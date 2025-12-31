@@ -221,6 +221,8 @@ namespace NovelGame
                         Label beforeLabel = new Label();
                         beforeLabel.style.fontSize = fontSize;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        beforeLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                        beforeLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         beforeLabel.style.color = brightTextColor;
@@ -252,6 +254,8 @@ namespace NovelGame
                     Label clickableLabel = new Label("");
                     clickableLabel.style.fontSize = fontSize;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
+                    clickableLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                    clickableLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     
                     if (isClickable)
                     {
@@ -297,6 +301,8 @@ namespace NovelGame
                         Label afterLabel = new Label();
                         afterLabel.style.fontSize = fontSize;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        afterLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                        afterLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         afterLabel.style.color = brightTextColor;
@@ -330,6 +336,8 @@ namespace NovelGame
                     Label textLabel = new Label();
                     textLabel.style.fontSize = fontSize;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    textLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                    textLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     // 明るい色を適用
                     Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                     textLabel.style.color = brightTextColor;
@@ -528,6 +536,8 @@ namespace NovelGame
                         Label beforeLabel = new Label(replacedBefore);
                         beforeLabel.style.fontSize = 20;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        beforeLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                        beforeLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         beforeLabel.style.color = brightTextColor;
@@ -540,6 +550,8 @@ namespace NovelGame
                     Label clickableLabel = new Label(replacedClickable);
                     clickableLabel.style.fontSize = 20;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
+                    clickableLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                    clickableLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.8f, 0.4f)); // 最初から緑色（見つかった状態）
                     currentContainer.Add(clickableLabel);
 
@@ -553,6 +565,8 @@ namespace NovelGame
                         Label afterLabel = new Label(replacedAfter);
                         afterLabel.style.fontSize = 20;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        afterLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                        afterLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         afterLabel.style.color = brightTextColor;
@@ -567,6 +581,8 @@ namespace NovelGame
                     Label textLabel = new Label(replacedLine);
                     textLabel.style.fontSize = 20;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    textLabel.style.alignSelf = Align.FlexStart; // 左揃え
+                    textLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     // 明るい色を適用
                     Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                     textLabel.style.color = brightTextColor;

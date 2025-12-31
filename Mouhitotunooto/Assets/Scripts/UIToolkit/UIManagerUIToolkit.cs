@@ -1909,6 +1909,9 @@ namespace NovelGame
                 resultContainer.style.whiteSpace = WhiteSpace.Normal;
                 resultContainer.style.maxWidth = 800;
                 resultContainer.style.marginBottom = 20;
+                resultContainer.style.alignItems = Align.FlexStart; // 左揃え
+                resultContainer.style.alignSelf = Align.FlexStart; // 左揃え
+                resultContainer.style.width = Length.Percent(100); // 幅を100%に設定
                 
                 // 元のLabelを非表示にして、新しいコンテナを追加
                 resultLabel.style.display = DisplayStyle.None;
@@ -2030,6 +2033,8 @@ namespace NovelGame
                         resultLabelForTypewriter.style.whiteSpace = WhiteSpace.Normal;
                         resultLabelForTypewriter.style.maxWidth = 800;
                         resultLabelForTypewriter.style.marginBottom = 20;
+                        resultLabelForTypewriter.style.alignSelf = Align.FlexStart; // 左揃え
+                        resultLabelForTypewriter.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         resultLabelForTypewriter.style.color = brightTextColor;
                         resultLabelForTypewriter.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
