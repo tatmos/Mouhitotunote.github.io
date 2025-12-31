@@ -221,6 +221,10 @@ namespace NovelGame
                         Label beforeLabel = new Label();
                         beforeLabel.style.fontSize = fontSize;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        // 明るい色を適用
+                        Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                        beforeLabel.style.color = brightTextColor;
+                        beforeLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         container.Add(beforeLabel);
                         
                         string currentDisplayText = "";
@@ -293,6 +297,10 @@ namespace NovelGame
                         Label afterLabel = new Label();
                         afterLabel.style.fontSize = fontSize;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        // 明るい色を適用
+                        Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                        afterLabel.style.color = brightTextColor;
+                        afterLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         container.Add(afterLabel);
                         
                         string currentAfterDisplayText = "";
@@ -322,6 +330,10 @@ namespace NovelGame
                     Label textLabel = new Label();
                     textLabel.style.fontSize = fontSize;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    // 明るい色を適用
+                    Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                    textLabel.style.color = brightTextColor;
+                    textLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                     container.Add(textLabel);
                     
                     string currentLineDisplayText = "";
@@ -515,6 +527,10 @@ namespace NovelGame
                         Label beforeLabel = new Label(replacedBefore);
                         beforeLabel.style.fontSize = 20;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
+                        // 明るい色を適用
+                        Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                        beforeLabel.style.color = brightTextColor;
+                        beforeLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         currentContainer.Add(beforeLabel);
                     }
 
@@ -536,6 +552,10 @@ namespace NovelGame
                         Label afterLabel = new Label(replacedAfter);
                         afterLabel.style.fontSize = 20;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
+                        // 明るい色を適用
+                        Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                        afterLabel.style.color = brightTextColor;
+                        afterLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         currentContainer.Add(afterLabel);
                     }
                 }
@@ -546,6 +566,10 @@ namespace NovelGame
                     Label textLabel = new Label(replacedLine);
                     textLabel.style.fontSize = 20;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
+                    // 明るい色を適用
+                    Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                    textLabel.style.color = brightTextColor;
+                    textLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                     currentContainer.Add(textLabel);
                 }
 

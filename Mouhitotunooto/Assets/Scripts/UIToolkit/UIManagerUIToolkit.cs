@@ -50,6 +50,14 @@ namespace NovelGame
         [Tooltip("インディゴ系のUIボタン画像（9-slice対応）。確認ダイアログのキャンセルボタンなどに使用されます。")]
         [SerializeField] private Sprite uiButtonIndigoImage; // インディゴ系のUIボタン画像（9-slice対応）
         
+        [Header("UI Element Images")]
+        [Tooltip("タイトル画像（「ミニノベルゲーム」など）。")]
+        [SerializeField] private Sprite titleImage; // タイトル画像
+        [Tooltip("スコア表示用の背景画像（9-slice対応）。")]
+        [SerializeField] private Sprite scoreDisplayBackgroundImage; // スコア表示用の背景画像
+        [Tooltip("メニューボタン用の画像（9-slice対応）。登場人物、実績、もうひとつボタンなどに使用されます。")]
+        [SerializeField] private Sprite menuButtonImage; // メニューボタン用の画像
+        
         [Header("Effects")]
         [SerializeField] private Material distortionMaterial;
         
@@ -64,6 +72,12 @@ namespace NovelGame
         private Texture2D distortionTexture2D; // 再利用するTexture2D
         private const float DistortionUpdateInterval = 0.2f; // 更新間隔（5FPS = 0.2秒）
         private const float DistortionResolutionScale = 0.4f; // 解像度スケール（0.4 = 40%の解像度）
+        
+        // 背景の明度を下げるオーバーレイ
+        private VisualElement backgroundOverlay;
+        private Coroutine backgroundOverlayFadeCoroutine;
+        private const float BackgroundOverlayOpacity = 0.6f; // オーバーレイの不透明度（0.3 = 30%の暗さ）
+        private const float BackgroundOverlayFadeDuration = 0.5f; // フェードイン時間（秒）
         
         [Header("Audio")]
         [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
@@ -212,6 +226,9 @@ namespace NovelGame
                 Destroy(distortionTexture2D);
                 distortionTexture2D = null;
             }
+            
+            // 背景オーバーレイのクリーンアップ
+            CleanupBackgroundOverlay();
         }
 
         /// <summary>
@@ -491,10 +508,27 @@ namespace NovelGame
                 }
             }
             
-            // タイトルを設定
+            // タイトルを画像に置き換え
             var titleLabel = root.Q<Label>("TitleText");
-            if (titleLabel != null)
+            if (titleLabel != null && titleImage != null && titleImage.texture != null)
             {
+                // LabelをVisualElementに置き換えて画像を表示
+                var titleContainer = titleLabel.parent;
+                if (titleContainer != null)
+                {
+                    var titleImageElement = new VisualElement();
+                    titleImageElement.style.width = titleImage.texture.width;
+                    titleImageElement.style.height = titleImage.texture.height;
+                    titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
+                    titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                    titleImageElement.style.marginBottom = 10;
+                    titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
+                    titleLabel.style.display = DisplayStyle.None; // 元のLabelを非表示
+                }
+            }
+            else if (titleLabel != null)
+            {
+                // 画像がない場合は従来通りテキストを表示
                 titleLabel.text = "ミニノベルゲーム";
                 titleLabel.AddToClassList("title-text");
             }
@@ -504,6 +538,9 @@ namespace NovelGame
             if (showProfileButton != null)
             {
                 showProfileButton.clicked += ShowProfileScreen;
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showProfileButton, menuButtonImage, menuButtonTextColor);
             }
 
             // エンドクレジットボタンの設定（真実の扉クリア後のみ表示）
@@ -512,6 +549,9 @@ namespace NovelGame
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showCreditsButton, menuButtonImage, menuButtonTextColor);
                 
                 var scenario6Result = gameManager.GetScenarioResult(6);
                 if (scenario6Result != null)
@@ -543,6 +583,9 @@ namespace NovelGame
             {
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showAchievementsButton, achievementsIcon, "実績一覧を見る");
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showAchievementsButton, menuButtonImage, menuButtonTextColor);
             
                 showAchievementsButton.style.display = DisplayStyle.Flex;
                 showAchievementsButton.clicked += ShowAchievementsScreen;
@@ -554,6 +597,9 @@ namespace NovelGame
             {
                 showMouhitotsuButtonInFadeIn.style.display = DisplayStyle.Flex;
                 showMouhitotsuButtonInFadeIn.clicked += ShowMouhitotsuScreen;
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showMouhitotsuButtonInFadeIn, menuButtonImage, menuButtonTextColor);
             }
 
             // スコア表示を更新
@@ -984,10 +1030,27 @@ namespace NovelGame
                 }
             }
 
-            // タイトルを設定
+            // タイトルを画像に置き換え
             var titleLabel = root.Q<Label>("TitleText");
-            if (titleLabel != null)
+            if (titleLabel != null && titleImage != null && titleImage.texture != null)
             {
+                // LabelをVisualElementに置き換えて画像を表示
+                var titleContainer = titleLabel.parent;
+                if (titleContainer != null)
+                {
+                    var titleImageElement = new VisualElement();
+                    titleImageElement.style.width = titleImage.texture.width;
+                    titleImageElement.style.height = titleImage.texture.height;
+                    titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
+                    titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                    titleImageElement.style.marginBottom = 10;
+                    titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
+                    titleLabel.style.display = DisplayStyle.None; // 元のLabelを非表示
+                }
+            }
+            else if (titleLabel != null)
+            {
+                // 画像がない場合は従来通りテキストを表示
                 string titleText = "ミニノベルゲーム";
                 var lostLetters = gameManager.GetLostLetters();
                 if (lostLetters.Count > 0)
@@ -1007,6 +1070,9 @@ namespace NovelGame
             {
                 showProfileButton.clicked += ShowProfileScreen;
                 showProfileButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showProfileButton, menuButtonImage, menuButtonTextColor);
             }
 
             // エンドクレジットボタンの設定（真実の扉クリア後のみ表示）
@@ -1016,6 +1082,9 @@ namespace NovelGame
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
                 showCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showCreditsButton, menuButtonImage, menuButtonTextColor);
                 
                 var scenario6Result = gameManager.GetScenarioResult(6);
                 if (scenario6Result != null)
@@ -1050,6 +1119,9 @@ namespace NovelGame
                 showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 showAchievementsButton.style.display = DisplayStyle.Flex;
                 showAchievementsButton.clicked += ShowAchievementsScreen;
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showAchievementsButton, menuButtonImage, menuButtonTextColor);
             }
 
             // 「もうひとつ」ボタンの設定（常に表示）
@@ -1059,6 +1131,9 @@ namespace NovelGame
                 showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 showMouhitotsuButton.style.display = DisplayStyle.Flex;
                 showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
+                // メニューボタンに画像を適用
+                Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+                ApplyButtonImage(showMouhitotsuButton, menuButtonImage, menuButtonTextColor);
             }
 
             UpdateScoreDisplay();
@@ -1367,14 +1442,63 @@ namespace NovelGame
                     titleLabel.text = scenario.title;
                     titleLabel.AddToClassList("title-text");
                 }
+                // 明るい色を適用
+                Color textColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                titleLabel.style.color = textColor;
+                titleLabel.style.textShadow = new TextShadow { offset = new Vector2(2, 2), blurRadius = 4, color = new Color(0, 0, 0, 0.8f) };
             }
 
             var setupContainer = root.Q<VisualElement>("SetupText");
+            // SetupText内のLabelに明るい色を適用
+            if (setupContainer != null)
+            {
+                Color textColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+                foreach (var child in setupContainer.Children())
+                {
+                    if (child is Label label)
+                    {
+                        label.style.color = textColor;
+                        label.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+                    }
+                }
+            }
             var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
             var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
             var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
             var countdownContainer = root.Q<VisualElement>("CountdownContainer");
             var countdownText = root.Q<Label>("CountdownText");
+            
+            // 明るい色を適用
+            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+            
+            // スコア表示に明るい色を適用
+            var scoreLabel = root.Q<Label>("ScoreText");
+            if (scoreLabel != null)
+            {
+                scoreLabel.style.color = brightTextColor;
+                scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // ワードゲット成功メッセージに明るい色を適用
+            if (wordFoundMessageLabel != null)
+            {
+                wordFoundMessageLabel.style.color = brightTextColor;
+                wordFoundMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // ワードゲット失敗メッセージに明るい色を適用
+            if (wordFailedMessageLabel != null)
+            {
+                wordFailedMessageLabel.style.color = brightTextColor;
+                wordFailedMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // カウントダウンテキストに明るい色を適用
+            if (countdownText != null)
+            {
+                countdownText.style.color = brightTextColor;
+                countdownText.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
             
             // 時計アイコンを設定
             var clockIcon = root.Q<Image>("ClockIcon");
@@ -1555,6 +1679,9 @@ namespace NovelGame
             SetBackgroundImage(scenario.id, false);
 
             bool isDarkMode = gameManager.IsDarkMode();
+            
+            // 明るい色を定義（メソッド全体で使用）
+            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
 
             // 後日談を設定（最初は非表示）
             var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
@@ -1582,6 +1709,9 @@ namespace NovelGame
             {
                 // 既存のクラスをクリア
                 epilogueLabel.ClearClassList();
+                // 明るい色を適用
+                epilogueLabel.style.color = brightTextColor;
+                epilogueLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                 
                 if (isDarkMode)
                 {
@@ -1623,6 +1753,43 @@ namespace NovelGame
             var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
             var countdownContainer = root.Q<VisualElement>("CountdownContainer");
             var countdownText = root.Q<Label>("CountdownText");
+            
+            // スコア表示に明るい色を適用（brightTextColorはメソッド先頭で定義済み）
+            var scoreLabel = root.Q<Label>("ScoreText");
+            if (scoreLabel != null)
+            {
+                scoreLabel.style.color = brightTextColor;
+                scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // ワードゲットテキストに明るい色を適用
+            if (wordGetLabel != null)
+            {
+                wordGetLabel.style.color = brightTextColor;
+                wordGetLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // ワードゲット成功メッセージに明るい色を適用
+            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
+            if (wordFoundMessageLabel != null)
+            {
+                wordFoundMessageLabel.style.color = brightTextColor;
+                wordFoundMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // ワードゲット失敗メッセージに明るい色を適用
+            if (wordFailedMessageLabel != null)
+            {
+                wordFailedMessageLabel.style.color = brightTextColor;
+                wordFailedMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
+            
+            // カウントダウンテキストに明るい色を適用
+            if (countdownText != null)
+            {
+                countdownText.style.color = brightTextColor;
+                countdownText.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+            }
             
             // 時計アイコンを設定
             var clockIcon = root.Q<Image>("ClockIcon");
@@ -1819,6 +1986,9 @@ namespace NovelGame
                         resultLabelForTypewriter.style.whiteSpace = WhiteSpace.Normal;
                         resultLabelForTypewriter.style.maxWidth = 800;
                         resultLabelForTypewriter.style.marginBottom = 20;
+                        // 明るい色を適用
+                        resultLabelForTypewriter.style.color = brightTextColor;
+                        resultLabelForTypewriter.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         resultContainer.Add(resultLabelForTypewriter);
                         
                         typewriterEffectManager.StartTypewriterEffect(resultLabelForTypewriter, resultText, () =>
@@ -1826,6 +1996,16 @@ namespace NovelGame
                             // タイプライター効果が完了したら、即座に戻るボタンを表示
                             ShowBackButton();
                         });
+                    }
+                    
+                    // resultContainer内のすべてのLabelに明るい色を適用（タイプライター効果で追加されるLabelにも適用）
+                    foreach (var child in resultContainer.Children())
+                    {
+                        if (child is Label label)
+                        {
+                            label.style.color = brightTextColor;
+                            label.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+                        }
                     }
                 }
             }
@@ -1867,6 +2047,9 @@ namespace NovelGame
                 {
                     epilogueTitle.AddToClassList("epilogue-title");
                 }
+                // 明るい色を適用（クラス追加後に適用して上書き）
+                epilogueTitle.style.color = brightTextColor;
+                epilogueTitle.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
             }
 
             // 戻るボタン（最初は非表示）
@@ -1909,6 +2092,9 @@ namespace NovelGame
 
         private void HideAllScreens(bool keepBgm = false)
         {
+            // 背景オーバーレイをクリーンアップ
+            CleanupBackgroundOverlay();
+            
             if (titleScreenDocument != null) titleScreenDocument.gameObject.SetActive(false);
             if (selectionScreenDocument != null) selectionScreenDocument.gameObject.SetActive(false);
             if (scenarioScreenDocument != null)
@@ -1992,6 +2178,17 @@ namespace NovelGame
             if (scoreLabel != null && gameManager != null)
             {
                 int totalScenarios = gameManager.GetScenarios().Count;
+                
+                // スコア表示に背景画像を適用
+                if (scoreDisplayBackgroundImage != null && scoreDisplayBackgroundImage.texture != null)
+                {
+                    scoreLabel.style.backgroundImage = new StyleBackground(scoreDisplayBackgroundImage.texture);
+                    scoreLabel.style.backgroundColor = Color.clear;
+                    scoreLabel.style.paddingTop = 8;
+                    scoreLabel.style.paddingBottom = 8;
+                    scoreLabel.style.paddingLeft = 16;
+                    scoreLabel.style.paddingRight = 16;
+                }
                 
                 // ダークモードで失われた文字を取得
                 var lostLetters = gameManager.GetLostLetters();
@@ -2122,6 +2319,44 @@ namespace NovelGame
                     label.style.color = textColor;
                 }
             }
+            
+            // ホバー効果を追加（マウスオーバー時に数ピクセルずれる）
+            AddButtonHoverEffect(button);
+        }
+        
+        /// <summary>
+        /// ボタンにホバー効果を追加（マウスオーバー時に数ピクセルずれる）
+        /// </summary>
+        private void AddButtonHoverEffect(Button button)
+        {
+            if (button == null) return;
+            
+            const float hoverOffset = 3f; // ホバー時のずれ量（ピクセル）
+            
+            // マウスオーバー時：少し上にずれる（marginで実現）
+            button.RegisterCallback<MouseEnterEvent>(evt => {
+                button.style.marginTop = -hoverOffset;
+                button.style.marginLeft = -hoverOffset;
+                button.style.transitionDuration = new List<TimeValue> { new TimeValue(0.1f, TimeUnit.Second) };
+            });
+            
+            // マウスアウト時：元の位置に戻る
+            button.RegisterCallback<MouseLeaveEvent>(evt => {
+                button.style.marginTop = 0;
+                button.style.marginLeft = 0;
+            });
+            
+            // クリック時：さらに下に押し込む
+            button.RegisterCallback<MouseDownEvent>(evt => {
+                button.style.marginTop = hoverOffset;
+                button.style.marginLeft = hoverOffset;
+            });
+            
+            // クリック解除時：ホバー位置に戻る
+            button.RegisterCallback<MouseUpEvent>(evt => {
+                button.style.marginTop = -hoverOffset;
+                button.style.marginLeft = -hoverOffset;
+            });
         }
 
         private void CreateScenarioButtons(VisualElement root)
@@ -2475,7 +2710,116 @@ namespace NovelGame
                     
                     // ダークモード時は背景を歪ませる
                     ApplyBackgroundDistortion(backgroundImage);
+                    
+                    // シナリオ画面またはリザルト画面の場合、背景の明度を下げるオーバーレイを追加
+                    if (isScenarioScreen || scenarioId > 0) // リザルト画面もシナリオIDが0より大きい場合
+                    {
+                        SetupBackgroundOverlay(backgroundImage);
+                    }
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 背景の明度を下げるオーバーレイを設定
+        /// </summary>
+        private void SetupBackgroundOverlay(VisualElement backgroundImage)
+        {
+            if (backgroundImage == null || backgroundImage.parent == null) return;
+            
+            // 既存のオーバーレイを削除
+            if (backgroundOverlay != null)
+            {
+                if (backgroundOverlay.parent != null)
+                {
+                    backgroundOverlay.parent.Remove(backgroundOverlay);
+                }
+                backgroundOverlay = null;
+            }
+            
+            // 既存のフェードコルーチンを停止
+            if (backgroundOverlayFadeCoroutine != null)
+            {
+                StopCoroutine(backgroundOverlayFadeCoroutine);
+                backgroundOverlayFadeCoroutine = null;
+            }
+            
+            // オーバーレイを作成
+            backgroundOverlay = new VisualElement();
+            backgroundOverlay.name = "BackgroundOverlay";
+            
+            // オーバーレイのスタイル設定
+            backgroundOverlay.style.position = Position.Absolute;
+            backgroundOverlay.style.left = 0;
+            backgroundOverlay.style.top = 0;
+            backgroundOverlay.style.right = 0;
+            backgroundOverlay.style.bottom = 0;
+            backgroundOverlay.style.backgroundColor = Color.black;
+            backgroundOverlay.style.opacity = 0; // 最初は透明
+            
+            // 背景画像の直後に挿入（背景画像の上、他の要素の下）
+            var parent = backgroundImage.parent;
+            int backgroundIndex = parent.IndexOf(backgroundImage);
+            parent.Insert(backgroundIndex + 1, backgroundOverlay);
+            
+            // フェードインを開始
+            backgroundOverlayFadeCoroutine = StartCoroutine(FadeInBackgroundOverlay());
+        }
+        
+        /// <summary>
+        /// 背景オーバーレイをフェードインで表示
+        /// </summary>
+        private IEnumerator FadeInBackgroundOverlay()
+        {
+            if (backgroundOverlay == null) yield break;
+            
+            float elapsed = 0f;
+            float startOpacity = 0f;
+            float targetOpacity = BackgroundOverlayOpacity;
+            
+            while (elapsed < BackgroundOverlayFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / BackgroundOverlayFadeDuration);
+                float currentOpacity = Mathf.Lerp(startOpacity, targetOpacity, t);
+                
+                if (backgroundOverlay != null)
+                {
+                    backgroundOverlay.style.opacity = currentOpacity;
+                }
+                
+                yield return null;
+            }
+            
+            // 最終的な不透明度を設定
+            if (backgroundOverlay != null)
+            {
+                backgroundOverlay.style.opacity = targetOpacity;
+            }
+            
+            backgroundOverlayFadeCoroutine = null;
+        }
+        
+        /// <summary>
+        /// 背景オーバーレイをクリーンアップ
+        /// </summary>
+        private void CleanupBackgroundOverlay()
+        {
+            // フェードコルーチンを停止
+            if (backgroundOverlayFadeCoroutine != null)
+            {
+                StopCoroutine(backgroundOverlayFadeCoroutine);
+                backgroundOverlayFadeCoroutine = null;
+            }
+            
+            // オーバーレイを削除
+            if (backgroundOverlay != null)
+            {
+                if (backgroundOverlay.parent != null)
+                {
+                    backgroundOverlay.parent.Remove(backgroundOverlay);
+                }
+                backgroundOverlay = null;
             }
         }
 
