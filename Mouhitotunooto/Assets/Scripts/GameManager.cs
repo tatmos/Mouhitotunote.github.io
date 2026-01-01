@@ -15,6 +15,7 @@ namespace NovelGame
         internal int score = 0;
         private HashSet<int> completedScenarios = new HashSet<int>();
         private HashSet<int> completedScenariosInDarkMode = new HashSet<int>(); // ダークモード中にクリアしたシナリオ
+        private HashSet<int> startedScenariosInDarkMode = new HashSet<int>(); // ダークモード中に開始したシナリオ（1-5のみ）
         private Dictionary<int, ScenarioResult> scenarioResults = new Dictionary<int, ScenarioResult>();
         private HashSet<char> collectedLetters = new HashSet<char>();
         private HashSet<char> restoredLetters = new HashSet<char>();
@@ -33,9 +34,9 @@ namespace NovelGame
         private DateTime gameStartTime;
         private DateTime gameEndTime;
 
-        // Divisionのクリア状況
+        // Divisionのクリア状況（後方互換性のため残すが、DivisionManagerを使用）
         private HashSet<string> clearedDivisions = new HashSet<string>();
-        // 全Divisionを表示するデバッグフラグ
+        // 全Divisionを表示するデバッグフラグ（後方互換性のため残すが、DivisionManagerを使用）
         [SerializeField] private bool debugShowAllDivisions = false;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
@@ -50,6 +51,14 @@ namespace NovelGame
 
         public event Action OnScoreChanged;
         public event Action OnScenarioCompleted;
+
+        /// <summary>
+        /// スコア変更イベントを発火（外部から呼び出し可能）
+        /// </summary>
+        public void NotifyScoreChanged()
+        {
+            OnScoreChanged?.Invoke();
+        }
 
         private void Awake()
         {
@@ -91,6 +100,11 @@ namespace NovelGame
         }
 
         public DateTime GetGameStartTime() => gameStartTime;
+
+        public void SetGameStartTime(DateTime time)
+        {
+            gameStartTime = time;
+        }
 
         public void SetGameEndTime(DateTime endTime)
         {
@@ -156,6 +170,17 @@ namespace NovelGame
         {
             var scenarios = GetScenarios();
             currentScenarioIndex = scenarios.FindIndex(s => s.id == scenarioId);
+            
+            // ダークモード時にシナリオ（1-5のみ）を開始した場合、そのシナリオの文字を失う
+            if (IsDarkMode() && !isThirdLoop && MouhitotsuWordManager.IsValidScenarioId(scenarioId))
+            {
+                if (!startedScenariosInDarkMode.Contains(scenarioId))
+                {
+                    startedScenariosInDarkMode.Add(scenarioId);
+                    Debug.Log($"[GameManager] ダークモードでシナリオ{scenarioId}を開始しました。文字「{MouhitotsuWordManager.GetLetterByScenarioId(scenarioId)}」を失います。");
+                    CheckLostLettersUpdate();
+                }
+            }
             
             CheckLostLettersUpdate();
         }
@@ -309,15 +334,45 @@ namespace NovelGame
             seenEndsByMode[scenarioId][playedInDarkMode].Add(choiceId);
 
             // 節目（Division）の判定とログ出力
-            UpdateAndLogDivisionStatus(scenarioId, playedInDarkMode, isActuallyDarkMode);
+            if (DivisionManager.Instance != null)
+            {
+                DivisionManager.Instance.UpdateAndLogDivisionStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
+            }
+            else
+            {
+                // フォールバック（DivisionManagerがない場合）
+                UpdateAndLogDivisionStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
+            }
+            
+            // ボードNo1にスコア123.45fを送信する。
+            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
+            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
 
             OnScenarioCompleted?.Invoke();
         }
 
         /// <summary>
-        /// Divisionの判定を行い、新しく到達した場合はログを出力して保存する
+        /// Divisionの判定を行い、新しく到達した場合はログを出力して保存する（後方互換性のため残す）
         /// </summary>
+        [System.Obsolete("DivisionManager.UpdateAndLogDivisionStatus を使用してください")]
         private void UpdateAndLogDivisionStatus(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
+        {
+            if (DivisionManager.Instance != null)
+            {
+                DivisionManager.Instance.UpdateAndLogDivisionStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
+            }
+            else
+            {
+                // フォールバック（DivisionManagerがない場合）
+                UpdateAndLogDivisionStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
+            }
+            
+            // ボードNo1にスコア123.45fを送信する。
+            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
+            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
+        }
+
+        private void UpdateAndLogDivisionStatusFallback(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
         {
             if (!isThirdLoop)
             {
@@ -327,11 +382,11 @@ namespace NovelGame
                     if (scenarioId != 6) return;
                     if (score < 7)
                     {
-                        LogDivision("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
+                        LogDivisionFallback("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
                     }
                     else
                     {
-                        LogDivision("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
+                        LogDivisionFallback("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
                     }
                 }
                 else if (isActuallyDarkMode)
@@ -343,20 +398,29 @@ namespace NovelGame
                 if (scenarioId != 6) return;
                 if (score < 7)
                 {
-                    LogDivision("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                    LogDivisionFallback("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                 }
                 else
                 {
-                    LogDivision("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                    LogDivisionFallback("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                 }
             }
-            
-            // ボードNo1にスコア123.45fを送信する。
-            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
-            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
         }
 
+        [System.Obsolete("DivisionManager.LogDivision を使用してください")]
         public void LogDivision(string divisionId, string message)
+        {
+            if (DivisionManager.Instance != null)
+            {
+                DivisionManager.Instance.LogDivision(divisionId, message);
+            }
+            else
+            {
+                LogDivisionFallback(divisionId, message);
+            }
+        }
+
+        private void LogDivisionFallback(string divisionId, string message)
         {
             if (!clearedDivisions.Contains(divisionId))
             {
@@ -478,13 +542,34 @@ namespace NovelGame
         /// </summary>
         public int GetClearedDivisionsCount()
         {
-            return clearedDivisions.Count;
+            if (DivisionManager.Instance != null)
+            {
+                return DivisionManager.Instance.GetClearedDivisionsCount();
+            }
+            else
+            {
+                // フォールバック（DivisionManagerがない場合）
+                return clearedDivisions.Count;
+            }
         }
 
         /// <summary>
         /// 物語の解明度（パーセンテージ）を取得
         /// </summary>
         public int GetStoryProgressPercentage()
+        {
+            if (DivisionManager.Instance != null)
+            {
+                return DivisionManager.Instance.GetStoryProgressPercentage(score, completedScenarios, restoredLetters);
+            }
+            else
+            {
+                // フォールバック（DivisionManagerがない場合）
+                return GetStoryProgressPercentageFallback();
+            }
+        }
+
+        private int GetStoryProgressPercentageFallback()
         {
             float percentage = 0;
 
@@ -505,8 +590,6 @@ namespace NovelGame
             else if (!IsDivisionCleared("B"))
             {
                 percentage = 20f;
-                
-               
             }
             else if (!IsDivisionCleared("C"))
             {
@@ -521,7 +604,7 @@ namespace NovelGame
                 }
                 else if (score > 6)
                 {
-                    percentage += ((score - 6) * 20f) / 6.0f ;
+                    percentage += ((score - 6) * 20f) / 6.0f;
                 }
             }
             else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
@@ -616,83 +699,47 @@ namespace NovelGame
             return isScenario6Unlocked;
         }
 
+        public void SetIsScenario6Unlocked(bool value)
+        {
+            isScenario6Unlocked = value;
+        }
+
+        public void SetIsDarkMode(bool value)
+        {
+            isDarkMode = value;
+        }
+
         /// <summary>
         /// Divisionのクリア状況を取得
         /// </summary>
         public bool IsDivisionCleared(string divisionId)
         {
-            if (debugShowAllDivisions) return true;
-            return clearedDivisions.Contains(divisionId);
+            if (DivisionManager.Instance != null)
+            {
+                return DivisionManager.Instance.IsDivisionCleared(divisionId);
+            }
+            else
+            {
+                // フォールバック（DivisionManagerがない場合）
+                if (debugShowAllDivisions) return true;
+                return clearedDivisions.Contains(divisionId);
+            }
         }
 
         /// <summary>
         /// 特定のDivisionへジャンプ（デバッグ/再挑戦用）
         /// </summary>
+        [System.Obsolete("DivisionManager.JumpToDivision を使用してください")]
         public void JumpToDivision(string divisionId)
         {
-            ResetGame();
-            int totalScenarios = GetScenarios().Count;
-
-            switch (divisionId)
+            if (DivisionManager.Instance != null)
             {
-                case "Prologue":
-                    Debug.Log("[GameManager] プロローグを開始します。");
-                    gameStartTime = DateTime.Now;
-                    break;
-                case "A":
-                    // 通常モード、未クリア状態
-                    LogDivision("A", "Division A を開始します（手動ジャンプ）。");
-                    break;
-                case "B":
-                    // 通常モード、全クリア状態
-                    LogDivision("B", "Division B を開始します（手動ジャンプ）。");
-                    for (int i = 1; i <= totalScenarios; i++)
-                    {
-                        completedScenarios.Add(i);
-                        score++;
-                    }
-                    // シナリオ6もクリア済みにすることでダークモード条件を満たす
-                    isDarkMode = false;
-                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
-                    break;
-                case "C":
-                    // ダークモード、全文字消失直前
-                    LogDivision("C", "Division C を開始します（手動ジャンプ）。");
-                    isDarkMode = true;
-                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
-                    for (int i = 1; i <= 5; i++)
-                    {
-                        completedScenarios.Add(i);
-                        completedScenariosInDarkMode.Add(i);
-                        score++;
-                    }
-                    score++; // シナリオ6分
-                    break;
-                case "D":
-                    // 3周目、開始状態
-                    LogDivision("D", "Division D を開始します（手動ジャンプ）。");
-                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
-                    TriggerThirdLoop();
-                    break;
-                case "E":
-                    // 3周目、全文字復活直前
-                    LogDivision("E", "Division E を開始します（手動ジャンプ）。");
-                    isScenario6Unlocked = true; // ジャンプ時は演出済みとする
-                    TriggerThirdLoop();
-                    for (int i = 1; i <= 5; i++)
-                    {
-                        completedScenarios.Add(i);
-                        score++;
-                        char letter = MouhitotsuWordManager.GetLetterByScenarioId(i);
-                        if (letter != '\0')
-                        {
-                            RestoreLetter(letter);
-                        }
-                    }
-                    break;
+                DivisionManager.Instance.JumpToDivision(divisionId);
             }
-            OnScoreChanged?.Invoke();
-            Debug.Log($"[GameManager] Division {divisionId} へジャンプしました。");
+            else
+            {
+                Debug.LogError("[GameManager] DivisionManager.Instance が見つかりません。");
+            }
         }
 
         public bool AreAllLettersLost()
@@ -715,6 +762,7 @@ namespace NovelGame
             score = 0;
             completedScenarios.Clear();
             completedScenariosInDarkMode.Clear();
+            startedScenariosInDarkMode.Clear(); // 3周目開始時は開始したシナリオもクリア
             scenarioResults.Clear();
             collectedLetters.Clear();
             restoredLetters.Clear();
@@ -741,6 +789,51 @@ namespace NovelGame
             }
         }
 
+        public HashSet<int> GetCompletedScenarios()
+        {
+            return new HashSet<int>(completedScenarios);
+        }
+
+        public HashSet<char> GetRestoredLetters()
+        {
+            return new HashSet<char>(restoredLetters);
+        }
+
+        /// <summary>
+        /// シナリオを強制的に完了させる（デバッグ用）
+        /// </summary>
+        public void ForceCompleteScenario(int scenarioId, int choiceId, bool inDarkMode)
+        {
+            completedScenarios.Add(scenarioId);
+            if (inDarkMode)
+            {
+                completedScenariosInDarkMode.Add(scenarioId);
+            }
+            if (!inDarkMode)
+            {
+                score++;
+            }
+
+            // 文字を収集（シナリオ1-5のみ）
+            if (MouhitotsuWordManager.IsValidScenarioId(scenarioId))
+            {
+                char collectedLetter = MouhitotsuWordManager.GetLetterByScenarioId(scenarioId);
+                if (collectedLetter != '\0')
+                {
+                    collectedLetters.Add(collectedLetter);
+                }
+            }
+
+            scenarioResults[scenarioId] = new ScenarioResult
+            {
+                hasWord = true,
+                choiceId = choiceId,
+                epilogue = "",
+                epilogue2 = "",
+                scoreAtCompletion = score
+            };
+        }
+
         /// <summary>
         /// ダークモードで失われた文字を取得
         /// </summary>
@@ -764,10 +857,11 @@ namespace NovelGame
 
             if (!IsDarkMode()) return lostLetters;
 
-            // ダークモード中に完了したシナリオ（1〜5）に対応する文字を失われた文字に加える
+            // ダークモード中に開始したシナリオ（1〜5）に対応する文字を失われた文字に加える
+            // シナリオを開始したタイミングで文字を失う
             for (int i = 1; i <= 5; i++)
             {
-                if (completedScenariosInDarkMode.Contains(i))
+                if (startedScenariosInDarkMode.Contains(i))
                 {
                     char letter = MouhitotsuWordManager.GetLetterByScenarioId(i);
                     if (letter != '\0')
@@ -777,16 +871,16 @@ namespace NovelGame
                 }
             }
 
-            // シナリオ6のプレイ中（または終了直後）は、追加の消失（累積的なものなど）を抑制する場合があるが、
-            // 既に完了したシナリオの文字は消えたままにする。
-            var currentScenario = GetCurrentScenario();
-            if (currentScenario != null && MouhitotsuWordManager.IsValidScenarioId(currentScenario.id))
+            // ダークモード中に完了したシナリオ（1〜5）に対応する文字も失われた文字に加える（念のため）
+            for (int i = 1; i <= 5; i++)
             {
-                // 現在プレイ中のシナリオに対応する文字も「消失」として扱う（シナリオ1〜5のみ）
-                char letter = MouhitotsuWordManager.GetLetterByScenarioId(currentScenario.id);
-                if (letter != '\0')
+                if (completedScenariosInDarkMode.Contains(i))
                 {
-                    lostLetters.Add(letter);
+                    char letter = MouhitotsuWordManager.GetLetterByScenarioId(i);
+                    if (letter != '\0')
+                    {
+                        lostLetters.Add(letter);
+                    }
                 }
             }
             
@@ -824,6 +918,7 @@ namespace NovelGame
             score = 0;
             completedScenarios.Clear();
             completedScenariosInDarkMode.Clear();
+            startedScenariosInDarkMode.Clear(); // リセット時は開始したシナリオもクリア
             scenarioResults.Clear();
             collectedLetters.Clear();
             restoredLetters.Clear();
