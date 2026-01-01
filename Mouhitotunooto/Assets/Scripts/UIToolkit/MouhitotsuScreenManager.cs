@@ -10,7 +10,7 @@ namespace NovelGame
     {
         private GameManager gameManager;
         private System.Action onHoverSound;
-        private System.Action<string> onDivisionJump;
+        private System.Action<string> onChapterJump;
 
         public MouhitotsuScreenManager(GameManager gameManager)
         {
@@ -18,11 +18,11 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// Divisionジャンプ時のコールバックを設定
+        /// Chapterジャンプ時のコールバックを設定
         /// </summary>
-        public void SetOnDivisionJumpCallback(System.Action<string> callback)
+        public void SetOnChapterJumpCallback(System.Action<string> callback)
         {
-            this.onDivisionJump = callback;
+            this.onChapterJump = callback;
         }
 
         /// <summary>
@@ -61,18 +61,18 @@ namespace NovelGame
             timelineContainer.style.paddingRight = 40;
             timelineContainer.style.flexWrap = Wrap.NoWrap;
 
-            // 現在のDivisionを取得
-            string currentDivision = "Prologue";
-            if (DivisionManager.Instance != null)
+            // 現在のChapterを取得
+            string currentChapter = "Prologue";
+            if (ChapterManager.Instance != null)
             {
-                currentDivision = DivisionManager.Instance.GetCurrentDivision(gameManager);
+                currentChapter = ChapterManager.Instance.GetCurrentChapter(gameManager);
             }
 
-            // Divisionの定義（時系列順）
+            // Chapterの定義（時系列順）
             // Prologue → PreA → A/B（分岐） → C → PreD → D/E（分岐）
             
             // Prologue
-            var prologueBtn = CreateDivisionButton("Prologue", "プロローグ", "物語の始まり", currentDivision);
+            var prologueBtn = CreateChapterButton("Prologue", "プロローグ", "物語の始まり", currentChapter);
             var prologueContainer = new VisualElement();
             prologueContainer.style.flexDirection = FlexDirection.Column;
             prologueContainer.style.alignItems = Align.Center;
@@ -81,12 +81,12 @@ namespace NovelGame
             timelineContainer.Add(prologueContainer);
             
             // PreA
-            if (gameManager.IsDivisionCleared("PreA"))
+            if (gameManager.IsChapterCleared("PreA"))
             {
                 var line = CreateConnectionLine();
                 timelineContainer.Add(line);
                 
-                var preABtn = CreateDivisionButton("PreA", "PreA", "真実の扉が開いた", currentDivision);
+                var preABtn = CreateChapterButton("PreA", "PreA", "真実の扉が開いた", currentChapter);
                 var preAContainer = new VisualElement();
                 preAContainer.style.flexDirection = FlexDirection.Column;
                 preAContainer.style.alignItems = Align.Center;
@@ -96,8 +96,8 @@ namespace NovelGame
             }
 
             // A/B（分岐）
-            bool hasA = gameManager.IsDivisionCleared("A");
-            bool hasB = gameManager.IsDivisionCleared("B");
+            bool hasA = gameManager.IsChapterCleared("A");
+            bool hasB = gameManager.IsChapterCleared("B");
             if (hasA || hasB)
             {
                 var line = CreateConnectionLine();
@@ -110,14 +110,14 @@ namespace NovelGame
                 
                 if (hasA)
                 {
-                    var btnA = CreateDivisionButton("A", "Division A", "通常の物語", currentDivision);
+                    var btnA = CreateChapterButton("A", "Chapter A", "通常の物語", currentChapter);
                     btnA.style.marginBottom = 10;
                     abContainer.Add(btnA);
                 }
                 
                 if (hasB)
                 {
-                    var btnB = CreateDivisionButton("B", "Division B", "ダークモードへの予兆", currentDivision);
+                    var btnB = CreateChapterButton("B", "Chapter B", "ダークモードへの予兆", currentChapter);
                     abContainer.Add(btnB);
                 }
                 
@@ -125,12 +125,12 @@ namespace NovelGame
             }
 
             // C
-            if (gameManager.IsDivisionCleared("C"))
+            if (gameManager.IsChapterCleared("C"))
             {
                 var line = CreateConnectionLine();
                 timelineContainer.Add(line);
                 
-                var cBtn = CreateDivisionButton("C", "Division C", "3周目への門", currentDivision);
+                var cBtn = CreateChapterButton("C", "Chapter C", "3周目への門", currentChapter);
                 var cContainer = new VisualElement();
                 cContainer.style.flexDirection = FlexDirection.Column;
                 cContainer.style.alignItems = Align.Center;
@@ -140,12 +140,12 @@ namespace NovelGame
             }
 
             // PreD
-            if (gameManager.IsDivisionCleared("PreD"))
+            if (gameManager.IsChapterCleared("PreD"))
             {
                 var line = CreateConnectionLine();
                 timelineContainer.Add(line);
                 
-                var preDBtn = CreateDivisionButton("PreD", "PreD", "真実の扉が開いた（3周目）", currentDivision);
+                var preDBtn = CreateChapterButton("PreD", "PreD", "真実の扉が開いた（3周目）", currentChapter);
                 var preDContainer = new VisualElement();
                 preDContainer.style.flexDirection = FlexDirection.Column;
                 preDContainer.style.alignItems = Align.Center;
@@ -155,8 +155,8 @@ namespace NovelGame
             }
 
             // D/E（分岐）
-            bool hasD = gameManager.IsDivisionCleared("D");
-            bool hasE = gameManager.IsDivisionCleared("E");
+            bool hasD = gameManager.IsChapterCleared("D");
+            bool hasE = gameManager.IsChapterCleared("E");
             if (hasD || hasE)
             {
                 var line = CreateConnectionLine();
@@ -169,14 +169,14 @@ namespace NovelGame
                 
                 if (hasD)
                 {
-                    var btnD = CreateDivisionButton("D", "Division D", "救済のエンド", currentDivision);
+                    var btnD = CreateChapterButton("D", "Chapter D", "救済のエンド", currentChapter);
                     btnD.style.marginBottom = 10;
                     deContainer.Add(btnD);
                 }
                 
                 if (hasE)
                 {
-                    var btnE = CreateDivisionButton("E", "Division E", "終焉のエンド", currentDivision);
+                    var btnE = CreateChapterButton("E", "Chapter E", "終焉のエンド", currentChapter);
                     deContainer.Add(btnE);
                 }
                 
@@ -313,6 +313,57 @@ namespace NovelGame
 
             settingsContainer.Add(bgmContainer);
 
+            // SE音量スライダー
+            var seContainer = new VisualElement();
+            seContainer.style.flexDirection = FlexDirection.Row;
+            seContainer.style.alignItems = Align.Center;
+            seContainer.style.width = Length.Percent(80);
+            seContainer.style.maxWidth = 500;
+            seContainer.style.marginBottom = 15;
+
+            var seLabel = new Label("SE音量:");
+            seLabel.style.fontSize = 16;
+            seLabel.style.color = Color.white;
+            seLabel.style.minWidth = 100;
+            seContainer.Add(seLabel);
+
+            var seSlider = new Slider(0f, 1f);
+            seSlider.style.flexGrow = 1;
+            seSlider.style.minWidth = 200;
+            
+            // AudioManagerから現在のSE音量を取得
+            float currentSEVolume = 1.0f;
+            if (audioManager != null)
+            {
+                currentSEVolume = audioManager.GetSEVolume();
+                seSlider.value = currentSEVolume;
+            }
+            else
+            {
+                seSlider.value = currentSEVolume;
+            }
+
+            var seValueLabel = new Label($"{Mathf.RoundToInt(currentSEVolume * 100)}%");
+            seValueLabel.style.fontSize = 14;
+            seValueLabel.style.color = Color.white;
+            seValueLabel.style.minWidth = 50;
+            seValueLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+
+            // スライダー値変更時のコールバック（音量設定と値ラベル更新を同時に実行）
+            seSlider.RegisterValueChangedCallback(evt =>
+            {
+                if (audioManager != null)
+                {
+                    audioManager.SetSEVolume(evt.newValue);
+                }
+                seValueLabel.text = $"{Mathf.RoundToInt(evt.newValue * 100)}%";
+            });
+
+            seContainer.Add(seSlider);
+            seContainer.Add(seValueLabel);
+
+            settingsContainer.Add(seContainer);
+
             // 物語の解明度表示ON/OFFトグル
             var progressToggleContainer = new VisualElement();
             progressToggleContainer.style.flexDirection = FlexDirection.Row;
@@ -358,9 +409,9 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// Divisionボタンを作成
+        /// Chapterボタンを作成
         /// </summary>
-        private Button CreateDivisionButton(string id, string name, string description, string currentDivision)
+        private Button CreateChapterButton(string id, string name, string description, string currentChapter)
         {
             Button btn = new Button();
             btn.text = $"{name}\n{description}";
@@ -381,8 +432,8 @@ namespace NovelGame
             btn.style.unityTextAlign = TextAnchor.MiddleCenter;
             btn.style.whiteSpace = WhiteSpace.Normal;
 
-            // 現在のDivisionの場合は黄色枠を追加
-            if (id == currentDivision)
+            // 現在のChapterの場合は黄色枠を追加
+            if (id == currentChapter)
             {
                 btn.style.borderLeftWidth = 4;
                 btn.style.borderRightWidth = 4;
@@ -394,7 +445,7 @@ namespace NovelGame
                 btn.style.borderBottomColor = Color.yellow;
             }
 
-            btn.clicked += () => onDivisionJump?.Invoke(id);
+            btn.clicked += () => onChapterJump?.Invoke(id);
             btn.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
 
             return btn;

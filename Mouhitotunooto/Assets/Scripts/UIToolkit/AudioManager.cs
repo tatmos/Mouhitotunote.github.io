@@ -98,7 +98,9 @@ namespace NovelGame
             creditBgmObject.transform.SetParent(this.transform);
             creditBgmAudioSource = creditBgmObject.AddComponent<AudioSource>();
             creditBgmAudioSource.playOnAwake = false;
-            creditBgmAudioSource.volume = 1f;
+            // BGM音量を適用（保存された音量を復元）
+            float savedBGMVolume = PlayerPrefs.GetFloat("BGMVolume", 1.0f);
+            creditBgmAudioSource.volume = savedBGMVolume;
             creditBgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
             
             // 効果音専用のGameObject
@@ -106,7 +108,9 @@ namespace NovelGame
             sfxObject.transform.SetParent(this.transform);
             sfxAudioSource = sfxObject.AddComponent<AudioSource>();
             sfxAudioSource.playOnAwake = false;
-            sfxAudioSource.volume = 1f;
+            // 保存されたSE音量を復元（デフォルトは1.0）
+            float savedSEVolume = PlayerPrefs.GetFloat("SEVolume", 1.0f);
+            sfxAudioSource.volume = savedSEVolume;
             sfxAudioSource.outputAudioMixerGroup = sfxMixerGroup;
             
             // 環境音専用のGameObject
@@ -676,6 +680,10 @@ namespace NovelGame
             {
                 bgmAudioSource.volume = volume;
             }
+            if (creditBgmAudioSource != null)
+            {
+                creditBgmAudioSource.volume = volume;
+            }
             // 音量をPlayerPrefsに保存
             PlayerPrefs.SetFloat("BGMVolume", volume);
             PlayerPrefs.Save();
@@ -692,6 +700,34 @@ namespace NovelGame
             }
             // PlayerPrefsから読み込み（デフォルトは1.0）
             return PlayerPrefs.GetFloat("BGMVolume", 1.0f);
+        }
+
+        /// <summary>
+        /// SE音量を設定（0.0～1.0）
+        /// </summary>
+        public void SetSEVolume(float volume)
+        {
+            volume = Mathf.Clamp01(volume);
+            if (sfxAudioSource != null)
+            {
+                sfxAudioSource.volume = volume;
+            }
+            // 音量をPlayerPrefsに保存
+            PlayerPrefs.SetFloat("SEVolume", volume);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// SE音量を取得（0.0～1.0）
+        /// </summary>
+        public float GetSEVolume()
+        {
+            if (sfxAudioSource != null)
+            {
+                return sfxAudioSource.volume;
+            }
+            // PlayerPrefsから読み込み（デフォルトは1.0）
+            return PlayerPrefs.GetFloat("SEVolume", 1.0f);
         }
 
         public AudioClip GetCreditsBGM() => creditsBGM;

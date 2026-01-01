@@ -34,10 +34,10 @@ namespace NovelGame
         private DateTime gameStartTime;
         private DateTime gameEndTime;
 
-        // Divisionのクリア状況（後方互換性のため残すが、DivisionManagerを使用）
-        private HashSet<string> clearedDivisions = new HashSet<string>();
-        // 全Divisionを表示するデバッグフラグ（後方互換性のため残すが、DivisionManagerを使用）
-        [SerializeField] private bool debugShowAllDivisions = false;
+        // Chapterのクリア状況（後方互換性のため残すが、ChapterManagerを使用）
+        private HashSet<string> clearedChapters = new HashSet<string>();
+        // 全Chapterを表示するデバッグフラグ（後方互換性のため残すが、ChapterManagerを使用）
+        [SerializeField] private bool debugShowAllChapters = false;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
         private Dictionary<int, Dictionary<bool, HashSet<int>>> seenEndsByMode = new Dictionary<int, Dictionary<bool, HashSet<int>>>();
@@ -346,15 +346,15 @@ namespace NovelGame
             }
             seenEndsByMode[scenarioId][playedInDarkMode].Add(choiceId);
 
-            // 節目（Division）の判定とログ出力
-            if (DivisionManager.Instance != null)
+            // 節目（Chapter）の判定とログ出力
+            if (ChapterManager.Instance != null)
             {
-                DivisionManager.Instance.UpdateAndLogDivisionStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
+                ChapterManager.Instance.UpdateAndLogChapterStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
             }
             else
             {
-                // フォールバック（DivisionManagerがない場合）
-                UpdateAndLogDivisionStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
+                // フォールバック（ChapterManagerがない場合）
+                UpdateAndLogChapterStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
             }
             
             // ボードNo1にスコア123.45fを送信する。
@@ -365,19 +365,19 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// Divisionの判定を行い、新しく到達した場合はログを出力して保存する（後方互換性のため残す）
+        /// Chapterの判定を行い、新しく到達した場合はログを出力して保存する（後方互換性のため残す）
         /// </summary>
-        [System.Obsolete("DivisionManager.UpdateAndLogDivisionStatus を使用してください")]
-        private void UpdateAndLogDivisionStatus(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
+        [System.Obsolete("ChapterManager.UpdateAndLogChapterStatus を使用してください")]
+        private void UpdateAndLogChapterStatus(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                DivisionManager.Instance.UpdateAndLogDivisionStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
+                ChapterManager.Instance.UpdateAndLogChapterStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
             }
             else
             {
-                // フォールバック（DivisionManagerがない場合）
-                UpdateAndLogDivisionStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
+                // フォールバック（ChapterManagerがない場合）
+                UpdateAndLogChapterStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
             }
             
             // ボードNo1にスコア123.45fを送信する。
@@ -385,7 +385,7 @@ namespace NovelGame
             UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
         }
 
-        private void UpdateAndLogDivisionStatusFallback(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
+        private void UpdateAndLogChapterStatusFallback(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
         {
             if (!isThirdLoop)
             {
@@ -395,11 +395,11 @@ namespace NovelGame
                     if (scenarioId != 6) return;
                     if (score < 7)
                     {
-                        LogDivisionFallback("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
+                        LogChapterFallback("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
                     }
                     else
                     {
-                        LogDivisionFallback("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
+                        LogChapterFallback("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
                     }
                 }
                 else if (isActuallyDarkMode)
@@ -411,34 +411,34 @@ namespace NovelGame
                 if (scenarioId != 6) return;
                 if (score < 7)
                 {
-                    LogDivisionFallback("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                    LogChapterFallback("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                 }
                 else
                 {
-                    LogDivisionFallback("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
+                    LogChapterFallback("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
                 }
             }
         }
 
-        [System.Obsolete("DivisionManager.LogDivision を使用してください")]
-        public void LogDivision(string divisionId, string message)
+        [System.Obsolete("ChapterManager.LogChapter を使用してください")]
+        public void LogChapter(string chapterId, string message)
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                DivisionManager.Instance.LogDivision(divisionId, message);
+                ChapterManager.Instance.LogChapter(chapterId, message);
             }
             else
             {
-                LogDivisionFallback(divisionId, message);
+                LogChapterFallback(chapterId, message);
             }
         }
 
-        private void LogDivisionFallback(string divisionId, string message)
+        private void LogChapterFallback(string chapterId, string message)
         {
-            if (!clearedDivisions.Contains(divisionId))
+            if (!clearedChapters.Contains(chapterId))
             {
-                Debug.Log($"[GameManager] division {divisionId}: {message}");
-                clearedDivisions.Add(divisionId);
+                Debug.Log($"[GameManager] chapter {chapterId}: {message}");
+                clearedChapters.Add(chapterId);
             }
         }
         
@@ -553,16 +553,16 @@ namespace NovelGame
         /// <summary>
         /// クリア済みのDivision数を取得
         /// </summary>
-        public int GetClearedDivisionsCount()
+        public int GetClearedChaptersCount()
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                return DivisionManager.Instance.GetClearedDivisionsCount();
+                return ChapterManager.Instance.GetClearedChaptersCount();
             }
             else
             {
-                // フォールバック（DivisionManagerがない場合）
-                return clearedDivisions.Count;
+                // フォールバック（ChapterManagerがない場合）
+                return clearedChapters.Count;
             }
         }
 
@@ -571,13 +571,13 @@ namespace NovelGame
         /// </summary>
         public int GetStoryProgressPercentage()
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                return DivisionManager.Instance.GetStoryProgressPercentage(score, completedScenarios, restoredLetters);
+                return ChapterManager.Instance.GetStoryProgressPercentage(score, completedScenarios, restoredLetters);
             }
             else
             {
-                // フォールバック（DivisionManagerがない場合）
+                // フォールバック（ChapterManagerがない場合）
                 return GetStoryProgressPercentageFallback();
             }
         }
@@ -590,7 +590,7 @@ namespace NovelGame
             // A: 20%, B: 40%, C: 60%, D: 80%, E: 100%
             
             // 1. Division A 以前 (通常クリア)
-            if (!IsDivisionCleared("A"))
+            if (!IsChapterCleared("A"))
             {
                 // シナリオ1-6のクリア状況 (最大6つ)
                 int completed = 0;
@@ -600,11 +600,11 @@ namespace NovelGame
                 }
                 percentage = (completed / 6f) * 20f;
             }
-            else if (!IsDivisionCleared("B"))
+            else if (!IsChapterCleared("B"))
             {
                 percentage = 20f;
             }
-            else if (!IsDivisionCleared("C"))
+            else if (!IsChapterCleared("C"))
             {
                 // 2. Division B 以前 (スコア7以上、不正発覚)
                 percentage = 40f;
@@ -620,7 +620,7 @@ namespace NovelGame
                     percentage += ((score - 6) * 20f) / 6.0f;
                 }
             }
-            else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
+            else if (!IsChapterCleared("D") && !IsChapterCleared("E"))
             {
                 // 3. Division C (3周目、文字の復元)
                 percentage = 60f;
@@ -637,7 +637,7 @@ namespace NovelGame
                 percentage = 80f;
                 
                 // Dのみクリア（不正なしなら）
-                if (IsDivisionCleared("D") && !IsDivisionCleared("E"))
+                if (IsChapterCleared("D") && !IsChapterCleared("E"))
                 {
                     percentage = 100f;
                 }
@@ -725,33 +725,33 @@ namespace NovelGame
         /// <summary>
         /// Divisionのクリア状況を取得
         /// </summary>
-        public bool IsDivisionCleared(string divisionId)
+        public bool IsChapterCleared(string chapterId)
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                return DivisionManager.Instance.IsDivisionCleared(divisionId);
+                return ChapterManager.Instance.IsChapterCleared(chapterId);
             }
             else
             {
-                // フォールバック（DivisionManagerがない場合）
-                if (debugShowAllDivisions) return true;
-                return clearedDivisions.Contains(divisionId);
+                // フォールバック（ChapterManagerがない場合）
+                if (debugShowAllChapters) return true;
+                return clearedChapters.Contains(chapterId);
             }
         }
 
         /// <summary>
         /// 特定のDivisionへジャンプ（デバッグ/再挑戦用）
         /// </summary>
-        [System.Obsolete("DivisionManager.JumpToDivision を使用してください")]
-        public void JumpToDivision(string divisionId)
+        [System.Obsolete("ChapterManager.JumpToChapter を使用してください")]
+        public void JumpToChapter(string chapterId)
         {
-            if (DivisionManager.Instance != null)
+            if (ChapterManager.Instance != null)
             {
-                DivisionManager.Instance.JumpToDivision(divisionId);
+                ChapterManager.Instance.JumpToChapter(chapterId);
             }
             else
             {
-                Debug.LogError("[GameManager] DivisionManager.Instance が見つかりません。");
+                Debug.LogError("[GameManager] ChapterManager.Instance が見つかりません。");
             }
         }
 

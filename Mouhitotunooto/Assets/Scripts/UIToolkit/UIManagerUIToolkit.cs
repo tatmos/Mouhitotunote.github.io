@@ -111,7 +111,7 @@ namespace NovelGame
         private DistortionEffectManager distortionEffectManager;
         private WordGetEffectManager wordGetEffectManager;
         private ScenarioUnlockEffectManager scenarioUnlockEffectManager;
-        private DivisionTransitionManager divisionTransitionManager;
+        private ChapterTransitionManager chapterTransitionManager;
         
         // プロフィール関連（ProfileScreenManagerで管理されているため、ここでは使用しない）
         
@@ -224,8 +224,8 @@ namespace NovelGame
             scenarioUnlockEffectManager = gameObject.AddComponent<ScenarioUnlockEffectManager>();
             scenarioUnlockEffectManager.Initialize(gameManager, audioManager, scenarioButtonNormalImage, OnScenarioSelected, () => PlayHoverSound());
             
-            divisionTransitionManager = gameObject.AddComponent<DivisionTransitionManager>();
-            divisionTransitionManager.Initialize(gameManager, audioManager, typewriterEffectManager, () => ShowTitleScreen(), () => HideAllScreens());
+            chapterTransitionManager = gameObject.AddComponent<ChapterTransitionManager>();
+            chapterTransitionManager.Initialize(gameManager, audioManager, typewriterEffectManager, () => ShowTitleScreen(), () => HideAllScreens());
 
             gameManager.OnScoreChanged += UpdateScoreDisplay;
             gameManager.OnLetterLost += OnLetterLost;
@@ -637,116 +637,14 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// Division C（3周目）への移行演出を外部から開始するためのメソッド
+        /// Chapter C（3周目）への移行演出を外部から開始するためのメソッド
         /// </summary>
-        public void TriggerDivisionCTransition(int score)
+        public void TriggerChapterCTransition(int score)
         {
-            StartCoroutine(ShowDivisionCTransition(score));
-        }
-
-        /// <summary>
-        /// Division C（3周目）への移行演出を表示
-        /// </summary>
-        private IEnumerator ShowDivisionCTransition(int score)
-        {
-            audioManager.FadeOutAudioOnSceneChange();
-            audioManager.FadeOutAmbientSoundForResult();
-            
-            // 雷のような特別な音を再生
-            audioManager.PlayThunderSound();
-
-            HideAllScreens();
-
-            // 演出用の真っ黒なオーバーレイを作成
-            if (titleScreenDocument == null)
+            if (chapterTransitionManager != null && titleScreenDocument != null)
             {
-                Debug.LogError("TitleScreenDocumentがアサインされていません！演出をスキップします。");
-                gameManager.TriggerThirdLoop();
-                ShowTitleScreen();
-                yield break;
+                StartCoroutine(chapterTransitionManager.ShowChapterCTransition(score, titleScreenDocument));
             }
-
-            // タイトル画面をアクティブにして、rootを取得できるようにする
-            titleScreenDocument.gameObject.SetActive(true);
-            var root = titleScreenDocument.rootVisualElement;
-            
-            if (root == null)
-            {
-                Debug.LogError("rootVisualElementが取得できません！演出をスキップします。");
-                gameManager.TriggerThirdLoop();
-                ShowTitleScreen();
-                yield break;
-            }
-
-            var overlay = new VisualElement();
-            overlay.style.position = Position.Absolute;
-            overlay.style.left = 0;
-            overlay.style.top = 0;
-            overlay.style.right = 0;
-            overlay.style.bottom = 0;
-            overlay.style.backgroundColor = Color.black;
-            overlay.style.justifyContent = Justify.Center;
-            overlay.style.alignItems = Align.Center;
-            root.Add(overlay);
-
-            // テキスト表示用のラベル
-            var cutsceneLabel = new Label("");
-            cutsceneLabel.style.fontSize = 32;
-            cutsceneLabel.style.color = Color.white;
-            cutsceneLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            cutsceneLabel.style.whiteSpace = WhiteSpace.Normal;
-            cutsceneLabel.style.width = Length.Percent(80);
-            overlay.Add(cutsceneLabel);
-
-            yield return new WaitForSeconds(1.5f);
-
-            // 表示するテキストを構築
-            string transitionText = "不正なデータが修正されました。システムを強制再起動します";
-            
-            // ダークモード：失われた文字を置換
-            var lostLetters = gameManager.GetLostLetters();
-            if (lostLetters.Count > 0)
-            {
-                foreach (char lostLetter in lostLetters)
-                {
-                    transitionText = transitionText.Replace(lostLetter.ToString(), "※");
-                }
-            }
-
-            // タイプライター表示
-            bool isComplete = false;
-            if (typewriterEffectManager != null)
-            {
-                typewriterEffectManager.StartTypewriterEffect(cutsceneLabel, transitionText, () => isComplete = true);
-            }
-            else
-            {
-                cutsceneLabel.text = transitionText;
-                isComplete = true;
-            }
-
-            while (!isComplete) yield return null;
-
-            yield return new WaitForSeconds(3.0f);
-
-            // 長めのフェードアウト（5秒）
-            float fadeDuration = 5.0f;
-            float elapsed = 0f;
-            while (elapsed < fadeDuration)
-            {
-                elapsed += Time.deltaTime;
-                float alpha = Mathf.Lerp(1.0f, 0f, elapsed / fadeDuration);
-                cutsceneLabel.style.opacity = alpha;
-                yield return null;
-            }
-
-            root.Remove(overlay);
-
-            // 3周目開始（Division C移行）
-            gameManager.TriggerThirdLoop();
-            
-            // タイトル画面へ（すでに暗い画面なので、フェード演出を介さず直接呼ぶ）
-            ShowTitleScreen();
         }
 
         /// <summary>
@@ -754,11 +652,14 @@ namespace NovelGame
         /// </summary>
         public void TriggerThirdLoopCutscene()
         {
-            StartCoroutine(ShowThirdLoopCutscene());
+            if (chapterTransitionManager != null && titleScreenDocument != null)
+            {
+                chapterTransitionManager.TriggerThirdLoopCutscene(titleScreenDocument);
+            }
         }
 
         /// <summary>
-        /// 3周目への移行カットシーンを表示
+        /// 3周目への移行カットシーンを表示（後方互換性のため残す）
         /// </summary>
         private IEnumerator ShowThirdLoopCutscene()
         {
@@ -929,13 +830,13 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// 暗転演出を伴うDivisionジャンプを実行
+        /// 暗転演出を伴うChapterジャンプを実行
         /// </summary>
-        private IEnumerator PerformDivisionJump(string divisionId)
+        private IEnumerator PerformChapterJump(string chapterId)
         {
             if (currentDocument == null || currentDocument.rootVisualElement == null)
             {
-                DivisionManager.Instance.JumpToDivision(divisionId);
+                ChapterManager.Instance.JumpToChapter(chapterId);
                 ShowSelectionScreen();
                 yield break;
             }
@@ -967,7 +868,7 @@ namespace NovelGame
             }
 
             // ジャンプ処理
-            DivisionManager.Instance.JumpToDivision(divisionId);
+            ChapterManager.Instance.JumpToChapter(chapterId);
             
             // 画面遷移
             ShowSelectionScreen();
@@ -979,16 +880,16 @@ namespace NovelGame
             // 演出としては一瞬暗くなってから新しい画面が表示されるので、これで十分か。
         }
 
-        public bool CheckAndGoToDivisionC()
+        public bool CheckAndGoToChapterC()
         {
-            // ダークモード中にシナリオを選択した際、スコアが6に戻っていればDivision Cへ強制転送
+            // ダークモード中にシナリオを選択した際、スコアが6に戻っていればChapter Cへ強制転送
             if (gameManager.IsDarkMode() && !gameManager.isThirdLoop && gameManager.score <= 6)
             {
-                DivisionManager.Instance.LogDivision("C", "文字をいくつか失った状態でシナリオ6クリア -> 3周目へ強制移行");
+                ChapterManager.Instance.LogChapter("C", "文字をいくつか失った状態でシナリオ6クリア -> 3周目へ強制移行");
                 
                 Debug.Log("[GameManager] 不正なデータが修正されました。システムを強制再起動します。");
                 // 3周目への移行
-                UIManagerUIToolkit.Instance.TriggerDivisionCTransition(gameManager.score);
+                UIManagerUIToolkit.Instance.TriggerChapterCTransition(gameManager.score);
                 return true;
             }
             return false;
@@ -1014,7 +915,7 @@ namespace NovelGame
                 return;
             }
             
-            if (CheckAndGoToDivisionC())
+            if (CheckAndGoToChapterC())
             {
                 return;
             }
@@ -1177,17 +1078,17 @@ namespace NovelGame
                 // まだ演出していないがアクセス可能な場合
                 if (gameManager.CheckAndConsumeScenario6Unlocked())
                 {
-                    // 真実の扉が開いたタイミングをDivisionとして記録
-                    if (DivisionManager.Instance != null)
+                    // 真実の扉が開いたタイミングをChapterとして記録
+                    if (ChapterManager.Instance != null)
                     {
                         // 3周目の場合はPreD、それ以外はPreA
                         if (gameManager.IsThirdLoop())
                         {
-                            DivisionManager.Instance.LogDivision("PreD", "真実の扉が開いた（3周目でシナリオ1-5をクリア）");
+                            ChapterManager.Instance.LogChapter("PreD", "真実の扉が開いた（3周目でシナリオ1-5をクリア）");
                         }
                         else
                         {
-                            DivisionManager.Instance.LogDivision("PreA", "真実の扉が開いた（シナリオ1-5をクリア）");
+                            ChapterManager.Instance.LogChapter("PreA", "真実の扉が開いた（シナリオ1-5をクリア）");
                         }
                     }
                     StartCoroutine(ShowScenario6UnlockAnimation(root));
@@ -1717,7 +1618,7 @@ namespace NovelGame
                     if (gameManager.AreAllLettersLost())
                     {
                         // ダークモードですべての文字を消失した状態でクリア
-                        StartCoroutine(ShowThirdLoopCutscene());
+                        TriggerThirdLoopCutscene();
                         return true;
                     }
                 }
@@ -3145,9 +3046,9 @@ namespace NovelGame
             var mouhitotsuContainer = root.Q<VisualElement>("MouhitotsuContainer");
             if (mouhitotsuContainer != null && mouhitotsuScreenManager != null)
             {
-                mouhitotsuScreenManager.SetOnDivisionJumpCallback(divisionId => {
+                mouhitotsuScreenManager.SetOnChapterJumpCallback(chapterId => {
                     ShowConfirmationDialog("現在の状況が消えてしまいますがよろしいですか？", () => {
-                        StartCoroutine(PerformDivisionJump(divisionId));
+                        StartCoroutine(PerformChapterJump(chapterId));
                     });
                 });
                 mouhitotsuScreenManager.CreateRetryButtons(root);
@@ -3344,7 +3245,7 @@ namespace NovelGame
             blackOverlay.style.alignItems = Align.Center;
             root.Add(blackOverlay);
             
-            // division E の場合は最後に「（おや？）」を表示
+            // chapter E の場合は最後に「（おや？）」を表示
             if (gameManager.IsThirdLoop() && gameManager.GetScore() >= 7)
             {
                 var oyaLabel = new Label("（おや？）");
