@@ -286,7 +286,14 @@ namespace NovelGame
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果を開始
         /// </summary>
-        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool, Vector2> onWordFound = null, int fontSize = 20, bool isClickable = true)
+        /// <param name="container">表示するコンテナ</param>
+        /// <param name="fullText">フォーマット後のテキスト（表示用）</param>
+        /// <param name="onComplete">完了時のコールバック</param>
+        /// <param name="onWordFound">ワードが見つかった時のコールバック</param>
+        /// <param name="fontSize">フォントサイズ</param>
+        /// <param name="isClickable">クリッカブルかどうか</param>
+        /// <param name="originalText">フォーマット前の元のテキスト（パターンマッチング用、nullの場合はfullTextを使用）</param>
+        public void StartTypewriterEffectWithClickableWord(VisualElement container, string fullText, System.Action onComplete = null, System.Action<bool, Vector2> onWordFound = null, int fontSize = 20, bool isClickable = true, string originalText = null)
         {
             // 既存のタイプライター効果を停止
             if (currentTypewriterEffect != null)
@@ -299,33 +306,44 @@ namespace NovelGame
             currentFullText = fullText;
             onWordFoundCallback = onWordFound;
 
+            // 元のテキストが指定されていない場合は、fullTextを使用（後方互換性のため）
+            string textForPatternMatching = originalText ?? fullText;
+
             // タイプライター効果開始
-            currentTypewriterEffect = StartCoroutine(TypewriterEffectWithClickableWordCoroutine(container, fullText, onComplete, fontSize, isClickable));
+            currentTypewriterEffect = StartCoroutine(TypewriterEffectWithClickableWordCoroutine(container, fullText, textForPatternMatching, onComplete, fontSize, isClickable));
         }
 
         /// <summary>
         /// クリッカブルな「もうひとつ」を含むタイプライター効果コルーチン
         /// </summary>
-        private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, System.Action onComplete = null, int fontSize = 20, bool isClickable = true)
+        /// <param name="container">表示するコンテナ</param>
+        /// <param name="fullText">フォーマット後のテキスト（表示用）</param>
+        /// <param name="originalTextForPatternMatching">フォーマット前の元のテキスト（パターンマッチング用）</param>
+        /// <param name="onComplete">完了時のコールバック</param>
+        /// <param name="fontSize">フォントサイズ</param>
+        /// <param name="isClickable">クリッカブルかどうか</param>
+        private IEnumerator TypewriterEffectWithClickableWordCoroutine(VisualElement container, string fullText, string originalTextForPatternMatching, System.Action onComplete = null, int fontSize = 20, bool isClickable = true)
         {
             // ダークモードで失われた文字を取得
             var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
             // 取得済みの文字を取得
             var collectedLetters = GameManager.Instance != null ? GameManager.Instance.GetCollectedLetters() : new HashSet<char>();
             
-            // テキストを行ごとに分割
+            // 表示用テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
+            // パターンマッチング用の元のテキストを行ごとに分割
+            string[] originalLines = originalTextForPatternMatching.Split('\n');
             
             float charDelay = 0.03f; // 1文字あたりの遅延（秒）
             float lineDelay = 0.15f; // 行間の遅延（秒）
 
             for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
             {
-                string line = lines[lineIndex];
+                string line = lines[lineIndex]; // 表示用テキスト（フォーマット後）
+                string originalLine = lineIndex < originalLines.Length ? originalLines[lineIndex] : line; // パターンマッチング用テキスト（フォーマット前）
                 
-                // 行を解析して「【もうひとつ】」または「もうひとつ」または「もう、ひとつ」の位置を検出
-                // 重要: 元のテキスト（line）でパターンマッチングを行う（伏字になる前の文字列で検出）
-                // シングルクォート（『』）とダブルクォート（""）で囲まれたパターンも検出
+                // パターンマッチングは元のテキスト（フォーマット前）に対して行う
+                // これにより、3周目で「もうひとつ」が「※※※※※」に置き換えられていても、正しく検出できる
                 string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ", "『もうひとつ』", "\"もうひとつ\"", "「もうひとつ」" };
 
                 int wordStartIndex = -1;
@@ -333,10 +351,10 @@ namespace NovelGame
                 string clickableText = "";
                 string matchedPattern = "";
 
-                // 元のテキストでパターンマッチングを行う（伏字になる前の文字列で検出）
+                // 元のテキスト（フォーマット前）でパターンマッチングを行う
                 foreach (var pattern in patterns)
                 {
-                    wordStartIndex = line.IndexOf(pattern);
+                    wordStartIndex = originalLine.IndexOf(pattern);
                     if (wordStartIndex >= 0)
                     {
                         matchedPattern = pattern;
@@ -356,15 +374,15 @@ namespace NovelGame
                                 .Replace("「", "").Replace("」", "")
                                 .Replace("\"", "");
                         }
-                        Debug.Log($"[TypewriterEffectManager] Pattern matched: '{pattern}' at index {wordStartIndex}, line: '{line}', clickableText: '{clickableText}'");
+                        Debug.Log($"[TypewriterEffectManager] Pattern matched: '{pattern}' at index {wordStartIndex}, originalLine: '{originalLine}', clickableText: '{clickableText}'");
                         break;
                     }
                 }
                 
                 // パターンマッチングが失敗した場合のデバッグログ（ランダム要素が含まれるテキストの確認用）
-                if (wordStartIndex < 0 && line.Contains("もう") && line.Contains("ひとつ"))
+                if (wordStartIndex < 0 && originalLine.Contains("もう") && originalLine.Contains("ひとつ"))
                 {
-                    Debug.LogWarning($"[TypewriterEffectManager] 「もうひとつ」が含まれているが、パターンマッチングに失敗しました。行: '{line}'");
+                    Debug.LogWarning($"[TypewriterEffectManager] 「もうひとつ」が含まれているが、パターンマッチングに失敗しました。originalLine: '{originalLine}'");
                 }
                 
                 if (wordStartIndex >= 0 && wordLength > 0)
