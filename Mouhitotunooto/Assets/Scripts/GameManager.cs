@@ -34,9 +34,9 @@ namespace NovelGame
         private DateTime gameStartTime;
         private DateTime gameEndTime;
 
-        // Chapterのクリア状況（後方互換性のため残すが、ChapterManagerを使用）
+        // Chapterのクリア状況（ChapterManagerに移行済み。互換性のため残存）
         private HashSet<string> clearedChapters = new HashSet<string>();
-        // 全Chapterを表示するデバッグフラグ（後方互換性のため残すが、ChapterManagerを使用）
+        // 全Chapterを表示するデバッグフラグ（ChapterManagerに移行済み。互換性のため残存）
         [SerializeField] private bool debugShowAllChapters = false;
         
         // 見たエンドを記録（シナリオID -> ダークモードかどうか -> 見たchoiceIdのセット）
@@ -353,8 +353,7 @@ namespace NovelGame
             }
             else
             {
-                // フォールバック（ChapterManagerがない場合）
-                UpdateAndLogChapterStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
+                Debug.LogError("[GameManager] ChapterManager.Instance が null です。Chapterの判定をスキップします。");
             }
             
             // ボードNo1にスコア123.45fを送信する。
@@ -364,83 +363,6 @@ namespace NovelGame
             OnScenarioCompleted?.Invoke();
         }
 
-        /// <summary>
-        /// Chapterの判定を行い、新しく到達した場合はログを出力して保存する（後方互換性のため残す）
-        /// </summary>
-        [System.Obsolete("ChapterManager.UpdateAndLogChapterStatus を使用してください")]
-        private void UpdateAndLogChapterStatus(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
-        {
-            if (ChapterManager.Instance != null)
-            {
-                ChapterManager.Instance.UpdateAndLogChapterStatus(scenarioId, playedInDarkMode, isActuallyDarkMode, isThirdLoop, score);
-            }
-            else
-            {
-                // フォールバック（ChapterManagerがない場合）
-                UpdateAndLogChapterStatusFallback(scenarioId, playedInDarkMode, isActuallyDarkMode);
-            }
-            
-            // ボードNo1にスコア123.45fを送信する。
-            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
-            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
-        }
-
-        private void UpdateAndLogChapterStatusFallback(int scenarioId, bool playedInDarkMode, bool isActuallyDarkMode)
-        {
-            if (!isThirdLoop)
-            {
-                // 以前の状態が通常モードだった場合
-                if (!playedInDarkMode)
-                {
-                    if (scenarioId != 6) return;
-                    if (score < 7)
-                    {
-                        LogChapterFallback("A", "クリア数オーバーなしでシナリオ6クリア -> まだ、もうひとつの世界に気づいていない");
-                    }
-                    else
-                    {
-                        LogChapterFallback("B", "クリア数オーバーありでシナリオ6クリア -> 真実の扉で不正を判定され、修正プログラムが暴走し始める（ダークモード突入）");
-                    }
-                }
-                else if (isActuallyDarkMode)
-                {
-                }
-            }
-            else if (isThirdLoop)
-            {
-                if (scenarioId != 6) return;
-                if (score < 7)
-                {
-                    LogChapterFallback("D", "伏字モードでクリア数オーバーなしでシナリオ6クリア -> すべての文字を取り返した、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
-                }
-                else
-                {
-                    LogChapterFallback("E", "2週目：伏字モードでクリア数オーバーありでシナリオ6クリア -> すべての文字を取り返したが、バグも発生させた、エンドクレジットともうひとつの世界（ゲームから離れた現実）終焉エンド");
-                }
-            }
-        }
-
-        [System.Obsolete("ChapterManager.LogChapter を使用してください")]
-        public void LogChapter(string chapterId, string message)
-        {
-            if (ChapterManager.Instance != null)
-            {
-                ChapterManager.Instance.LogChapter(chapterId, message);
-            }
-            else
-            {
-                LogChapterFallback(chapterId, message);
-            }
-        }
-
-        private void LogChapterFallback(string chapterId, string message)
-        {
-            if (!clearedChapters.Contains(chapterId))
-            {
-                Debug.Log($"[GameManager] chapter {chapterId}: {message}");
-                clearedChapters.Add(chapterId);
-            }
-        }
         
         /// <summary>
         /// 指定されたシナリオの指定されたchoiceIdのエンドを見たかどうかを取得（通常モード/ダークモードを区別）
@@ -679,16 +601,6 @@ namespace NovelGame
             return 2;
         }
 
-        /// <summary>
-        /// 現在の周回数を取得（後方互換性のため残すが、シナリオ単位の周回数には対応していない）
-        /// </summary>
-        [System.Obsolete("GetScenarioLoopCount(int scenarioId)を使用してください")]
-        public int GetLoopCount()
-        {
-            if (isThirdLoop) return 2; // isThirdLoop == true の時点で2周目
-            if (hasCompletedFirstLoop) return 2; // 後方互換性のため
-            return 1;
-        }
 
         /// <summary>
         /// シナリオ6が解放されたかどうか（演出用）をチェックし、フラグを更新する
@@ -739,21 +651,6 @@ namespace NovelGame
             }
         }
 
-        /// <summary>
-        /// 特定のDivisionへジャンプ（デバッグ/再挑戦用）
-        /// </summary>
-        [System.Obsolete("ChapterManager.JumpToChapter を使用してください")]
-        public void JumpToChapter(string chapterId)
-        {
-            if (ChapterManager.Instance != null)
-            {
-                ChapterManager.Instance.JumpToChapter(chapterId);
-            }
-            else
-            {
-                Debug.LogError("[GameManager] ChapterManager.Instance が見つかりません。");
-            }
-        }
 
         public bool AreAllLettersLost()
         {

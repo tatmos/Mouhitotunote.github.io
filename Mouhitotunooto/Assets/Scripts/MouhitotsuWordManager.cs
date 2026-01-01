@@ -82,17 +82,6 @@ namespace NovelGame
             return "【もうひとつ】";
         }
 
-        /// <summary>
-        /// 失われた文字を置換文字（※）に置き換えた文字列を取得
-        /// </summary>
-        /// <param name="text">元のテキスト</param>
-        /// <param name="lostLetters">失われた文字のセット</param>
-        /// <returns>置換後のテキスト</returns>
-        [System.Obsolete("TextFormatter.ReplaceLostLetters を使用してください")]
-        public static string ReplaceLostLetters(string text, HashSet<char> lostLetters)
-        {
-            return TextFormatter.ReplaceLostLetters(text, lostLetters);
-        }
 
         /// <summary>
         /// 収集済みの文字数と総文字数を取得
