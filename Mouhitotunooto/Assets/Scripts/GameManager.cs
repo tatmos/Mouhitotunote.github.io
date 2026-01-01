@@ -51,6 +51,7 @@ namespace NovelGame
 
         public event Action OnScoreChanged;
         public event Action OnScenarioCompleted;
+        public event Action<char> OnLetterLost; // 文字が失われた時のイベント
 
         /// <summary>
         /// スコア変更イベントを発火（外部から呼び出し可能）
@@ -177,7 +178,10 @@ namespace NovelGame
                 if (!startedScenariosInDarkMode.Contains(scenarioId))
                 {
                     startedScenariosInDarkMode.Add(scenarioId);
-                    Debug.Log($"[GameManager] ダークモードでシナリオ{scenarioId}を開始しました。文字「{MouhitotsuWordManager.GetLetterByScenarioId(scenarioId)}」を失います。");
+                    char lostLetter = MouhitotsuWordManager.GetLetterByScenarioId(scenarioId);
+                    Debug.Log($"[GameManager] ダークモードでシナリオ{scenarioId}を開始しました。文字「{lostLetter}」を失います。");
+                    // 文字が失われたイベントを発火
+                    OnLetterLost?.Invoke(lostLetter);
                     CheckLostLettersUpdate();
                 }
             }
@@ -232,7 +236,16 @@ namespace NovelGame
                 // ダークモード中にクリアした場合は記録
                 if (playedInDarkMode)
                 {
-                    completedScenariosInDarkMode.Add(scenarioId);
+                    if (!completedScenariosInDarkMode.Contains(scenarioId))
+                    {
+                        completedScenariosInDarkMode.Add(scenarioId);
+                        // シナリオ1-5の場合、文字が失われたイベントを発火
+                        if (MouhitotsuWordManager.IsValidScenarioId(scenarioId))
+                        {
+                            char lostLetter = MouhitotsuWordManager.GetLetterByScenarioId(scenarioId);
+                            OnLetterLost?.Invoke(lostLetter);
+                        }
+                    }
                 }
 
                 // 文字を収集（シナリオ1-5のみ）

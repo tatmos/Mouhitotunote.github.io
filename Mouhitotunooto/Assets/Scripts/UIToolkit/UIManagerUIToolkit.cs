@@ -2038,10 +2038,74 @@ namespace NovelGame
                             }
                             
                             // 綺麗な演出とともに一呼吸してから表示
-                            StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel, pos));
+                            if (wordGetEffectManager != null)
+                            {
+                                StartCoroutine(wordGetEffectManager.ShowWordGetWithEffect(root, isDarkMode, pos, () =>
+                                {
+                                    // 演出完了後の処理
+                                    // wordGetLabelのテキストを設定
+                                    if (wordGetLabel != null)
+                                    {
+                                        wordGetLabel.ClearClassList();
+                                        if (isDarkMode)
+                                        {
+                                            wordGetLabel.text = "⚠️ 【システムエラー】世界崩壊 ⚠️";
+                                            wordGetLabel.AddToClassList("word-get-dark");
+                                        }
+                                        else
+                                        {
+                                            // ✨を画像で置き換え
+                                            SetupWordGetLabelWithSparkle(wordGetContainer, wordGetLabel, GetMaskedWordGetText());
+                                            wordGetLabel.AddToClassList("word-get-success");
+                                        }
+                                        
+                                        // フェードインとスケールアニメーション
+                                        StartCoroutine(AnimateWordGetLabelFadeIn(wordGetLabel));
+                                    }
+                                    
+                                    // HandleChoiceを再度呼び出して、hasWordをtrueに更新
+                                    if (scenario != null && result != null)
+                                    {
+                                        gameManager.HandleChoice(result.choiceId, true);
+                                        // resultを再取得
+                                        result = gameManager.GetScenarioResult(scenario.id);
+                                    }
+                                    
+                                    // 後日談を表示
+                                    if (epilogueContainer != null && epilogueLabel != null && !string.IsNullOrEmpty(epilogueText))
+                                    {
+                                        epilogueContainer.style.display = DisplayStyle.Flex;
+                                        if (typewriterEffectManager != null)
+                                        {
+                                            typewriterEffectManager.StartTypewriterEffect(epilogueLabel, epilogueText, () =>
+                                            {
+                                                // 後日談のタイプライター効果が完了したら戻るボタンを表示
+                                                ShowBackButton();
+                                            });
+                                        }
+                                        else
+                                        {
+                                            ShowBackButton();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ShowBackButton();
+                                    }
+                                }));
+                            }
+                            else
+                            {
+                                // フォールバック：元のメソッドを使用
+                                StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel, pos));
+                            }
             
                             // スコア表示へ光が飛んでいく演出を開始（posがクリック位置 = 【もうひとつ】の位置）
-                            if (!isDarkMode)
+                            if (!isDarkMode && wordGetEffectManager != null)
+                            {
+                                StartCoroutine(wordGetEffectManager.ShowLetterGetAnimation(pos, root));
+                            }
+                            else if (!isDarkMode)
                             {
                                 StartCoroutine(ShowLetterGetAnimation(pos));
                             }
