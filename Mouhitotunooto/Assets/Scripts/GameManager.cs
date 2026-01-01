@@ -356,9 +356,18 @@ namespace NovelGame
                 Debug.LogError("[GameManager] ChapterManager.Instance が null です。Chapterの判定をスキップします。");
             }
             
-            // ボードNo1にスコア123.45fを送信する。
-            UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
-            UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
+            // チートモードが有効な場合はスコア送信をスキップ
+            bool isCheatModeEnabled = ChapterManager.Instance != null && ChapterManager.Instance.GetDebugShowAllChapters();
+            if (!isCheatModeEnabled)
+            {
+                // ボードNo1にスコア123.45fを送信する。
+                UnityroomApiClient.Instance.SendScore(1, GetStoryProgressPercentage(), ScoreboardWriteMode.HighScoreDesc);
+                UnityroomApiClient.Instance.SendScore(2, GetScore(), ScoreboardWriteMode.HighScoreDesc);
+            }
+            else
+            {
+                Debug.Log("[GameManager] チートモードが有効なため、Unityroomへのスコア送信をスキップしました。");
+            }
 
             OnScenarioCompleted?.Invoke();
         }

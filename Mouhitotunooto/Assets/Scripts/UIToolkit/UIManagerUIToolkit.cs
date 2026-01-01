@@ -386,7 +386,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.7.0 (2026-01-02)";
+                string text = "v1.7.1 (2026-01-02)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -537,11 +537,29 @@ namespace NovelGame
                 if (titleContainer != null)
                 {
                     var titleImageElement = new VisualElement();
-                    titleImageElement.style.width = titleImage.texture.width;
-                    titleImageElement.style.height = titleImage.texture.height;
+                    // WebGL対応: アスペクト比を維持しつつ、適切なサイズにスケール
+                    float originalWidth = titleImage.texture.width;
+                    float originalHeight = titleImage.texture.height;
+                    float aspectRatio = originalHeight / originalWidth;
+                    
+                    // 最大幅を600pxに制限し、アスペクト比を維持して高さを計算
+                    float maxWidth = 600f;
+                    float calculatedWidth = Mathf.Min(originalWidth, maxWidth);
+                    float calculatedHeight = calculatedWidth * aspectRatio;
+                    
+                    // 最大高さも200pxに制限（必要に応じて）
+                    if (calculatedHeight > 200f)
+                    {
+                        calculatedHeight = 200f;
+                        calculatedWidth = calculatedHeight / aspectRatio;
+                    }
+                    
+                    titleImageElement.style.width = calculatedWidth;
+                    titleImageElement.style.height = calculatedHeight;
                     titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
                     titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
-                    titleImageElement.style.marginBottom = 10;
+                    titleImageElement.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    titleImageElement.style.marginBottom = 20;
                     titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
                     titleLabel.style.display = DisplayStyle.None; // 元のLabelを非表示
                 }
@@ -882,11 +900,29 @@ namespace NovelGame
                 if (titleContainer != null)
                 {
                     var titleImageElement = new VisualElement();
-                    titleImageElement.style.width = titleImage.texture.width;
-                    titleImageElement.style.height = titleImage.texture.height;
+                    // WebGL対応: アスペクト比を維持しつつ、適切なサイズにスケール
+                    float originalWidth = titleImage.texture.width;
+                    float originalHeight = titleImage.texture.height;
+                    float aspectRatio = originalHeight / originalWidth;
+                    
+                    // 最大幅を600pxに制限し、アスペクト比を維持して高さを計算
+                    float maxWidth = 600f;
+                    float calculatedWidth = Mathf.Min(originalWidth, maxWidth);
+                    float calculatedHeight = calculatedWidth * aspectRatio;
+                    
+                    // 最大高さも200pxに制限（必要に応じて）
+                    if (calculatedHeight > 200f)
+                    {
+                        calculatedHeight = 200f;
+                        calculatedWidth = calculatedHeight / aspectRatio;
+                    }
+                    
+                    titleImageElement.style.width = calculatedWidth;
+                    titleImageElement.style.height = calculatedHeight;
                     titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
                     titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
-                    titleImageElement.style.marginBottom = 10;
+                    titleImageElement.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    titleImageElement.style.marginBottom = 20;
                     titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
                     titleLabel.style.display = DisplayStyle.None; // 元のLabelを非表示
                 }

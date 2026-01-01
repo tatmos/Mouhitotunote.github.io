@@ -9,8 +9,8 @@
 .card {
     background-color: rgba(0, 0, 0, 0); /* 透明 */
     border-radius: 16px;
-    padding: 32px;
-    margin: 16px;
+    padding: 40px;
+    margin: 30px;
     /* box-shadowは削除（背景が透明なので不要） */
 }
 
@@ -20,8 +20,8 @@
     border-width: 2px;
     border-color: rgb(220, 38, 38); /* red-600 */
     border-radius: 16px;
-    padding: 32px;
-    margin: 16px;
+    padding: 40px;
+    margin: 30px;
 }
 
 /* プロフィールタブレイアウト */

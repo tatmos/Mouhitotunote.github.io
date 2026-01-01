@@ -2,12 +2,12 @@
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441132597879392&amp;guid=129863cdc8fc8a64386b92878645c775&amp;type=3#GameStyles"/>
     <ui:VisualElement name="CreditsScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;"/>
-        <ui:VisualElement name="Content" class="card credits-card" style="flex-grow: 1; flex-direction: column; padding: 32px; max-width: 1400px; margin: 20px auto;">
+        <ui:VisualElement name="Content" class="card credits-card" style="flex-grow: 1; flex-direction: column; padding: 40px; max-width: 1400px; margin: 30px auto;">
             <ui:Label name="CreditsTitle" text="「もうひとつ」" class="credits-title" style="font-size: 60px; -unity-font-style: bold; margin-bottom: 48px; text-align: center;"/>
             <ui:ScrollView name="CreditsScrollView" style="flex-grow: 1;">
                 <ui:VisualElement name="CreditsContent" style="flex-direction: column; align-items: center; padding: 20px; width: 100%;"/>
             </ui:ScrollView>
-            <ui:Button name="BackToSelectionButtonFromCredits" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
+            <ui:Button name="BackToSelectionButtonFromCredits" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 30px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

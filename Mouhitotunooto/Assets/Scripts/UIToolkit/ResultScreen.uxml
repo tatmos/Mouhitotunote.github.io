@@ -8,17 +8,17 @@
             <ui:Label name="CountdownText" text="10" style="font-size: 32px; -unity-font-style: bold; color: rgb(239, 68, 68);"/>
         </ui:VisualElement>
         <ui:ScrollView style="flex-grow: 1;">
-            <ui:VisualElement name="Content" class="card" style="flex-direction: column; align-items: center; padding: 20px; max-width: 800px; margin: 20px auto; width: 400%;">
-                <ui:Label name="ResultText" text="結果テキスト" style="font-size: 18px; white-space: normal; max-width: 800px; margin-bottom: 20px; align-items: flex-start; align-self: center;"/>
-                <ui:VisualElement name="WordGetContainer" style="width: 100%; margin-bottom: 20px;"/>
-                <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 20px;"/>
-                <ui:Label name="WordFoundMessage" text="" style="font-size: 24px; -unity-font-style: bold; color: rgb(16, 185, 129); margin-bottom: 20px; display: none;"/>
-                <ui:Label name="WordFailedMessage" text="残念...【もうひとつ】は出ませんでした" style="font-size: 24px; -unity-font-style: bold; color: rgb(239, 68, 68); margin-bottom: 20px; display: none;"/>
-                <ui:VisualElement name="EpilogueContainer" class="epilogue-box" style="width: 100%; margin-bottom: 20px; background-image: url(&quot;project://database/Assets/Images/EpilogueTitle.png?fileID=21300000&amp;guid=ee71dd6e7e358d142bbbf1e0e3cf60e8&amp;type=3#EpilogueTitle&quot;); background-color: rgba(55, 55, 55, 0); border-left-width: 0; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); min-width: auto; min-height: 60px;">
-                    <ui:Label name="EpilogueTitle" text="後日談" class="epilogue-title" style="margin-bottom: 4px; color: rgb(128, 168, 255);"/>
+            <ui:VisualElement name="Content" class="card" style="flex-direction: column; align-items: center; padding: 40px; max-width: 800px; margin: 30px auto; width: 100%;">
+                <ui:Label name="ResultText" text="結果テキスト" style="font-size: 18px; white-space: normal; max-width: 800px; margin-bottom: 30px; align-items: flex-start; align-self: center;"/>
+                <ui:VisualElement name="WordGetContainer" style="width: 100%; margin-bottom: 30px;"/>
+                <ui:Label name="WordGetText" text="ワードゲット表示" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 30px;"/>
+                <ui:Label name="WordFoundMessage" text="" style="font-size: 24px; -unity-font-style: bold; color: rgb(16, 185, 129); margin-bottom: 30px; display: none;"/>
+                <ui:Label name="WordFailedMessage" text="残念...【もうひとつ】は出ませんでした" style="font-size: 24px; -unity-font-style: bold; color: rgb(239, 68, 68); margin-bottom: 30px; display: none;"/>
+                <ui:VisualElement name="EpilogueContainer" class="epilogue-box" style="width: 100%; margin-bottom: 30px; background-image: url(&quot;project://database/Assets/Images/EpilogueTitle.png?fileID=21300000&amp;guid=ee71dd6e7e358d142bbbf1e0e3cf60e8&amp;type=3#EpilogueTitle&quot;); background-color: rgba(55, 55, 55, 0); border-left-width: 0; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); min-width: auto; min-height: 60px;">
+                    <ui:Label name="EpilogueTitle" text="後日談" class="epilogue-title" style="margin-bottom: 8px; color: rgb(128, 168, 255);"/>
                     <ui:Label name="EpilogueText" text="後日談" style="font-size: 16px; white-space: normal; max-width: 800px; color: rgb(255, 255, 255);"/>
                 </ui:VisualElement>
-                <ui:Button name="BackToSelectionButton" text="シナリオ選択に戻る" class="button-gradient-indigo" style="margin-top: 20px; min-width: 200px; min-height: 50px; display: none;"/>
+                <ui:Button name="BackToSelectionButton" text="シナリオ選択に戻る" class="button-gradient-indigo" style="margin-top: 30px; min-width: 200px; min-height: 50px; display: none;"/>
             </ui:VisualElement>
         </ui:ScrollView>
     </ui:VisualElement>
