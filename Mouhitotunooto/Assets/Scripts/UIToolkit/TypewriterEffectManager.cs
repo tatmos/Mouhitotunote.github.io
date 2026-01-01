@@ -323,52 +323,34 @@ namespace NovelGame
             {
                 string line = lines[lineIndex];
                 
-                // 行を解析して「【もうひとつ】」または「もうひとつ」の位置を検出
-                // ダークモード時の「※」を含むパターンも考慮
-                string[] patterns = { "【もうひとつ】", "もうひとつ" };
-                
-                // ダークモード用に「も」「う」「ひ」「と」「つ」が「※」に置換されたパターンを生成
-                List<string> dynamicPatterns = new List<string>();
-                char[] letters = MouhitotsuWordManager.GetAllLetters();
-                
-                foreach (var p in patterns)
-                {
-                    dynamicPatterns.Add(p);
-                    // 1文字ずつ「※」に置換したパターンを追加（より複雑な置換も考えられるが、まずは1文字ずつ）
-                    foreach (var letter in letters)
-                    {
-                        string replaced = p.Replace(letter.ToString(), "※");
-                        if (replaced != p && !dynamicPatterns.Contains(replaced))
-                        {
-                            dynamicPatterns.Add(replaced);
-                        }
-                    }
-                    
-                    // 全ての対象文字を「※」に置換した究極のパターンも追加
-                    string allReplaced = p;
-                    foreach (var letter in letters)
-                    {
-                        allReplaced = allReplaced.Replace(letter.ToString(), "※");
-                    }
-                    if (allReplaced != p && !dynamicPatterns.Contains(allReplaced))
-                    {
-                        dynamicPatterns.Add(allReplaced);
-                    }
-                }
+                // 行を解析して「【もうひとつ】」または「もうひとつ」または「もう、ひとつ」の位置を検出
+                // 重要: 元のテキスト（line）でパターンマッチングを行う（伏字になる前の文字列で検出）
+                string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ" };
 
                 int wordStartIndex = -1;
                 int wordLength = 0;
                 string clickableText = "";
                 string matchedPattern = "";
 
-                foreach (var pattern in dynamicPatterns)
+                // 元のテキストでパターンマッチングを行う（伏字になる前の文字列で検出）
+                foreach (var pattern in patterns)
                 {
                     wordStartIndex = line.IndexOf(pattern);
                     if (wordStartIndex >= 0)
                     {
                         matchedPattern = pattern;
                         wordLength = pattern.Length;
-                        clickableText = pattern.Replace("【", "").Replace("】", "");
+                        // 「もう、ひとつ」の場合は、カンマを含む「もう、ひとつ」をクリッカブルテキストとして使用
+                        // ただし、「【もうひとつ】」の場合は、カッコを除去した「もうひとつ」を使用
+                        if (pattern.Contains("もう、ひとつ") || pattern.Contains("もう,ひとつ"))
+                        {
+                            clickableText = "もう、ひとつ";
+                        }
+                        else
+                        {
+                            clickableText = pattern.Replace("【", "").Replace("】", "");
+                        }
+                        Debug.Log($"[TypewriterEffectManager] Pattern matched: '{pattern}' at index {wordStartIndex}, line: '{line}', clickableText: '{clickableText}'");
                         break;
                     }
                 }

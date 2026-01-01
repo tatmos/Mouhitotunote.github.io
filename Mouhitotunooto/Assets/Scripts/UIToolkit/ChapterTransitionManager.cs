@@ -37,6 +37,12 @@ namespace NovelGame
 
             hideAllScreens();
 
+            // タイトル画面をアクティブにする（hideAllScreensで非アクティブになっている可能性があるため）
+            if (titleScreenDocument != null)
+            {
+                titleScreenDocument.gameObject.SetActive(true);
+            }
+
             // タイトル画面のルート要素を取得
             var root = titleScreenDocument.rootVisualElement;
             if (root == null) yield break;
@@ -79,11 +85,11 @@ namespace NovelGame
             string transitionText = "";
             if (score >= 7)
             {
-                transitionText = "真実の扉で不正を判定されました。\n\n修正プログラムを起動します。\n\n世界が歪み始める...\n\nすべての文字が失われていく...\n\nそして、3周目が始まる。";
+                transitionText = "真実の扉で不正を判定されました。\n\n修正プログラムを起動します。\n\n世界が歪み始める...\n\nすべての文字が失われていく...\n";
             }
             else
             {
-                transitionText = "真実の扉を開いた。\n\nしかし、何かがおかしい。\n\n世界が歪み始める...\n\nすべての文字が失われていく...\n\nそして、3周目が始まる。";
+                transitionText = "真実の扉を開いた。\n\nしかし、何かがおかしい。\n\n世界が歪み始める...\n\nすべての文字が失われていく...\n";
             }
 
             // ラベルをフェードイン
@@ -197,7 +203,7 @@ namespace NovelGame
             overlay.Add(cutsceneLabel);
 
             // カットシーンテキスト
-            string transitionText = "世界が歪み始める...\n\nすべての文字が失われていく...\n\nそして、3周目が始まる。";
+            string transitionText = "世界が歪み始める...\n\nすべての文字が失われていく...\n";
 
             // ラベルをフェードイン
             elapsed = 0f;

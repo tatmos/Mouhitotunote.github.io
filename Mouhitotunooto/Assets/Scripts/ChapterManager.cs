@@ -355,8 +355,11 @@ namespace NovelGame
             // 各チャプターの基本進捗 (計 6段階想定)
             // PreA: 10%, A: 20%, B: 40%, C: 60%, D: 80%, E: 100%
             
+            // 注意: IsChapterClearedはdebugShowAllChaptersが有効な場合trueを返すため、
+            // 実際のクリア状況を確認するためにclearedChaptersを直接使用する
+            
             // 1. Chapter PreA 以前 (通常クリア)
-            if (!IsChapterCleared("PreA"))
+            if (!clearedChapters.Contains("PreA"))
             {
                 // シナリオ1-5のクリア状況 (最大5つ)
                 int completed = 0;
@@ -366,7 +369,7 @@ namespace NovelGame
                 }
                 percentage = (completed / 5f) * 10f; // PreA到達まで10%
             }
-            else if (!IsChapterCleared("A"))
+            else if (!clearedChapters.Contains("A"))
             {
                 // PreA到達済み、Chapter A 以前
                 percentage = 10f; // PreA到達で10%
@@ -376,11 +379,11 @@ namespace NovelGame
                     percentage = 20f; // Chapter A到達で20%
                 }
             }
-            else if (!IsChapterCleared("B"))
+            else if (!clearedChapters.Contains("B"))
             {
                 percentage = 20f;
             }
-            else if (!IsChapterCleared("C"))
+            else if (!clearedChapters.Contains("C"))
             {
                 // 2. Chapter B 以前 (スコア7以上、不正発覚)
                 percentage = 40f;
@@ -396,7 +399,7 @@ namespace NovelGame
                     percentage += ((score - 6) * 20f) / 6.0f;
                 }
             }
-            else if (!IsChapterCleared("PreD"))
+            else if (!clearedChapters.Contains("PreD"))
             {
                 // 3. Chapter C (3周目、文字の復元)
                 percentage = 60f;
@@ -406,7 +409,7 @@ namespace NovelGame
                 // PreD到達まで80%
                 percentage += subProgress * 20f;
             }
-            else if (!IsChapterCleared("D") && !IsChapterCleared("E"))
+            else if (!clearedChapters.Contains("D") && !clearedChapters.Contains("E"))
             {
                 // 4. PreD到達済み、Chapter D/E 以前
                 percentage = 80f;
@@ -418,11 +421,11 @@ namespace NovelGame
                 percentage = 80f;
                 
                 // Dのみクリア（不正なしなら）
-                if (IsChapterCleared("D") && !IsChapterCleared("E"))
+                if (clearedChapters.Contains("D") && !clearedChapters.Contains("E"))
                 {
                     percentage = 100f;
                 }
-                else if (IsChapterCleared("E"))
+                else if (clearedChapters.Contains("E"))
                 {
                     percentage = 100f;
                 }

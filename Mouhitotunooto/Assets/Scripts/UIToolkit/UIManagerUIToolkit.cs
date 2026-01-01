@@ -1390,10 +1390,11 @@ namespace NovelGame
                         {
                             wordFoundInCurrentScenario = true;
                             
-                            // 効果音を再生（ワードゲット数が増える時の音）
+                            // 効果音を再生（ワードゲット数が増える時の音 + ランダムなワードゲット音）
                             if (audioManager != null)
                             {
                                 audioManager.PlayWordGetIncreaseSound();
+                                audioManager.PlayWordGetSound();
                             }
                             
                             // メッセージを表示
@@ -1807,10 +1808,11 @@ namespace NovelGame
                         {
                             wordFoundInCurrentScenario = true;
                             
-                            // 効果音を再生（ワードゲット数が増える時の音）
+                            // 効果音を再生（ワードゲット数が増える時の音 + ランダムなワードゲット音）
                             if (audioManager != null)
                             {
                                 audioManager.PlayWordGetIncreaseSound();
+                                audioManager.PlayWordGetSound();
                             }
                             
                             // カウントダウンを停止
