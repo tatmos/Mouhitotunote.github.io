@@ -325,7 +325,8 @@ namespace NovelGame
                 
                 // 行を解析して「【もうひとつ】」または「もうひとつ」または「もう、ひとつ」の位置を検出
                 // 重要: 元のテキスト（line）でパターンマッチングを行う（伏字になる前の文字列で検出）
-                string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ" };
+                // シングルクォート（『』）とダブルクォート（""）で囲まれたパターンも検出
+                string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ", "『もうひとつ』", "\"もうひとつ\"", "「もうひとつ」" };
 
                 int wordStartIndex = -1;
                 int wordLength = 0;
@@ -340,19 +341,30 @@ namespace NovelGame
                     {
                         matchedPattern = pattern;
                         wordLength = pattern.Length;
+                        // クリッカブルテキストを抽出（装飾文字を除去）
                         // 「もう、ひとつ」の場合は、カンマを含む「もう、ひとつ」をクリッカブルテキストとして使用
-                        // ただし、「【もうひとつ】」の場合は、カッコを除去した「もうひとつ」を使用
                         if (pattern.Contains("もう、ひとつ") || pattern.Contains("もう,ひとつ"))
                         {
                             clickableText = "もう、ひとつ";
                         }
                         else
                         {
-                            clickableText = pattern.Replace("【", "").Replace("】", "");
+                            // 装飾文字（【】、『』、「」、""）を除去
+                            clickableText = pattern
+                                .Replace("【", "").Replace("】", "")
+                                .Replace("『", "").Replace("』", "")
+                                .Replace("「", "").Replace("」", "")
+                                .Replace("\"", "");
                         }
                         Debug.Log($"[TypewriterEffectManager] Pattern matched: '{pattern}' at index {wordStartIndex}, line: '{line}', clickableText: '{clickableText}'");
                         break;
                     }
+                }
+                
+                // パターンマッチングが失敗した場合のデバッグログ（ランダム要素が含まれるテキストの確認用）
+                if (wordStartIndex < 0 && line.Contains("もう") && line.Contains("ひとつ"))
+                {
+                    Debug.LogWarning($"[TypewriterEffectManager] 「もうひとつ」が含まれているが、パターンマッチングに失敗しました。行: '{line}'");
                 }
                 
                 if (wordStartIndex >= 0 && wordLength > 0)

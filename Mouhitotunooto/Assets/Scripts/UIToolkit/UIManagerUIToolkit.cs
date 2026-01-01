@@ -1563,8 +1563,9 @@ namespace NovelGame
                 {
                     epilogueText = result.epilogue;
                     
-                    // シナリオ4（魔法学校の試験）の場合、失敗時（hasWord = false）に動物にゆかりのある話題を追加
-                    if (scenario.id == 4 && !result.hasWord)
+                    // シナリオ4（魔法学校の試験）の場合、ワードが見つからなかった場合に動物にゆかりのある話題を追加
+                    // 重要: hasWordではなく、wordFoundInCurrentScenarioを使用
+                    if (scenario.id == 4 && !wordFoundInCurrentScenario)
                     {
                         // シナリオのsetupから動物名を抽出（「試験官：「{animalName}を出現させなさい」」の形式）
                         string animalName = ExtractAnimalNameFromSetup(scenario.setup);
@@ -1638,11 +1639,40 @@ namespace NovelGame
                 clockIcon.sprite = this.clockIcon;
             }
             
-            // フラグをリセット（結果画面で「もうひとつ」を探すため）
-            // ただし、すでにHandleChoiceでhasWord=trueになっている場合は、そのまま保持
-            if (result != null && !result.hasWord)
+            // テキストに「もうひとつ」が含まれているかどうかを自動的に検出
+            // 重要: hasWordの概念は不要。テキストに「もうひとつ」が含まれていれば、自動的にワードゲット可能
+            if (result != null && scenario != null)
             {
-                wordFoundInCurrentScenario = false;
+                // 選択された選択肢のテキストを取得
+                if (scenario.branches.ContainsKey(result.choiceId))
+                {
+                    var branch = scenario.branches[result.choiceId];
+                    string branchText = branch.text ?? "";
+                    
+                    // テキストに「もうひとつ」が含まれているかチェック（伏字になる前の元のテキストで検出）
+                    string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ" };
+                    bool containsWord = false;
+                    foreach (var pattern in patterns)
+                    {
+                        if (branchText.Contains(pattern))
+                        {
+                            containsWord = true;
+                            break;
+                        }
+                    }
+                    
+                    // テキストに「もうひとつ」が含まれていれば、自動的にワードゲット可能
+                    if (containsWord)
+                    {
+                        wordFoundInCurrentScenario = true;
+                        Debug.Log($"[UIManagerUIToolkit] テキストに「もうひとつ」が含まれているため、自動的にワードゲット可能に設定しました。");
+                    }
+                    else
+                    {
+                        // テキストに「もうひとつ」が含まれていない場合のみ、フラグをリセット
+                        wordFoundInCurrentScenario = false;
+                    }
+                }
             }
             
             // 既存のカウントダウンを停止
@@ -1727,7 +1757,19 @@ namespace NovelGame
                 resultLabel.parent.Insert(resultLabel.parent.IndexOf(resultLabel), resultContainer);
                 
                 // 結果テキストに「【もうひとつ】」が含まれているか確認
-                bool hasMouhitotsu = resultText.Contains("【もうひとつ】");
+                // テキストに「もうひとつ」が含まれているかチェック（すべてのパターンを考慮）
+                // 重要: シングルクォート（『』）、ダブルクォート（""）、角括弧（【】）など、すべてのパターンを検出
+                string[] mouhitotsuPatterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ", "『もうひとつ』", "\"もうひとつ\"", "「もうひとつ」" };
+                bool hasMouhitotsu = false;
+                foreach (var pattern in mouhitotsuPatterns)
+                {
+                    if (resultText.Contains(pattern))
+                    {
+                        hasMouhitotsu = true;
+                        Debug.Log($"[UIManagerUIToolkit] 「もうひとつ」パターンを検出: '{pattern}'");
+                        break;
+                    }
+                }
                 
                 // タイプライター効果で表示
                 if (typewriterEffectManager != null)
