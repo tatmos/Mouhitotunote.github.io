@@ -128,44 +128,47 @@ namespace NovelGame
                 return currentActiveChapter;
             }
 
-            // Chapter Eがクリアされている
-            if (IsChapterCleared("E"))
+            // チートモードが有効な場合でも、実際にクリアされたチャプターを優先的に返す
+            // （debugShowAllChaptersが有効でも、実際の進行状況を反映する）
+            
+            // Chapter Eがクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("E"))
             {
                 return "E";
             }
 
-            // Chapter Dがクリアされている
-            if (IsChapterCleared("D"))
+            // Chapter Dがクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("D"))
             {
                 return "D";
             }
 
-            // PreD（3周目で真実の扉が開いた）がクリアされている
-            if (IsChapterCleared("PreD"))
+            // PreD（3周目で真実の扉が開いた）がクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("PreD"))
             {
                 return "PreD";
             }
 
-            // Chapter Cがクリアされている
-            if (IsChapterCleared("C"))
+            // Chapter Cがクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("C"))
             {
                 return "C";
             }
 
-            // Chapter Bがクリアされている
-            if (IsChapterCleared("B"))
+            // Chapter Bがクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("B"))
             {
                 return "B";
             }
 
-            // Chapter Aがクリアされている
-            if (IsChapterCleared("A"))
+            // Chapter Aがクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("A"))
             {
                 return "A";
             }
 
-            // PreA（真実の扉が開いた）がクリアされている
-            if (IsChapterCleared("PreA"))
+            // PreA（真実の扉が開いた）がクリアされている（実際にクリアされた場合のみ）
+            if (clearedChapters.Contains("PreA"))
             {
                 return "PreA";
             }
@@ -435,6 +438,22 @@ namespace NovelGame
         {
             clearedChapters.Clear();
             currentActiveChapter = null;
+        }
+
+        /// <summary>
+        /// デバッグモードで全Chapterを表示するかどうかを設定
+        /// </summary>
+        public void SetDebugShowAllChapters(bool enabled)
+        {
+            debugShowAllChapters = enabled;
+        }
+
+        /// <summary>
+        /// デバッグモードで全Chapterを表示するかどうかを取得
+        /// </summary>
+        public bool GetDebugShowAllChapters()
+        {
+            return debugShowAllChapters;
         }
     }
 }

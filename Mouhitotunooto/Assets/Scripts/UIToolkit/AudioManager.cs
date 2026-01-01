@@ -373,6 +373,8 @@ namespace NovelGame
         private IEnumerator FadeOutCreditAudioCoroutine(float duration)
         {
             float startVolume = creditBgmAudioSource.volume;
+            // 設定されたBGM音量を保存（フェード終了後に復元するため）
+            float savedVolume = GetBGMVolume();
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -381,7 +383,8 @@ namespace NovelGame
                 yield return null;
             }
             creditBgmAudioSource.Stop();
-            creditBgmAudioSource.volume = startVolume;
+            // 設定された音量を復元（フェード前の音量ではなく、ユーザーが設定した音量）
+            creditBgmAudioSource.volume = savedVolume;
         }
 
         public void FadeOutBGM(float duration)
@@ -405,6 +408,8 @@ namespace NovelGame
             if (bgmAudioSource.isPlaying)
             {
                 float startVolume = bgmAudioSource.volume;
+                // 設定されたBGM音量を保存（フェード終了後に復元するため）
+                float savedVolume = GetBGMVolume();
                 float elapsed = 0f;
                 while (elapsed < duration)
                 {
@@ -414,7 +419,8 @@ namespace NovelGame
                 }
 
                 bgmAudioSource.Stop();
-                bgmAudioSource.volume = startVolume;
+                // 設定された音量を復元（フェード前の音量ではなく、ユーザーが設定した音量）
+                bgmAudioSource.volume = savedVolume;
                 fadeOutCoroutine = null;
                 StartCoroutine(CheckAndFadeInAmbientAfterBGM());
             }
@@ -506,6 +512,8 @@ namespace NovelGame
         private IEnumerator FadeOutAndPauseSelectionBGM(float duration)
         {
             float startVolume = bgmAudioSource.volume;
+            // 設定されたBGM音量を保存（フェード終了後に復元するため）
+            float savedVolume = GetBGMVolume();
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -513,19 +521,23 @@ namespace NovelGame
                 bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / duration);
                 yield return null;
             }
+            // 設定された音量を復元
+            bgmAudioSource.volume = savedVolume;
             selectionBGMPausedTime = bgmAudioSource.time;
         }
 
         private IEnumerator FadeInAudioCoroutine(float duration)
         {
+            // 設定されたBGM音量を取得
+            float targetVolume = GetBGMVolume();
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                bgmAudioSource.volume = Mathf.Lerp(0f, SelectionBGMNormalVolume, elapsed / duration);
+                bgmAudioSource.volume = Mathf.Lerp(0f, targetVolume, elapsed / duration);
                 yield return null;
             }
-            bgmAudioSource.volume = SelectionBGMNormalVolume;
+            bgmAudioSource.volume = targetVolume;
             fadeInCoroutine = null;
         }
 
@@ -534,7 +546,10 @@ namespace NovelGame
             if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
             {
                 if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
-                selectionBGMVolumeCoroutine = StartCoroutine(FadeSelectionBGMVolume(bgmAudioSource.volume, SelectionBGMLoweredVolume, 1f));
+                // 設定されたBGM音量を基準に、その75%に下げる
+                float currentVolume = GetBGMVolume();
+                float loweredVolume = currentVolume * SelectionBGMLoweredVolume;
+                selectionBGMVolumeCoroutine = StartCoroutine(FadeSelectionBGMVolume(bgmAudioSource.volume, loweredVolume, 1f));
 
                 bool isDarkMode = GameManager.Instance != null && GameManager.Instance.IsDarkMode();
                 if (isDarkMode)
@@ -691,14 +706,12 @@ namespace NovelGame
 
         /// <summary>
         /// BGM音量を取得（0.0～1.0）
+        /// フェード中でも設定された音量を返す（PlayerPrefsから読み込む）
         /// </summary>
         public float GetBGMVolume()
         {
-            if (bgmAudioSource != null)
-            {
-                return bgmAudioSource.volume;
-            }
             // PlayerPrefsから読み込み（デフォルトは1.0）
+            // フェード中でも設定された音量を返すため、AudioSourceのvolumeではなくPlayerPrefsから取得
             return PlayerPrefs.GetFloat("BGMVolume", 1.0f);
         }
 

@@ -780,6 +780,12 @@ namespace NovelGame
             dialog.style.paddingRight = 32;
             dialog.style.width = 500;
             dialog.style.alignItems = Align.Center;
+            // 黒または濃い藍色系の半透明背景を追加
+            dialog.style.backgroundColor = new Color(0.1f, 0.1f, 0.2f, 0.95f); // 濃い藍色系、ほぼ不透明
+            dialog.style.borderTopLeftRadius = 10;
+            dialog.style.borderTopRightRadius = 10;
+            dialog.style.borderBottomLeftRadius = 10;
+            dialog.style.borderBottomRightRadius = 10;
             
             // メッセージ
             var label = new Label(message);
@@ -787,6 +793,7 @@ namespace NovelGame
             label.style.whiteSpace = WhiteSpace.Normal;
             label.style.marginBottom = 30;
             label.style.unityTextAlign = TextAnchor.MiddleCenter;
+            label.style.color = Color.white; // 文字色を白に設定
             dialog.Add(label);
             
             // ボタンコンテナ
@@ -819,8 +826,8 @@ namespace NovelGame
             cancelButton.style.flexGrow = 1;
             cancelButton.style.marginLeft = 10;
             cancelButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-            // キャンセルボタンに画像を適用
-            Color cancelButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
+            // キャンセルボタンに画像を適用（明るめの文字色に変更）
+            Color cancelButtonTextColor = new Color(0.9f, 0.9f, 1f, 1f); // 明るい青白系
             ApplyButtonImage(cancelButton, uiButtonIndigoImage, cancelButtonTextColor);
             buttonContainer.Add(cancelButton);
             
@@ -3050,6 +3057,9 @@ namespace NovelGame
                     ShowConfirmationDialog("現在の状況が消えてしまいますがよろしいですか？", () => {
                         StartCoroutine(PerformChapterJump(chapterId));
                     });
+                });
+                mouhitotsuScreenManager.SetOnShowConfirmationDialogCallback((message, onConfirm) => {
+                    ShowConfirmationDialog(message, onConfirm);
                 });
                 mouhitotsuScreenManager.CreateRetryButtons(root);
             }

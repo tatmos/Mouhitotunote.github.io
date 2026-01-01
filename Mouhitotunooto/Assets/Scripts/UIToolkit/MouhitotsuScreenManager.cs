@@ -11,6 +11,7 @@ namespace NovelGame
         private GameManager gameManager;
         private System.Action onHoverSound;
         private System.Action<string> onChapterJump;
+        private System.Action<string, System.Action> onShowConfirmationDialog;
 
         public MouhitotsuScreenManager(GameManager gameManager)
         {
@@ -31,6 +32,14 @@ namespace NovelGame
         public void SetOnHoverSoundCallback(System.Action callback)
         {
             this.onHoverSound = callback;
+        }
+
+        /// <summary>
+        /// 確認ダイアログ表示用のコールバックを設定
+        /// </summary>
+        public void SetOnShowConfirmationDialogCallback(System.Action<string, System.Action> callback)
+        {
+            this.onShowConfirmationDialog = callback;
         }
 
         /// <summary>
@@ -370,6 +379,7 @@ namespace NovelGame
             progressToggleContainer.style.alignItems = Align.Center;
             progressToggleContainer.style.width = Length.Percent(80);
             progressToggleContainer.style.maxWidth = 500;
+            progressToggleContainer.style.marginBottom = 15;
 
             var progressToggleLabel = new Label("物語の解明度表示:");
             progressToggleLabel.style.fontSize = 16;
@@ -388,6 +398,72 @@ namespace NovelGame
             progressToggleContainer.Add(progressToggle);
 
             settingsContainer.Add(progressToggleContainer);
+
+            // チートモードチェックボックス
+            var cheatModeContainer = new VisualElement();
+            cheatModeContainer.style.flexDirection = FlexDirection.Row;
+            cheatModeContainer.style.alignItems = Align.Center;
+            cheatModeContainer.style.width = Length.Percent(80);
+            cheatModeContainer.style.maxWidth = 500;
+
+            var cheatModeLabel = new Label("チートモード:");
+            cheatModeLabel.style.fontSize = 16;
+            cheatModeLabel.style.color = new Color(1f, 0.8f, 0.8f);
+            cheatModeLabel.style.minWidth = 180;
+            cheatModeContainer.Add(cheatModeLabel);
+
+            var cheatModeToggle = new Toggle();
+            // 現在のチートモード状態を取得
+            bool isCheatModeEnabled = false;
+            if (ChapterManager.Instance != null)
+            {
+                isCheatModeEnabled = ChapterManager.Instance.GetDebugShowAllChapters();
+            }
+            cheatModeToggle.value = isCheatModeEnabled;
+            cheatModeToggle.RegisterValueChangedCallback(evt =>
+            {
+                // チェックボックスが変更されたとき、確認ダイアログを表示
+                if (evt.newValue && !evt.previousValue)
+                {
+                    // チェックが入った場合のみ確認ダイアログを表示
+                    if (onShowConfirmationDialog != null)
+                    {
+                        onShowConfirmationDialog("ネタばれを含みますが、チートモードを有効にしますか？", () =>
+                        {
+                            // 「はい」が選択された場合
+                            if (ChapterManager.Instance != null)
+                            {
+                                ChapterManager.Instance.SetDebugShowAllChapters(true);
+                            }
+                            // 画面を再生成してすべてのチャプターを表示
+                            var container = root.Q<VisualElement>("MouhitotsuContainer");
+                            if (container != null)
+                            {
+                                CreateRetryButtons(root);
+                            }
+                        });
+                        // ダイアログが表示されたので、チェックボックスを元に戻す（確認後に設定される）
+                        cheatModeToggle.SetValueWithoutNotify(evt.previousValue);
+                    }
+                }
+                else if (!evt.newValue && evt.previousValue)
+                {
+                    // チェックが外された場合は即座に無効化
+                    if (ChapterManager.Instance != null)
+                    {
+                        ChapterManager.Instance.SetDebugShowAllChapters(false);
+                    }
+                    // 画面を再生成
+                    var container = root.Q<VisualElement>("MouhitotsuContainer");
+                    if (container != null)
+                    {
+                        CreateRetryButtons(root);
+                    }
+                }
+            });
+            cheatModeContainer.Add(cheatModeToggle);
+
+            settingsContainer.Add(cheatModeContainer);
 
             // 物語の解明度ラベルの下に挿入（ない場合はタイトルの下）
             var progressLabel = root.Q<Label>("MouhitotsuProgress");
