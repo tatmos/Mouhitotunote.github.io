@@ -775,6 +775,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1284892494
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1284892496}
+  - component: {fileID: 1284892495}
+  m_Layer: 0
+  m_Name: DivisionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1284892495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1284892494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d242aca71c1e8b48a91297320108fe6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NovelGame.DivisionManager
+  debugMode: 1
+  debugStartDivision: 0
+  debugShowAllDivisions: 1
+  currentDivision: Prologue
+--- !u!4 &1284892496
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1284892494}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1315741626
 GameObject:
   m_ObjectHideFlags: 0
@@ -857,6 +905,7 @@ MonoBehaviour:
   sparkleSound: {fileID: 8300000, guid: 126e265408ba40a4fb1d86a84a64da9b, type: 3}
   buttonHoverSound: {fileID: 8300000, guid: 856de598b7fd38244aa32e9a626fca82, type: 3}
   thunderSound: {fileID: 8300000, guid: 4c394882dba1d9f469fcd3ddc7c352e9, type: 3}
+  truthDoorUnlockSound: {fileID: 8300000, guid: 0698a718edb7f484f8fbb9ac0491fb48, type: 3}
   ambientSounds:
   - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
   - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}
@@ -1198,3 +1247,4 @@ SceneRoots:
   - {fileID: 291218905}
   - {fileID: 1315741628}
   - {fileID: 1630783076}
+  - {fileID: 1284892496}

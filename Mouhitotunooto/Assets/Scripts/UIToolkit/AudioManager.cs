@@ -20,6 +20,7 @@ namespace NovelGame
         private AudioClip sparkleSound;
         private AudioClip buttonHoverSound;
         private AudioClip thunderSound;
+        private AudioClip truthDoorUnlockSound;
         private AudioClip[] ambientSounds;
 
         [Header("Audio Mixer")]
@@ -127,6 +128,7 @@ namespace NovelGame
             AudioClip sparkleSound, 
             AudioClip buttonHoverSound, 
             AudioClip thunderSound, 
+            AudioClip truthDoorUnlockSound,
             AudioClip[] ambientSounds)
         {
             this.wordGetSounds = wordGetSounds;
@@ -137,6 +139,7 @@ namespace NovelGame
             this.sparkleSound = sparkleSound;
             this.buttonHoverSound = buttonHoverSound;
             this.thunderSound = thunderSound;
+            this.truthDoorUnlockSound = truthDoorUnlockSound;
             this.ambientSounds = ambientSounds;
         }
 
@@ -256,6 +259,14 @@ namespace NovelGame
             if (thunderSound != null && sfxAudioSource != null)
             {
                 PlaySoundWithPitchVariation(thunderSound);
+            }
+        }
+
+        public void PlayTruthDoorUnlockSound()
+        {
+            if (truthDoorUnlockSound != null && sfxAudioSource != null)
+            {
+                PlaySoundWithPitchVariation(truthDoorUnlockSound);
             }
         }
 

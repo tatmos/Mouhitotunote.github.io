@@ -62,16 +62,8 @@ namespace NovelGame
         [SerializeField] private Material distortionMaterial;
         
         // 背景テクスチャのキャッシュ（VisualElement → Texture2D）
+        // 注意: DistortionEffectManagerでも使用するため、共有する必要がある場合はpublicにするか、DistortionEffectManagerに渡す
         private Dictionary<VisualElement, Texture2D> backgroundTextureCache = new Dictionary<VisualElement, Texture2D>();
-        
-        // RenderTextureを使用した歪み効果のための変数
-        private RenderTexture distortionRenderTexture;
-        private Texture2D currentDistortionSourceTexture;
-        private VisualElement currentDistortionElement;
-        private Coroutine distortionUpdateCoroutine;
-        private Texture2D distortionTexture2D; // 再利用するTexture2D
-        private const float DistortionUpdateInterval = 0.2f; // 更新間隔（5FPS = 0.2秒）
-        private const float DistortionResolutionScale = 0.4f; // 解像度スケール（0.4 = 40%の解像度）
         
         // 背景の明度を下げるオーバーレイ
         private VisualElement backgroundOverlay;
@@ -88,6 +80,7 @@ namespace NovelGame
         [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
         [SerializeField] private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
         [SerializeField] private AudioClip thunderSound; // 3周目移行時の雷のような音
+        [SerializeField] private AudioClip truthDoorUnlockSound; // 真実の扉出現時の効果音
         [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         
@@ -110,6 +103,15 @@ namespace NovelGame
         private AchievementsScreenManager achievementsScreenManager;
         private MouhitotsuScreenManager mouhitotsuScreenManager;
         private CreditsScreenManager creditsScreenManager;
+        
+        // 演出マネージャー
+        private LetterFallAnimationManager letterFallAnimationManager;
+        private ShakeAnimationManager shakeAnimationManager;
+        private FadeEffectManager fadeEffectManager;
+        private DistortionEffectManager distortionEffectManager;
+        private WordGetEffectManager wordGetEffectManager;
+        private ScenarioUnlockEffectManager scenarioUnlockEffectManager;
+        private DivisionTransitionManager divisionTransitionManager;
         
         // プロフィール関連（ProfileScreenManagerで管理されているため、ここでは使用しない）
         
@@ -153,7 +155,8 @@ namespace NovelGame
                 lostLetterSound, 
                 sparkleSound, 
                 buttonHoverSound, 
-                thunderSound, 
+                thunderSound,
+                truthDoorUnlockSound,
                 ambientSounds);
 
             // マネージャークラスのインスタンスを作成
@@ -199,9 +202,48 @@ namespace NovelGame
             
             creditsScreenManager = gameObject.AddComponent<CreditsScreenManager>();
 
+            // 演出マネージャーを初期化
+            letterFallAnimationManager = gameObject.AddComponent<LetterFallAnimationManager>();
+            letterFallAnimationManager.Initialize(gameManager);
+            
+            shakeAnimationManager = gameObject.AddComponent<ShakeAnimationManager>();
+            
+            fadeEffectManager = gameObject.AddComponent<FadeEffectManager>();
+            
+            distortionEffectManager = gameObject.AddComponent<DistortionEffectManager>();
+            if (distortionMaterial != null)
+            {
+                distortionEffectManager.SetDistortionMaterial(distortionMaterial);
+            }
+            
+            wordGetEffectManager = gameObject.AddComponent<WordGetEffectManager>();
+            wordGetEffectManager.Initialize(gameManager, audioManager, sparkleIcon);
+            
+            scenarioUnlockEffectManager = gameObject.AddComponent<ScenarioUnlockEffectManager>();
+            scenarioUnlockEffectManager.Initialize(gameManager, audioManager, scenarioButtonNormalImage, OnScenarioSelected, () => PlayHoverSound());
+            
+            divisionTransitionManager = gameObject.AddComponent<DivisionTransitionManager>();
+            divisionTransitionManager.Initialize(gameManager, audioManager, typewriterEffectManager, () => ShowTitleScreen(), () => HideAllScreens());
+
             gameManager.OnScoreChanged += UpdateScoreDisplay;
+            gameManager.OnLetterLost += OnLetterLost;
             Debug.Log("[GameManager] プロローグを開始します。");
             ShowTitleScreen();
+        }
+
+        /// <summary>
+        /// 文字が失われた時の処理
+        /// </summary>
+        private void OnLetterLost(char lostLetter)
+        {
+            if (letterFallAnimationManager != null && currentDocument != null)
+            {
+                var root = currentDocument.rootVisualElement;
+                if (root != null)
+                {
+                    letterFallAnimationManager.AnimateLetterFall(lostLetter, root);
+                }
+            }
         }
 
         private void OnDestroy()
@@ -209,25 +251,10 @@ namespace NovelGame
             if (gameManager != null)
             {
                 gameManager.OnScoreChanged -= UpdateScoreDisplay;
+                gameManager.OnLetterLost -= OnLetterLost;
             }
 
-            // 歪み効果のクリーンアップ
-            if (distortionUpdateCoroutine != null)
-            {
-                StopCoroutine(distortionUpdateCoroutine);
-            }
-
-            if (distortionRenderTexture != null)
-            {
-                distortionRenderTexture.Release();
-                distortionRenderTexture = null;
-            }
-
-            if (distortionTexture2D != null)
-            {
-                Destroy(distortionTexture2D);
-                distortionTexture2D = null;
-            }
+            // 歪み効果のクリーンアップはDistortionEffectManagerで管理されているため、ここでは不要
             
             // 背景オーバーレイのクリーンアップ
             CleanupBackgroundOverlay();
@@ -906,7 +933,7 @@ namespace NovelGame
         {
             if (currentDocument == null || currentDocument.rootVisualElement == null)
             {
-                gameManager.JumpToDivision(divisionId);
+                DivisionManager.Instance.JumpToDivision(divisionId);
                 ShowSelectionScreen();
                 yield break;
             }
@@ -938,7 +965,7 @@ namespace NovelGame
             }
 
             // ジャンプ処理
-            gameManager.JumpToDivision(divisionId);
+            DivisionManager.Instance.JumpToDivision(divisionId);
             
             // 画面遷移
             ShowSelectionScreen();
@@ -955,7 +982,7 @@ namespace NovelGame
             // ダークモード中にシナリオを選択した際、スコアが6に戻っていればDivision Cへ強制転送
             if (gameManager.IsDarkMode() && !gameManager.isThirdLoop && gameManager.score <= 6)
             {
-                gameManager.LogDivision("C", "文字をいくつか失った状態でシナリオ6クリア -> 3周目へ強制移行");
+                DivisionManager.Instance.LogDivision("C", "文字をいくつか失った状態でシナリオ6クリア -> 3周目へ強制移行");
                 
                 Debug.Log("[GameManager] 不正なデータが修正されました。システムを強制再起動します。");
                 // 3周目への移行
@@ -2974,159 +3001,10 @@ namespace NovelGame
         /// </summary>
         private void ApplyBackgroundDistortion(VisualElement backgroundImage)
         {
-            if (backgroundImage == null)
+            if (distortionEffectManager != null)
             {
-                Debug.LogWarning("[ApplyBackgroundDistortion] backgroundImage is null");
-                return;
+                distortionEffectManager.ApplyBackgroundDistortion(backgroundImage, gameManager != null && gameManager.IsDarkMode());
             }
-
-            bool isDarkMode = gameManager != null && gameManager.IsDarkMode();
-
-            // 既存のコルーチンを停止
-            if (distortionUpdateCoroutine != null)
-            {
-                StopCoroutine(distortionUpdateCoroutine);
-                distortionUpdateCoroutine = null;
-            }
-
-            if (isDarkMode && distortionMaterial != null)
-            {
-                // ダークモード時のみ、RenderTextureを使用した歪み効果を適用
-                SetupDistortionEffect(backgroundImage);
-            }
-            else
-            {
-                // ダークモードでない場合は、歪み効果を無効化
-                CleanupDistortionEffect(backgroundImage);
-            }
-        }
-
-        private void SetupDistortionEffect(VisualElement backgroundImage)
-        {
-            // 元のテクスチャを取得
-            Texture2D sourceTexture = null;
-            var styleBg = backgroundImage.style.backgroundImage;
-            if (styleBg != null && styleBg.value != null)
-            {
-                var bg = styleBg.value;
-                if (bg.texture != null)
-                {
-                    sourceTexture = bg.texture;
-                }
-            }
-
-            if (sourceTexture == null)
-            {
-                // テクスチャが見つからない場合は、キャッシュから取得を試みる
-                if (backgroundTextureCache.TryGetValue(backgroundImage, out sourceTexture) && sourceTexture != null)
-                {
-                    // キャッシュから取得成功
-                }
-                else
-                {
-                    Debug.LogWarning("[ApplyBackgroundDistortion] Source texture not found");
-                    return;
-                }
-            }
-            else
-            {
-                // キャッシュに保存
-                backgroundTextureCache[backgroundImage] = sourceTexture;
-            }
-
-            currentDistortionSourceTexture = sourceTexture;
-            currentDistortionElement = backgroundImage;
-
-            // RenderTextureをセットアップ（解像度を下げてパフォーマンスを向上）
-            int renderWidth = Mathf.Max(1, (int)(sourceTexture.width * DistortionResolutionScale));
-            int renderHeight = Mathf.Max(1, (int)(sourceTexture.height * DistortionResolutionScale));
-            
-            if (distortionRenderTexture == null)
-            {
-                distortionRenderTexture = new RenderTexture(renderWidth, renderHeight, 0, RenderTextureFormat.ARGB32);
-                distortionRenderTexture.Create();
-            }
-            else if (distortionRenderTexture.width != renderWidth || distortionRenderTexture.height != renderHeight)
-            {
-                distortionRenderTexture.Release();
-                distortionRenderTexture = new RenderTexture(renderWidth, renderHeight, 0, RenderTextureFormat.ARGB32);
-                distortionRenderTexture.Create();
-            }
-
-            // Texture2Dを再利用（毎回新規作成しない）
-            if (distortionTexture2D == null || distortionTexture2D.width != renderWidth || distortionTexture2D.height != renderHeight)
-            {
-                if (distortionTexture2D != null)
-                {
-                    Destroy(distortionTexture2D);
-                }
-                distortionTexture2D = new Texture2D(renderWidth, renderHeight, TextureFormat.RGBA32, false);
-            }
-
-            // Graphics.Blitを使用して歪みシェーダーを適用
-            Graphics.Blit(sourceTexture, distortionRenderTexture, distortionMaterial);
-
-            // RenderTextureの内容をTexture2DにコピーしてUIに設定（初回のみ）
-            UpdateDistortionTexture();
-
-            // 定期的にRenderTextureを更新するコルーチンを開始（更新頻度を下げる）
-            distortionUpdateCoroutine = StartCoroutine(UpdateDistortionEffect());
-        }
-
-        /// <summary>
-        /// RenderTextureの内容をTexture2Dにコピー（アロケーションを最小限に）
-        /// </summary>
-        private void UpdateDistortionTexture()
-        {
-            if (distortionTexture2D == null || distortionRenderTexture == null || currentDistortionElement == null)
-                return;
-
-            // RenderTextureの内容を再利用可能なTexture2Dにコピー
-            RenderTexture.active = distortionRenderTexture;
-            distortionTexture2D.ReadPixels(new Rect(0, 0, distortionRenderTexture.width, distortionRenderTexture.height), 0, 0);
-            distortionTexture2D.Apply();
-            RenderTexture.active = null;
-
-            // UIの背景画像を更新
-            // StyleBackgroundは軽量な構造体なので、毎回作成してもアロケーションへの影響は小さい
-            currentDistortionElement.style.backgroundImage = new StyleBackground(distortionTexture2D);
-        }
-
-        private IEnumerator UpdateDistortionEffect()
-        {
-            while (currentDistortionElement != null && gameManager != null && gameManager.IsDarkMode() && currentDistortionSourceTexture != null)
-            {
-                // Graphics.Blitを使用して歪みシェーダーを適用（時間ベースの歪みが動的に更新される）
-                Graphics.Blit(currentDistortionSourceTexture, distortionRenderTexture, distortionMaterial);
-                
-                // RenderTextureの内容をTexture2Dにコピー（アロケーションを最小限に）
-                UpdateDistortionTexture();
-
-                // 更新頻度を下げてパフォーマンスを向上（5FPS = 0.2秒間隔）
-                yield return new WaitForSeconds(DistortionUpdateInterval);
-            }
-        }
-
-        private void CleanupDistortionEffect(VisualElement backgroundImage)
-        {
-            // コルーチンを停止
-            if (distortionUpdateCoroutine != null)
-            {
-                StopCoroutine(distortionUpdateCoroutine);
-                distortionUpdateCoroutine = null;
-            }
-
-            // 元のテクスチャに戻す
-            if (backgroundImage != null && backgroundTextureCache.TryGetValue(backgroundImage, out Texture2D originalTexture))
-            {
-                if (originalTexture != null)
-                {
-                    backgroundImage.style.backgroundImage = new StyleBackground(originalTexture);
-                }
-            }
-
-            currentDistortionSourceTexture = null;
-            currentDistortionElement = null;
         }
 
 
@@ -3535,23 +3413,36 @@ namespace NovelGame
         /// </summary>
         private IEnumerator ShakeAnimation(Label label)
         {
-            float duration = 0.5f;
-            float shakeIntensity = 10f;
-            float elapsed = 0f;
+            if (shakeAnimationManager != null)
+            {
+                yield return StartCoroutine(shakeAnimationManager.ShakeAnimation(label));
+            }
+        }
+
+        /// <summary>
+        /// ワードゲットラベルのフェードインアニメーション
+        /// </summary>
+        private IEnumerator AnimateWordGetLabelFadeIn(Label wordGetLabel)
+        {
+            if (wordGetLabel == null) yield break;
             
-            while (elapsed < duration)
+            wordGetLabel.style.opacity = 0f;
+            wordGetLabel.style.scale = new Scale(new Vector2(0.8f, 0.8f));
+            
+            float fadeDuration = 0.5f;
+            float elapsed = 0f;
+            while (elapsed < fadeDuration)
             {
                 elapsed += Time.deltaTime;
-                float offsetX = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
-                float offsetY = UnityEngine.Random.Range(-shakeIntensity, shakeIntensity);
-                
-                label.style.translate = new Translate(offsetX, offsetY, 0);
-                
+                float t = elapsed / fadeDuration;
+                wordGetLabel.style.opacity = t;
+                float scale = Mathf.Lerp(0.8f, 1f, t);
+                wordGetLabel.style.scale = new Scale(new Vector2(scale, scale));
                 yield return null;
             }
             
-            // 元の位置に戻す
-            label.style.translate = new Translate(0, 0, 0);
+            wordGetLabel.style.opacity = 1f;
+            wordGetLabel.style.scale = new Scale(new Vector2(1f, 1f));
         }
         
         /// <summary>

@@ -147,10 +147,10 @@ namespace NovelGame
                 particles.Add(p);
             }
 
-            // SE
+            // 真実の扉出現音を再生
             if (audioManager != null)
             {
-                audioManager.PlaySparkleSound();
+                audioManager.PlayTruthDoorUnlockSound();
             }
 
             // アニメーション：集まってから飛んでいく
