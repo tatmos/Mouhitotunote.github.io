@@ -353,20 +353,10 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.6.0 (2025-12-31)";
+                string text = "v1.7.0 (2026-1-1)";
                 var lostLetters = gameManager.GetLostLetters();
-                if (lostLetters.Count > 0)
-                {
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        text = text.Replace(lostLetter.ToString(), "※");
-                    }
-                    versionText.text = text;
-                }
-                else
-                {
-                    versionText.text = text;
-                }
+                var collectedLetters = gameManager.GetCollectedLetters();
+                versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
             }
             
             // トランジション開始
@@ -404,15 +394,10 @@ namespace NovelGame
                     ? "謎の声：あなたは「※※※※※」を探す使命を...忘れてはいけません。"
                     : "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
 
-                // ダークモード：失われた文字を置換
+                // ダークモード：失われた文字を置換、取得した文字に色を付ける
                 var lostLetters = gameManager.GetLostLetters();
-                if (lostLetters.Count > 0)
-                {
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        mysteryText = mysteryText.Replace(lostLetter.ToString(), "※");
-                    }
-                }
+                var collectedLetters = gameManager.GetCollectedLetters();
+                mysteryText = TextFormatter.FormatText(mysteryText, collectedLetters, lostLetters, true);
 
                 // 強調ワードを含むタイプライター効果でテキストを表示（フォントサイズ24、クリック不可、速度を考慮）
                 // StartTypewriterEffectWithClickableWord 内部で speedMultiplier はまだサポートしていないが、
@@ -1217,15 +1202,10 @@ namespace NovelGame
             var lostLetters = gameManager.GetLostLetters();
             string scenarioTitleText = scenario6.title;
             string scenarioDescriptionText = scenario6.setup;
-            if (lostLetters.Count > 0)
-            {
-                foreach (char lostLetter in lostLetters)
-                {
-                    string target = lostLetter.ToString();
-                    scenarioTitleText = scenarioTitleText.Replace(target, "※");
-                    scenarioDescriptionText = scenarioDescriptionText.Replace(target, "※");
-                }
-            }
+            // 失われた文字を※に置き換え、取得した文字に色を付ける
+            var collectedLetters = gameManager.GetCollectedLetters();
+            scenarioTitleText = TextFormatter.FormatText(scenarioTitleText, collectedLetters, lostLetters, true);
+            scenarioDescriptionText = TextFormatter.FormatText(scenarioDescriptionText, collectedLetters, lostLetters, true);
             
             // 文字色の定義
             Color normalTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
@@ -2238,7 +2218,7 @@ namespace NovelGame
         /// </summary>
         private string GetMaskedWordGetText()
         {
-            string text = "【もうひとつ】ワードゲット!";
+            string text = MouhitotsuWordManager.GetFormattedWord() + "ワードゲット!";
             if (gameManager == null) return text;
 
             // 3周目の場合は「もうひとつ」を「※※※※※」に置換
@@ -2248,12 +2228,10 @@ namespace NovelGame
             }
             else
             {
-                // ダークモード：失われた文字を置換
+                // ダークモード：失われた文字を置換、取得した文字に色を付ける
                 var lostLetters = gameManager.GetLostLetters();
-                foreach (char lostLetter in lostLetters)
-                {
-                    text = text.Replace(lostLetter.ToString(), "※");
-                }
+                var collectedLetters = gameManager.GetCollectedLetters();
+                text = TextFormatter.FormatMouhitotsuWord(text, collectedLetters, lostLetters, true);
             }
             return text;
         }
@@ -2301,7 +2279,7 @@ namespace NovelGame
                 
                 // ダークモードで失われた文字を取得
                 var lostLetters = gameManager.GetLostLetters();
-                string scoreText = "【もうひとつ】ワードゲット数";
+                string scoreText = MouhitotsuWordManager.GetFormattedWord() + "ワードゲット数";
                 
                 // 3周目の場合は「もうひとつ」を「※※※※※」に置換
                 if (gameManager.IsThirdLoop())
@@ -2310,14 +2288,9 @@ namespace NovelGame
                 }
                 else
                 {
-                    // 失われた文字を※に置き換え
-                    if (lostLetters.Count > 0)
-                    {
-                        foreach (char lostLetter in lostLetters)
-                        {
-                            scoreText = scoreText.Replace(lostLetter.ToString(), "※");
-                        }
-                    }
+                    // 失われた文字を※に置き換え、取得した文字に色を付ける
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    scoreText = TextFormatter.FormatMouhitotsuWord(scoreText, collectedLetters, lostLetters, true);
                 }
                 
                 scoreLabel.text = $"{scoreText}: {currentScore} / {totalScenarios}";
@@ -2527,15 +2500,10 @@ namespace NovelGame
                 string scenarioDescriptionText = scenario.setup;
 
                 // ダークモード：失われた文字を置換
-                if (lostLetters.Count > 0)
-                {
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        string target = lostLetter.ToString();
-                        scenarioTitleText = scenarioTitleText.Replace(target, "※");
-                        scenarioDescriptionText = scenarioDescriptionText.Replace(target, "※");
-                    }
-                }
+                // 失われた文字を※に置き換え、取得した文字に色を付ける
+                var collectedLetters = gameManager.GetCollectedLetters();
+                scenarioTitleText = TextFormatter.FormatText(scenarioTitleText, collectedLetters, lostLetters, true);
+                scenarioDescriptionText = TextFormatter.FormatText(scenarioDescriptionText, collectedLetters, lostLetters, true);
 
                 // 文字色の定義
                 Color normalTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
@@ -2673,16 +2641,10 @@ namespace NovelGame
                 string choiceLabelText = $"選択肢{choice.id}：{choice.text}";
                 string previewLabelText = choice.preview;
 
-                // 失われた文字を※に置き換え
-                if (lostLetters.Count > 0)
-                {
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        string target = lostLetter.ToString();
-                        choiceLabelText = choiceLabelText.Replace(target, "※");
-                        previewLabelText = previewLabelText.Replace(target, "※");
-                    }
-                }
+                // 失われた文字を※に置き換え、取得した文字に色を付ける
+                var collectedLetters = gameManager.GetCollectedLetters();
+                choiceLabelText = TextFormatter.FormatText(choiceLabelText, collectedLetters, lostLetters, true);
+                previewLabelText = TextFormatter.FormatText(previewLabelText, collectedLetters, lostLetters, true);
 
                 // ボタンの中にテキストを配置
                 var buttonText = new Label(choiceLabelText);

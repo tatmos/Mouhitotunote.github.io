@@ -51,6 +51,166 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// リッチテキストタグを考慮しながら1文字ずつ表示する（Label用、表示テキストを累積）
+        /// </summary>
+        /// <param name="label">表示するラベル</param>
+        /// <param name="formattedText">フォーマット済みテキスト（リッチテキストタグを含む）</param>
+        /// <param name="originalText">元のテキスト（音を鳴らすために使用）</param>
+        /// <param name="lostLetters">失われた文字のセット</param>
+        /// <param name="baseCharDelay">基本の文字遅延時間</param>
+        /// <returns>累積された表示テキスト</returns>
+        private IEnumerator DisplayRichTextCharacterByCharacterForLabel(Label label, string formattedText, string originalText, HashSet<char> lostLetters, float baseCharDelay, System.Action<string> onTextUpdated = null)
+        {
+            string displayedText = label.text; // 既存のテキストから開始
+            int originalIndex = 0; // 元のテキストのインデックス
+            
+            for (int i = 0; i < formattedText.Length; i++)
+            {
+                char c = formattedText[i];
+                
+                // リッチテキストタグの開始（<color=#...>）
+                if (c == '<' && i + 1 < formattedText.Length && formattedText[i + 1] != '/')
+                {
+                    // タグ全体を取得
+                    int tagEnd = formattedText.IndexOf('>', i);
+                    if (tagEnd > 0)
+                    {
+                        string tag = formattedText.Substring(i, tagEnd - i + 1);
+                        displayedText += tag;
+                        i = tagEnd;
+                        label.text = displayedText;
+                        onTextUpdated?.Invoke(displayedText);
+                        continue;
+                    }
+                }
+                // リッチテキストタグの終了（</color>）
+                else if (c == '<' && i + 1 < formattedText.Length && formattedText[i + 1] == '/')
+                {
+                    // タグ全体を取得
+                    int tagEnd = formattedText.IndexOf('>', i);
+                    if (tagEnd > 0)
+                    {
+                        string tag = formattedText.Substring(i, tagEnd - i + 1);
+                        displayedText += tag;
+                        i = tagEnd;
+                        label.text = displayedText;
+                        onTextUpdated?.Invoke(displayedText);
+                        continue;
+                    }
+                }
+                else
+                {
+                    // 通常の文字
+                    displayedText += c;
+                    
+                    // 元のテキストから対応する文字を取得（音を鳴らすために使用）
+                    if (originalIndex < originalText.Length)
+                    {
+                        char originalChar = originalText[originalIndex];
+                        char charToDisplay = lostLetters != null && lostLetters.Contains(originalChar) ? '※' : originalChar;
+                        
+                        // 空白文字および記号・句読点以外の場合に音を鳴らす
+                        if (!char.IsWhiteSpace(originalChar) && !IsPunctuationOrSymbol(originalChar))
+                        {
+                            PlayTypewriterSound(charToDisplay);
+                        }
+                        
+                        // 記号や句読点の場合は待機時間を長くする
+                        float delay = IsPunctuationOrSymbol(originalChar) ? baseCharDelay * 2.0f : baseCharDelay;
+                        yield return new WaitForSeconds(delay);
+                        
+                        originalIndex++;
+                    }
+                    else
+                    {
+                        // 元のテキストの範囲外の場合は通常の遅延
+                        yield return new WaitForSeconds(baseCharDelay);
+                    }
+                }
+                
+                label.text = displayedText;
+                onTextUpdated?.Invoke(displayedText);
+            }
+        }
+
+        /// <summary>
+        /// リッチテキストタグを考慮しながら1文字ずつ表示する
+        /// </summary>
+        /// <param name="label">表示するラベル</param>
+        /// <param name="formattedText">フォーマット済みテキスト（リッチテキストタグを含む）</param>
+        /// <param name="originalText">元のテキスト（音を鳴らすために使用）</param>
+        /// <param name="lostLetters">失われた文字のセット</param>
+        /// <param name="baseCharDelay">基本の文字遅延時間</param>
+        private IEnumerator DisplayRichTextCharacterByCharacter(Label label, string formattedText, string originalText, HashSet<char> lostLetters, float baseCharDelay)
+        {
+            string currentDisplayText = "";
+            int originalIndex = 0; // 元のテキストのインデックス
+            
+            for (int i = 0; i < formattedText.Length; i++)
+            {
+                char c = formattedText[i];
+                
+                // リッチテキストタグの開始（<color=#...>）
+                if (c == '<' && i + 1 < formattedText.Length && formattedText[i + 1] != '/')
+                {
+                    // タグ全体を取得
+                    int tagEnd = formattedText.IndexOf('>', i);
+                    if (tagEnd > 0)
+                    {
+                        string tag = formattedText.Substring(i, tagEnd - i + 1);
+                        currentDisplayText += tag;
+                        i = tagEnd;
+                        continue;
+                    }
+                }
+                // リッチテキストタグの終了（</color>）
+                else if (c == '<' && i + 1 < formattedText.Length && formattedText[i + 1] == '/')
+                {
+                    // タグ全体を取得
+                    int tagEnd = formattedText.IndexOf('>', i);
+                    if (tagEnd > 0)
+                    {
+                        string tag = formattedText.Substring(i, tagEnd - i + 1);
+                        currentDisplayText += tag;
+                        i = tagEnd;
+                        continue;
+                    }
+                }
+                else
+                {
+                    // 通常の文字
+                    currentDisplayText += c;
+                    
+                    // 元のテキストから対応する文字を取得（音を鳴らすために使用）
+                    if (originalIndex < originalText.Length)
+                    {
+                        char originalChar = originalText[originalIndex];
+                        char charToDisplay = lostLetters != null && lostLetters.Contains(originalChar) ? '※' : originalChar;
+                        
+                        // 空白文字および記号・句読点以外の場合に音を鳴らす
+                        if (!char.IsWhiteSpace(originalChar) && !IsPunctuationOrSymbol(originalChar))
+                        {
+                            PlayTypewriterSound(charToDisplay);
+                        }
+                        
+                        // 記号や句読点の場合は待機時間を長くする
+                        float delay = IsPunctuationOrSymbol(originalChar) ? baseCharDelay * 2.0f : baseCharDelay;
+                        yield return new WaitForSeconds(delay);
+                        
+                        originalIndex++;
+                    }
+                    else
+                    {
+                        // 元のテキストの範囲外の場合は通常の遅延
+                        yield return new WaitForSeconds(baseCharDelay);
+                    }
+                }
+                
+                label.text = currentDisplayText;
+            }
+        }
+
+        /// <summary>
         /// 記号や句読点かどうかを判定
         /// </summary>
         private bool IsPunctuationOrSymbol(char c)
@@ -150,6 +310,8 @@ namespace NovelGame
         {
             // ダークモードで失われた文字を取得
             var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
+            // 取得済みの文字を取得
+            var collectedLetters = GameManager.Instance != null ? GameManager.Instance.GetCollectedLetters() : new HashSet<char>();
             
             // テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
@@ -229,25 +391,11 @@ namespace NovelGame
                         beforeLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         container.Add(beforeLabel);
                         
-                        string currentDisplayText = "";
-                        for (int i = 0; i < beforeWord.Length; i++)
-                        {
-                            char c = beforeWord[i];
-                            // 失われた文字なら置換
-                            char charToDisplay = lostLetters.Contains(c) ? '※' : c;
-                            currentDisplayText += charToDisplay;
-                            beforeLabel.text = currentDisplayText;
+                        // テキストを事前にフォーマット（色付けと伏字化）
+                        string formattedBeforeWord = TextFormatter.FormatText(beforeWord, collectedLetters, lostLetters, true);
                         
-                            // 空白文字および記号・句読点以外の場合に音を鳴らす
-                            if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
-                            {
-                                PlayTypewriterSound(charToDisplay);
-                            }
-
-                            // 記号や句読点の場合は待機時間を長くする
-                            float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
-                            yield return new WaitForSeconds(delay);
-                        }
+                        // リッチテキストタグを考慮しながら1文字ずつ表示
+                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(beforeLabel, formattedBeforeWord, beforeWord, lostLetters, charDelay));
                     }
                     
                     // 「もうひとつ」を強調表示（必要に応じてクリッカブル）するLabelとして表示
@@ -275,23 +423,11 @@ namespace NovelGame
                     
                     // 強調ワードを1文字ずつ表示（強調のために遅延を長くする）
                     float emphasizedCharDelay = charDelay * 10.0f; // 通常の10倍の遅延
-                    string currentClickableDisplayText = "";
-                    for (int i = 0; i < clickableText.Length; i++)
-                    {
-                        char c = clickableText[i];
-                        // 強調テキスト内の文字も失われた文字なら置換
-                        char charToDisplay = lostLetters.Contains(c) ? '※' : c;
-                        currentClickableDisplayText += charToDisplay;
-                        clickableLabel.text = currentClickableDisplayText;
-                        
-                        // 空白文字および記号・句読点以外の場合に音を鳴らす
-                        if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
-                        {
-                            PlayTypewriterSound(charToDisplay);
-                        }
-                        
-                        yield return new WaitForSeconds(emphasizedCharDelay);
-                    }
+                    // テキストを事前にフォーマット（色付けと伏字化）
+                    string formattedClickableText = TextFormatter.FormatText(clickableText, collectedLetters, lostLetters, true);
+                    
+                    // リッチテキストタグを考慮しながら1文字ずつ表示
+                    yield return StartCoroutine(DisplayRichTextCharacterByCharacter(clickableLabel, formattedClickableText, clickableText, lostLetters, emphasizedCharDelay));
                     
                     // 後の部分を通常のLabelとして表示
                     int wordEndIndex = wordStartIndex + wordLength;
@@ -309,25 +445,11 @@ namespace NovelGame
                         afterLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                         container.Add(afterLabel);
                         
-                        string currentAfterDisplayText = "";
-                        for (int i = 0; i < afterWord.Length; i++)
-                        {
-                            char c = afterWord[i];
-                            // 失われた文字なら置換
-                            char charToDisplay = lostLetters.Contains(c) ? '※' : c;
-                            currentAfterDisplayText += charToDisplay;
-                            afterLabel.text = currentAfterDisplayText;
-                            
-                            // 空白文字および記号・句読点以外の場合に音を鳴らす
-                            if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
-                            {
-                                PlayTypewriterSound(charToDisplay);
-                            }
-
-                            // 記号や句読点の場合は待機時間を長くする
-                            float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
-                            yield return new WaitForSeconds(delay);
-                        }
+                        // テキストを事前にフォーマット（色付けと伏字化）
+                        string formattedAfterWord = TextFormatter.FormatText(afterWord, collectedLetters, lostLetters, true);
+                        
+                        // リッチテキストタグを考慮しながら1文字ずつ表示
+                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(afterLabel, formattedAfterWord, afterWord, lostLetters, charDelay));
                     }
                 }
                 else
@@ -344,25 +466,11 @@ namespace NovelGame
                     textLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
                     container.Add(textLabel);
                     
-                    string currentLineDisplayText = "";
-                    for (int charIndex = 0; charIndex < line.Length; charIndex++)
-                    {
-                        char c = line[charIndex];
-                        // 失われた文字なら置換
-                        char charToDisplay = lostLetters.Contains(c) ? '※' : c;
-                        currentLineDisplayText += charToDisplay;
-                        textLabel.text = currentLineDisplayText;
-                        
-                        // 空白文字および記号・句読点以外の場合に音を鳴らす
-                        if (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c))
-                        {
-                            PlayTypewriterSound(charToDisplay);
-                        }
-                        
-                        // 記号や句読点の場合は待機時間を長くする
-                        float delay = IsPunctuationOrSymbol(c) ? charDelay * 2.0f : charDelay;
-                        yield return new WaitForSeconds(delay);
-                    }
+                    // テキストを事前にフォーマット（色付けと伏字化）
+                    string formattedLine = TextFormatter.FormatText(line, collectedLetters, lostLetters, true);
+                    
+                    // リッチテキストタグを考慮しながら1文字ずつ表示
+                    yield return StartCoroutine(DisplayRichTextCharacterByCharacter(textLabel, formattedLine, line, lostLetters, charDelay));
                 }
                 
                 // 最後の行以外は改行を追加
@@ -406,6 +514,8 @@ namespace NovelGame
         {
             // ダークモードで失われた文字を取得
             var lostLetters = GameManager.Instance != null ? GameManager.Instance.GetLostLetters() : new HashSet<char>();
+            // 取得済みの文字を取得
+            var collectedLetters = GameManager.Instance != null ? GameManager.Instance.GetCollectedLetters() : new HashSet<char>();
             
             // テキストを行ごとに分割
             string[] lines = fullText.Split('\n');
@@ -419,41 +529,18 @@ namespace NovelGame
             {
                 string line = lines[lineIndex];
                 
-                // 各行を1文字ずつ表示
-                string currentLineText = "";
-                for (int charIndex = 0; charIndex < line.Length; charIndex++)
-                {
-                    char c = line[charIndex];
-                    // 失われた文字なら置換
-                    char charToDisplay = lostLetters.Contains(c) ? '※' : c;
-                    currentLineText += charToDisplay;
-                    
-                    // 現在の行までの完全に表示されたテキスト + 現在の行の部分的なテキスト
-                    label.text = displayedText + currentLineText;
-
-                    // 空白文字および記号・句読点以外の場合に音を鳴らす
-                    // ※の場合は特別に音を鳴らす（lostLetterSound）
-                    if (charToDisplay == '※' || (!char.IsWhiteSpace(c) && !IsPunctuationOrSymbol(c)))
-                    {
-                        PlayTypewriterSound(charToDisplay);
-                    }
-
-                    // 記号や句読点の場合は待機時間を長くする（※は除く）
-                    float delay = (charToDisplay == '※' || IsPunctuationOrSymbol(c)) ? charDelay * 2.0f : charDelay;
-                    yield return new WaitForSeconds(delay);
-                }
-
-                // 行を完全に表示したら、displayedTextに追加（置換済みのものを追加）
-                string finalLineText = "";
-                foreach (char c in line)
-                {
-                    finalLineText += lostLetters.Contains(c) ? '※' : c;
-                }
-                displayedText += finalLineText;
+                // テキストを事前にフォーマット（色付けと伏字化）
+                string formattedLine = TextFormatter.FormatText(line, collectedLetters, lostLetters, true);
+                
+                // リッチテキストタグを考慮しながら1文字ずつ表示
+                yield return StartCoroutine(DisplayRichTextCharacterByCharacterForLabel(label, formattedLine, line, lostLetters, charDelay, (updatedText) => {
+                    displayedText = updatedText;
+                }));
                 
                 // 最後の行以外は改行を追加
                 if (lineIndex < lines.Length - 1)
                 {
+                    displayedText = label.text; // 現在のラベルのテキストを取得
                     displayedText += "\n";
                     label.text = displayedText; // 改行も表示
                     

@@ -71,12 +71,21 @@ namespace NovelGame
             if (loopCount >= 3)
             {
                 // 3周目以降の展開（新しい展開）
+                // 「も」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedMo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedMo = MouhitotsuWordManager.IsLetterCollected('も', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = "私：「この写真には、何か特別な意味があるようですね」\nあなたは写真をじっくりと観察する。人物も建物も、すべてが一つの物語を語っているように感じる。\nもも子さん：「よく気づいたわね。実は、この写真には『もうひとつ』の真実が隠されているの」\n\nあなたは写真の隅々まで注意深く見る。すると、写真の端に小さな文字が浮かび上がってきた。",
                     hasWord = true,
-                    epilogue = "写真全体を観察することで、隠されていた真実を発見しました。\nもも子さんは、あなたの洞察力に感心していました。\n(文字が復活し始めている...「も」という文字を取り戻した)",
-                    epilogue2 = "もも子さんは、あなたが写真の真実を発見したことを喜んでいました。\n「あなたは本当に優秀な探偵ね。この真実に気づいた人は、あなたが初めてよ」\nそう言って、もも子さんは深い笑顔を浮かべました。\nあなたは、写真から浮かび上がった文字「も」を手に取りました。\nその文字は、まるで生きているかのように温かく、あなたの手の中で輝いていました。"
+                    epilogue = hasCollectedMo ? "写真全体を観察することで、隠されていた真実を発見しました。\nもも子さんは、あなたの洞察力に感心していました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('も', 1, loopCount, true) : "写真全体を観察することで、隠されていた真実を発見しました。\nもも子さんは、あなたの洞察力に感心していました。",
+                    epilogue2 = hasCollectedMo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('も', 1, loopCount, true, "写真") : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -89,6 +98,15 @@ namespace NovelGame
             else if (loopCount >= 2)
             {
                 // 2周目以降の展開（true/falseを逆転）
+                // 「も」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedMo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedMo = MouhitotsuWordManager.IsLetterCollected('も', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = $"私：「この人物は10年前に失踪した{MissingPersonNameManager.GetMissingPersonName()}様ですね」\n依頼人：「そう...実は、私が知りたいのは、この人物の『もうひとつ』の側面なんです」\n私：「もうひとつ？」\n依頼人：「この人物は、実は二重人格だったと言われているの。表の顔と、裏の顔...」\n\nあなたは写真をじっくりと見つめる。確かに、人物の表情に何か不自然な部分がある。",
@@ -100,19 +118,28 @@ namespace NovelGame
                 {
                     text = $"私：「この建物は取り壊された{BuildingNameManager.GetBuildingName()}です」\n依頼人：「まさにそこ!でも、実は私が知りたいのは、この建物の『もうひとつ』の秘密なんです」\n私：「秘密？」\n依頼人：「この建物には、地下に隠された部屋があると言われているの。【もうひとつ】の真実が、そこにあるかもしれない...」\n\nあなたは写真の建物を注意深く観察する。確かに、何か隠された入り口のようなものが見える。",
                     hasWord = true,
-                    epilogue = "建物の地下に隠された部屋を発見し、そこにあった手がかりから事件の真実に辿り着きました。\nもも子さんは、あなたの鋭い観察眼に驚いていました。\n(何かが集まり始めている...「も」という文字を手に入れた)",
-                    epilogue2 = "もも子さんは、あなたが建物の秘密を発見したことを喜んでいました。\n「あなたは本当に優秀な探偵ね。地下の部屋なんて、誰も気づかなかったわ」\nそう言って、もも子さんは笑顔で帰っていきました。\nあなたは、地下の部屋で見つけた小さな文字「も」を大切に保管することにしました。\nその文字には、何か特別な力が宿っているような気がしました。"
+                    epilogue = hasCollectedMo ? "建物の地下に隠された部屋を発見し、そこにあった手がかりから事件の真実に辿り着きました。\nもも子さんは、あなたの鋭い観察眼に驚いていました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('も', 1, loopCount, false) : "建物の地下に隠された部屋を発見し、そこにあった手がかりから事件の真実に辿り着きました。\nもも子さんは、あなたの鋭い観察眼に驚いていました。",
+                    epilogue2 = hasCollectedMo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('も', 1, loopCount, false, "地下の部屋") : string.Empty
                 };
             }
             else
             {
                 // 1周目の展開（元の内容）
+                // 「も」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedMo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedMo = MouhitotsuWordManager.IsLetterCollected('も', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = $"私：「この人物は10年前に失踪した{MissingPersonNameManager.GetMissingPersonName()}様ですね」\n依頼人：「そう、でも私が知りたいのは・・・」\n私：「失礼しました。【もうひとつ】の手がかりを調べます。背景の建物ですね」\n\n・・・",
                     hasWord = true,
-                    epilogue = "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。\n(何かが集まり始めている...「も」という文字を手に入れた)",
-                    epilogue2 = "もも子さんは、あなたの探偵としての成長を認めてくれました。\n「あなたは本当に優秀な探偵ね。また何かあったら、お願いします」\nそう言って、もも子さんは笑顔で帰っていきました。\nあなたは、写真の隅にあった小さな文字「も」を大切に保管することにしました。"
+                    epilogue = hasCollectedMo ? "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('も', 1, loopCount, false) : "その後、あなたは背景の手がかりから事件を解決し、一人前の探偵として認められるようになりました。",
+                    epilogue2 = hasCollectedMo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('も', 1, loopCount, false, "写真の隅") : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -155,6 +182,15 @@ namespace NovelGame
             if (loopCount >= 3)
             {
                 // 3周目以降の展開（新しい展開）
+                // 「う」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedU = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedU = MouhitotsuWordManager.IsLetterCollected('う', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = "私：「今日は特別な日というのは、どういう意味ですか？」\nうみシェフ：「あなたが来てくれたからよ。実は、このレストランには『もうひとつ』の秘密があるの」\n\nうみシェフは、あなたの目をじっと見つめます。その目には、深い理解と温かさが宿っていました。",
@@ -166,19 +202,28 @@ namespace NovelGame
                 {
                     text = "私：「このメニューには、何か特別な意味があるようですね」\nあなたはメニューをじっくりと眺める。すると、メニューの文字が次第に浮かび上がってきた。\nうみシェフ：「よく気づいたわね。このメニューには、特別なお客様への『もうひとつ』のメッセージが込められているの」\n\nメニューの文字の中に、小さな文字「う」が輝いているのを見つけました。",
                     hasWord = true,
-                    epilogue = "メニューに隠された秘密を発見し、そこに込められたメッセージを読み取りました。\nうみシェフは、あなたの洞察力に感動していました。\n(文字が復活し始めている...「う」という文字を取り戻した)",
-                    epilogue2 = "うみシェフは、あなたがメニューの秘密を発見したことを喜んでいました。\n「あなたは本当に特別なお客様ね。このメッセージに気づいた人は、あなたが初めてよ」\nそう言って、うみシェフは深い笑顔を浮かべました。\nあなたは、メニューから浮かび上がった文字「う」を手に取りました。\nその文字は、まるで料理の香りのように温かく、あなたの心に染み込んでいきました。"
+                    epilogue = hasCollectedU ? "メニューに隠された秘密を発見し、そこに込められたメッセージを読み取りました。\nうみシェフは、あなたの洞察力に感動していました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('う', 2, loopCount, true) : "メニューに隠された秘密を発見し、そこに込められたメッセージを読み取りました。\nうみシェフは、あなたの洞察力に感動していました。",
+                    epilogue2 = hasCollectedU ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('う', 2, loopCount, true, "メニュー") : string.Empty
                 };
             }
             else if (loopCount >= 2)
             {
                 // 2周目以降の展開（true/falseを逆転）
+                // 「う」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedU = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedU = MouhitotsuWordManager.IsLetterCollected('う', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = "シェフ：「お待たせしました」\n特別な食材を使った美しい料理が運ばれてきた。\nシェフ：「今日は特別に、『もうひとつ』の秘密の食材を使ったの」\n私：「秘密の食材？」\nシェフ：「ええ、このレストランだけが知っている、特別な場所で採れた食材よ」\n\nあなたは料理を味わいながら、シェフの言葉に興味を覚える。",
                     hasWord = true,
-                    epilogue = "特別な食材を使った料理は、あなたが今まで味わったことのない美味しさでした。\nシェフは、あなたが料理の秘密に気づいたことを喜んでいました。\n(また文字を手に入れた...「う」)",
-                    epilogue2 = "うみシェフは、あなたが料理の秘密に気づいたことを喜んでいました。\n「よく気づいてくれたわね。あの食材は、特別なお客様だけに提供しているの」\nあなたは、うみシェフのこだわりと情熱に、ますますこのレストランが好きになりました。\n「また来てね」と、うみシェフは手を振って見送ってくれました。\n料理の皿の底に、小さな文字「う」が刻まれているのを見つけました。"
+                    epilogue = hasCollectedU ? "特別な食材を使った料理は、あなたが今まで味わったことのない美味しさでした。\nシェフは、あなたが料理の秘密に気づいたことを喜んでいました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('う', 2, loopCount, false) : "特別な食材を使った料理は、あなたが今まで味わったことのない美味しさでした。\nシェフは、あなたが料理の秘密に気づいたことを喜んでいました。",
+                    epilogue2 = hasCollectedU ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('う', 2, loopCount, false, "料理の皿の底") : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -191,6 +236,15 @@ namespace NovelGame
             else
             {
                 // 1周目の展開（元の内容）
+                // 「う」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedU = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedU = MouhitotsuWordManager.IsLetterCollected('う', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = "シェフ：「お待たせしました」\n美味しい料理が運ばれてきた。\nシェフ：「お気に召しましたか?」\n私：「はい!」",
@@ -202,8 +256,8 @@ namespace NovelGame
                 {
                     text = "シェフ：「お待たせしました」\n運ばれてきたのは空の皿。\n私：「あの・・・これは?」\nシェフ：にっこり笑って「今日のきまぐれは『想像の料理』です」\n私：「・・・?」\nシェフ：「冗談です。【もうひとつ】お持ちします」\n",
                     hasWord = true,
-                    epilogue = "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。\n(また文字を手に入れた...「う」)",
-                    epilogue2 = "うみシェフは、あなたが皿の底の文字に気づいたことを喜んでいました。\n「よく気づいてくれたわね。あれは特別なお客様へのメッセージなの」\nあなたは、うみシェフの遊び心と温かさに、ますますこのレストランが好きになりました。\n「また来てね」と、うみシェフは手を振って見送ってくれました。"
+                    epilogue = hasCollectedU ? "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('う', 2, loopCount, false) : "シェフのユーモアに笑いながら、あなたはこのレストランの常連客になりました。",
+                    epilogue2 = hasCollectedU ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('う', 2, loopCount, false, "皿の底") : string.Empty
                 };
             }
             scenario.SerializeBranches();
@@ -236,13 +290,22 @@ namespace NovelGame
             if (loopCount >= 3)
             {
                 // 3周目以降の展開（新しい展開）
+                // 「ひ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedHi = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedHi = MouhitotsuWordManager.IsLetterCollected('ひ', collectedLetters);
+                }
+
                 var timeCapsuleItem = TimeCapsuleItemManager.GetTimeCapsuleItem();
                 scenario.branches[1] = new Branch
                 {
                     text = $"友：「開けよう!」\n中には手紙と{timeCapsuleItem}が入っていた。\n私：「あれ、{timeCapsuleItem}は壊れていない...」\nひろ：「実は、この{timeCapsuleItem}には『もうひとつ』の秘密があるんだ。一緒に開けたからこそ、その秘密に気づけるはずだよ」\n\nあなたとひろは、{timeCapsuleItem}をじっくりと観察する。すると、{timeCapsuleItem}の中に小さな文字が浮かび上がってきた。",
                     hasWord = true,
-                    epilogue = $"一緒に開けることで、{timeCapsuleItem}に隠された秘密を発見しました。\nひろは、あなたと一緒にこの秘密を発見できたことを喜んでいました。\n(文字が復活し始めている...「ひ」という文字を取り戻した)",
-                    epilogue2 = $"{timeCapsuleItem}の秘密を発見した後、ひろは「一緒に開けて良かった。一人では気づけなかったかもしれない」と言いました。\n「友情の力で、この秘密に気づけたんだね」\n{timeCapsuleItem}に刻まれた文字「ひ」は、友情の証として、あなたとひろの心に刻まれました。\n二人は、これからもずっと友達でいられることを確信しました。"
+                    epilogue = hasCollectedHi ? $"一緒に開けることで、{timeCapsuleItem}に隠された秘密を発見しました。\nひろは、あなたと一緒にこの秘密を発見できたことを喜んでいました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('ひ', 3, loopCount, true) : $"一緒に開けることで、{timeCapsuleItem}に隠された秘密を発見しました。\nひろは、あなたと一緒にこの秘密を発見できたことを喜んでいました。",
+                    epilogue2 = hasCollectedHi ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('ひ', 3, loopCount, true, timeCapsuleItem) : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -255,13 +318,22 @@ namespace NovelGame
             else if (loopCount >= 2)
             {
                 // 2周目以降の展開（true/falseを逆転）
+                // 「ひ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedHi = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedHi = MouhitotsuWordManager.IsLetterCollected('ひ', collectedLetters);
+                }
+
                 var timeCapsuleItem = TimeCapsuleItemManager.GetTimeCapsuleItem();
                 scenario.branches[1] = new Branch
                 {
                     text = $"中には手紙と{timeCapsuleItem}が入っていた。\n手紙：「未来の僕へ。夢は叶った?」\n手紙の裏に、小さな文字が書かれているのに気づく。\n「実は、この{timeCapsuleItem}には『もうひとつ』の秘密がある。壊れたように見えるが、実は...」\n\nあなたは{timeCapsuleItem}をよく見ると、確かに何か仕掛けがあるようだ。",
                     hasWord = true,
-                    epilogue = $"{timeCapsuleItem}の秘密を発見したあなたは、そこに隠されていた小さな文字「ひ」を見つけました。\n一人で開けたことで、この秘密に気づくことができたのです。\n(3つ目の文字を発見...「ひ」)",
-                    epilogue2 = $"{timeCapsuleItem}の秘密を発見した後、あなたはひろにこのことを伝えることにしました。\n「実は、一人で開けたんだ。{timeCapsuleItem}に秘密があったの」\nひろは驚きながらも、あなたの行動を理解してくれました。\n「一人で開けることも、時には必要なんだね」\n{timeCapsuleItem}に刻まれた文字「ひ」は、あなたの成長の証として、あなたの心に刻まれました。"
+                    epilogue = hasCollectedHi ? $"{timeCapsuleItem}の秘密を発見したあなたは、そこに隠されていた小さな文字「ひ」を見つけました。\n一人で開けたことで、この秘密に気づくことができたのです。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('ひ', 3, loopCount, false) : $"{timeCapsuleItem}の秘密を発見したあなたは、そこに隠されていた小さな文字「ひ」を見つけました。\n一人で開けたことで、この秘密に気づくことができたのです。",
+                    epilogue2 = hasCollectedHi ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('ひ', 3, loopCount, false, timeCapsuleItem) : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -274,6 +346,15 @@ namespace NovelGame
             else
             {
                 // 1周目の展開（元の内容）
+                // 「ひ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedHi = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedHi = MouhitotsuWordManager.IsLetterCollected('ひ', collectedLetters);
+                }
+
                 var timeCapsuleItem = TimeCapsuleItemManager.GetTimeCapsuleItem();
                 scenario.branches[1] = new Branch
                 {
@@ -286,8 +367,8 @@ namespace NovelGame
                 {
                     text = "友：「開けよう!」\n中には手紙が二通。\n私：「あれ、一通しか入れてないよね?」\n友：ニヤリと笑って「実は僕も【もうひとつ】入れてたんだ。読んでみて」\n手紙には励ましの言葉が綴られていた。\n",
                     hasWord = true,
-                    epilogue = "幼馴染との絆を再確認したあなたは、二人で新しいタイムカプセルを埋めることにしました。\n(3つ目の文字を発見...「ひ」)",
-                    epilogue2 = "新しいタイムカプセルを埋めた後、ひろは「今度は20年後、また一緒に開けよう」と言いました。\n「約束だよ」と、あなたはひろと小指を絡めました。\n手紙の裏にあった文字「ひ」は、友情の証として、あなたの心に刻まれました。\n二人は、これからもずっと友達でいられることを確信しました。"
+                    epilogue = hasCollectedHi ? "幼馴染との絆を再確認したあなたは、二人で新しいタイムカプセルを埋めることにしました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('ひ', 3, loopCount, false) : "幼馴染との絆を再確認したあなたは、二人で新しいタイムカプセルを埋めることにしました。",
+                    epilogue2 = hasCollectedHi ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('ひ', 3, loopCount, false, "手紙の裏") : string.Empty
                 };
             }
             scenario.SerializeBranches();
@@ -323,12 +404,21 @@ namespace NovelGame
             if (loopCount >= 3)
             {
                 // 3周目以降の展開（新しい展開）
+                // 「と」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTo = MouhitotsuWordManager.IsLetterCollected('と', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = $"私：「魔法と手品を組み合わせて...」\nあなたは魔法の呪文を唱えながら、同時に手品の技術も使います。\nすると、{animalName}が魔法と手品の両方の力を帯びて出現しました。\n試験官：「素晴らしい!魔法と手品の両方を理解し、組み合わせることができた。これこそが『もうひとつ』の真実だ」\n\n{animalName}の周りに、小さな文字「と」が輝き始めました。",
                     hasWord = true,
-                    epilogue = "魔法と手品の両方を組み合わせることで、試験官が求めていた真実を発見しました。\nとおる試験官は、あなたの理解力に感動していました。\n(文字が復活し始めている...「と」という文字を取り戻した)",
-                    epilogue2 = $"とおる試験官は、あなたが魔法と手品の両方を理解したことを喜んでいました。\n「あなたは本当に特別な才能を持っている。魔法と手品、両方を組み合わせることができるのは、あなたが初めてだ」\nあなたは、{animalName}の周りに浮かんだ文字「と」を手に取りました。\nその文字は、まるで魔法の力そのもののように、あなたの心に染み込んでいきました。"
+                    epilogue = hasCollectedTo ? "魔法と手品の両方を組み合わせることで、試験官が求めていた真実を発見しました。\nとおる試験官は、あなたの理解力に感動していました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('と', 4, loopCount, true) : "魔法と手品の両方を組み合わせることで、試験官が求めていた真実を発見しました。\nとおる試験官は、あなたの理解力に感動していました。",
+                    epilogue2 = hasCollectedTo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('と', 4, loopCount, true, animalName) : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -341,6 +431,15 @@ namespace NovelGame
             else if (loopCount >= 2)
             {
                 // 2周目以降の展開（true/falseを逆転）
+                // 「と」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTo = MouhitotsuWordManager.IsLetterCollected('と', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = $"パッ!{animalName}が2匹出現した。\n試験官：「おや?」\n私：「すみません、手品の技術が未熟で...」\n試験官：「構いません。ただし、魔法学校の試験では、魔法を使うことが求められます」\n私：冷や汗をかく。\n\n手品では合格できないことが分かった。",
@@ -352,19 +451,28 @@ namespace NovelGame
                 {
                     text = $"スッと帽子から{animalName}を取り出した。\n試験官：「完璧です。実は、この試験は手品の技術を試すものだったのです」\n私：「えっ？」\n試験官：「魔法学校では、手品と魔法の両方を理解することが大切なのです。【もうひとつ】の真実を、あなたは見つけました」\n\n帽子の中に、小さな文字が浮かび上がる。",
                     hasWord = true,
-                    epilogue = "あなたは手品と魔法の両方を理解し、誰もが驚くエンターテイナーになりました。\n(4つ目の文字を手に入れた...「と」)",
-                    epilogue2 = "とおる試験官は、あなたの才能を高く評価してくれました。\n「手品と魔法、両方を理解できるのは珍しい。君は特別な才能を持っている」\nあなたは、帽子の中に浮かんだ文字「と」を、魔法の証として大切にしました。\n「これからも、もうひとつの可能性を探し続けてほしい」と、とおる試験官は言いました。"
+                    epilogue = hasCollectedTo ? "あなたは手品と魔法の両方を理解し、誰もが驚くエンターテイナーになりました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('と', 4, loopCount, false) : "あなたは手品と魔法の両方を理解し、誰もが驚くエンターテイナーになりました。",
+                    epilogue2 = hasCollectedTo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('と', 4, loopCount, false, "帽子の中") : string.Empty
                 };
             }
             else
             {
                 // 1周目の展開（元の内容）
+                // 「と」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTo = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTo = MouhitotsuWordManager.IsLetterCollected('と', collectedLetters);
+                }
+
                 scenario.branches[1] = new Branch
                 {
                     text = $"パッ!{animalName}が2匹出現した。\n試験官：「おや?」\n私：「すみません、魔力が強すぎて・・・」\n試験官：「構いません。では【もうひとつ】消してください」\n私：冷や汗をかく。\n",
                     hasWord = true,
-                    epilogue = "あなたは魔法と手品の両方をマスターし、誰もが驚くエンターテイナーになりました。\n(4つ目の文字を手に入れた...「と」)",
-                    epilogue2 = $"とおる試験官は、あなたの才能を高く評価してくれました。\n「魔法と手品、両方を使えるのは珍しい。君は特別な才能を持っている」\nあなたは、消えた{animalName}の跡に浮かんだ文字「と」を、魔法の証として大切にしました。\n「これからも、もうひとつの可能性を探し続けてほしい」と、とおる試験官は言いました。"
+                    epilogue = hasCollectedTo ? "あなたは魔法と手品の両方をマスターし、誰もが驚くエンターテイナーになりました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('と', 4, loopCount, false) : "あなたは魔法と手品の両方をマスターし、誰もが驚くエンターテイナーになりました。",
+                    epilogue2 = hasCollectedTo ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('と', 4, loopCount, false, animalName) : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -404,13 +512,22 @@ namespace NovelGame
             if (loopCount >= 3)
             {
                 // 3周目以降の展開（新しい展開）
+                // 「つ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTsu = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTsu = MouhitotsuWordManager.IsLetterCollected('つ', collectedLetters);
+                }
+
                 var puzzleImage = PuzzleImageManager.GetPuzzleImage();
                 scenario.branches[1] = new Branch
                 {
                     text = $"恋人：「一緒にはめよう」\nあなたとつばさは、最後のピースを一緒にはめました。\nカチッ。完成した絵は{puzzleImage.ImageDescription}。\n{puzzleImage.Reaction}\nつばさ：「実は、このパズルには『もうひとつ』の秘密があるの。一緒に完成させた人だけが、その秘密を知ることができる」\n\nパズルの表面に、小さな文字「つ」が浮かび上がってきました。",
                     hasWord = true,
-                    epilogue = "つばさと一緒にパズルを完成させることで、隠されていた秘密を発見しました。\nつばさは、あなたと一緒にこの秘密を発見できたことを喜んでいました。\n(文字が復活し始めている...「つ」という文字を取り戻した)",
-                    epilogue2 = "パズルの秘密を発見した後、つばさは「一緒に完成させて良かった。一人では気づけなかったかもしれない」と言いました。\n「愛情の力で、この秘密に気づけたんだね」\nパズルに刻まれた文字「つ」は、愛情の証として、あなたとつばさの心に刻まれました。\n「これからも、ずっと一緒にパズルを完成させようね」\nあなたは、つばさの優しさに包まれながら、幸せを噛みしめました。"
+                    epilogue = hasCollectedTsu ? "つばさと一緒にパズルを完成させることで、隠されていた秘密を発見しました。\nつばさは、あなたと一緒にこの秘密を発見できたことを喜んでいました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('つ', 5, loopCount, true) : "つばさと一緒にパズルを完成させることで、隠されていた秘密を発見しました。\nつばさは、あなたと一緒にこの秘密を発見できたことを喜んでいました。",
+                    epilogue2 = hasCollectedTsu ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('つ', 5, loopCount, true, "パズル") : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -423,13 +540,22 @@ namespace NovelGame
             else if (loopCount >= 2)
             {
                 // 2周目以降の展開（true/falseを逆転）
+                // 「つ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTsu = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTsu = MouhitotsuWordManager.IsLetterCollected('つ', collectedLetters);
+                }
+
                 var puzzleImage = PuzzleImageManager.GetPuzzleImage();
                 scenario.branches[1] = new Branch
                 {
                     text = $"カチッ。完成した絵は{puzzleImage.ImageDescription}。\n{puzzleImage.Reaction}\nその時、パズルの裏側に何か文字が書かれているのに気づいた。\n「実は、このパズルには『もうひとつ』の秘密がある。完成させたあなたに、特別なメッセージを...」\n\nパズルの裏側に、小さな文字が浮かび上がる。",
                     hasWord = true,
-                    epilogue = "パズルを完成させたことで、裏側に隠された秘密のメッセージを発見しました。\nつばさは、あなたがパズルを完成させることを信じていたのです。\n(最後の文字を手に入れた...「つ」)",
-                    epilogue2 = "パズルの裏側にあった文字「つ」を発見した後、つばさは「よく気づいてくれたね」と微笑みました。\n「実は、このパズルには特別な仕掛けがあったの。完成させた人だけが、その秘密を知ることができる」\nあなたは、つばさの愛情と工夫に感動しました。\n「これからも、ずっと一緒にパズルを完成させようね」\nあなたは、つばさの優しさに包まれながら、幸せを噛みしめました。"
+                    epilogue = hasCollectedTsu ? "パズルを完成させたことで、裏側に隠された秘密のメッセージを発見しました。\nつばさは、あなたがパズルを完成させることを信じていたのです。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('つ', 5, loopCount, false) : "パズルを完成させたことで、裏側に隠された秘密のメッセージを発見しました。\nつばさは、あなたがパズルを完成させることを信じていたのです。",
+                    epilogue2 = hasCollectedTsu ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('つ', 5, loopCount, false, "パズルの裏側") : string.Empty
                 };
                 scenario.branches[2] = new Branch
                 {
@@ -442,6 +568,15 @@ namespace NovelGame
             else
             {
                 // 1周目の展開（元の内容）
+                // 「つ」を取得済みかどうかをチェック
+                GameManager gameManager = GameManager.Instance;
+                bool hasCollectedTsu = false;
+                if (gameManager != null)
+                {
+                    var collectedLetters = gameManager.GetCollectedLetters();
+                    hasCollectedTsu = MouhitotsuWordManager.IsLetterCollected('つ', collectedLetters);
+                }
+
                 var puzzleImage = PuzzleImageManager.GetPuzzleImage();
                 scenario.branches[1] = new Branch
                 {
@@ -454,8 +589,8 @@ namespace NovelGame
                 {
                     text = "床を這いつくばって探す。見つからない。\n恋人：「探し物?」\n私：「最後のピースが・・・」\n恋人：ポケットから取り出して「実は【もうひとつ】買っておいたんだ。君が完成させた時のために」\n箱には同じパズルが入っていた。\n",
                     hasWord = true,
-                    epilogue = "恋人の優しさに感動したあなたは、二人で新しいパズルを完成させながら幸せな時間を過ごしました。\n(最後の文字を手に入れた...「つ」)",
-                    epilogue2 = "新しいパズルを完成させた後、つばさは「君のために、いつも準備してるんだよ」と微笑みました。\n箱の蓋の内側にあった文字「つ」は、つばさの愛情の証でした。\n「これからも、ずっと一緒にパズルを完成させようね」\nあなたは、つばさの優しさに包まれながら、幸せを噛みしめました。"
+                    epilogue = hasCollectedTsu ? "恋人の優しさに感動したあなたは、二人で新しいパズルを完成させながら幸せな時間を過ごしました。\n" + MouhitotsuWordManager.GetLetterAcquiredEpilogue('つ', 5, loopCount, false) : "恋人の優しさに感動したあなたは、二人で新しいパズルを完成させながら幸せな時間を過ごしました。",
+                    epilogue2 = hasCollectedTsu ? MouhitotsuWordManager.GetLetterAcquiredEpilogue2('つ', 5, loopCount, false, "箱の蓋の内側") : string.Empty
                 };
             }
             scenario.SerializeBranches();
