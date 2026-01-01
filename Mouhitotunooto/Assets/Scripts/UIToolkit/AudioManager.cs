@@ -13,6 +13,8 @@ namespace NovelGame
 
         [Header("Audio Clips")]
         private AudioClip[] wordGetSounds;
+        private AudioClip wordGetIncreaseSound; // ワードゲット数が増える時の効果音
+        private AudioClip wordGetDecreaseSound; // ワードゲット数が減る時の効果音
         private AudioClip creditsBGM;
         private AudioClip selectionBGM;
         private AudioClip typewriterSound;
@@ -125,6 +127,8 @@ namespace NovelGame
 
         public void SetAudioClips(
             AudioClip[] wordGetSounds, 
+            AudioClip wordGetIncreaseSound,
+            AudioClip wordGetDecreaseSound,
             AudioClip creditsBGM, 
             AudioClip selectionBGM, 
             AudioClip typewriterSound, 
@@ -136,6 +140,8 @@ namespace NovelGame
             AudioClip[] ambientSounds)
         {
             this.wordGetSounds = wordGetSounds;
+            this.wordGetIncreaseSound = wordGetIncreaseSound;
+            this.wordGetDecreaseSound = wordGetDecreaseSound;
             this.creditsBGM = creditsBGM;
             this.selectionBGM = selectionBGM;
             this.typewriterSound = typewriterSound;
@@ -158,6 +164,29 @@ namespace NovelGame
                     PlaySoundWithPitchVariation(selectedSound);
                     FadeOutAmbientSound();
                 }
+            }
+        }
+
+        /// <summary>
+        /// ワードゲット数が増える時の効果音を再生
+        /// </summary>
+        public void PlayWordGetIncreaseSound()
+        {
+            if (wordGetIncreaseSound != null && sfxAudioSource != null)
+            {
+                PlaySoundWithPitchVariation(wordGetIncreaseSound);
+                FadeOutAmbientSound();
+            }
+        }
+
+        /// <summary>
+        /// ワードゲット数が減る時の効果音を再生
+        /// </summary>
+        public void PlayWordGetDecreaseSound()
+        {
+            if (wordGetDecreaseSound != null && sfxAudioSource != null)
+            {
+                PlaySoundWithPitchVariation(wordGetDecreaseSound);
             }
         }
 

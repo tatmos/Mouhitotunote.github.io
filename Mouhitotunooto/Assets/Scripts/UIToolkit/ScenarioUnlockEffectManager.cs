@@ -147,11 +147,12 @@ namespace NovelGame
                 particles.Add(p);
             }
 
-            // 真実の扉出現音を再生
+            // 星のパーティクル音を再生
             if (audioManager != null)
             {
                 audioManager.PlaySparkleSound();
             }
+
 
             // アニメーション：集まってから飛んでいく
             float duration = 1.0f;
@@ -191,6 +192,8 @@ namespace NovelGame
             flash.style.opacity = 1f;
             effectContainer.Add(flash);
 
+            
+            // 真実の扉出現音を再生（パーティクルアニメーション開始時）
             if (audioManager != null)
             {
                 audioManager.PlayTruthDoorUnlockSound();

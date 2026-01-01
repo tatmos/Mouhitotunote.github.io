@@ -281,10 +281,10 @@ namespace NovelGame
             if (root == null || scoreLabel == null) yield break;
             if (gameManager == null) yield break;
             
-            // 逆再生の効果音を再生
+            // ワードゲット数が減る時の効果音を再生
             if (audioManager != null)
             {
-                audioManager.PlayWordGetSoundReversed();
+                audioManager.PlayWordGetDecreaseSound();
             }
             
             // 文字が奪われていく演出
