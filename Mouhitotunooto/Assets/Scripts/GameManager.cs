@@ -211,13 +211,11 @@ namespace NovelGame
                 }
 
                 // 文字を収集（シナリオ1-5のみ）
-                if (scenarioId <= 5)
+                if (MouhitotsuWordManager.IsValidScenarioId(scenarioId))
                 {
-                    char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
-                    int letterIndex = scenarioId - 1;
-                    if (letterIndex >= 0 && letterIndex < letters.Length)
+                    char collectedLetter = MouhitotsuWordManager.GetLetterByScenarioId(scenarioId);
+                    if (collectedLetter != '\0')
                     {
-                        char collectedLetter = letters[letterIndex];
                         if (!collectedLetters.Contains(collectedLetter))
                         {
                             Debug.Log($"[GameManager] 文字を取得しました: {collectedLetter}");
@@ -255,11 +253,13 @@ namespace NovelGame
             // 2周目以降（isThirdLoop == true）の場合は、シナリオIDに対応する文字を復活させる
             if (isThirdLoop && hasWord)
             {
-                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
-                int letterIndex = scenarioId - 1;
-                if (letterIndex >= 0 && letterIndex < letters.Length)
+                if (MouhitotsuWordManager.IsValidScenarioId(scenarioId))
                 {
-                    RestoreLetter(letters[letterIndex]);
+                    char letter = MouhitotsuWordManager.GetLetterByScenarioId(scenarioId);
+                    if (letter != '\0')
+                    {
+                        RestoreLetter(letter);
+                    }
                 }
                 
                 // 2周目でクリアした回数をカウント（3周目以降の判定に使用）
@@ -683,8 +683,11 @@ namespace NovelGame
                     {
                         completedScenarios.Add(i);
                         score++;
-                        char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
-                        RestoreLetter(letters[i-1]);
+                        char letter = MouhitotsuWordManager.GetLetterByScenarioId(i);
+                        if (letter != '\0')
+                        {
+                            RestoreLetter(letter);
+                        }
                     }
                     break;
             }
@@ -697,7 +700,6 @@ namespace NovelGame
             if (isThirdLoop) return false;
             if (!IsDarkMode()) return false;
             
-            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
             int count = 0;
             for (int i = 1; i <= 5; i++)
             {
@@ -745,7 +747,7 @@ namespace NovelGame
         public HashSet<char> GetLostLetters()
         {
             HashSet<char> lostLetters = new HashSet<char>();
-            char[] allLetters = { 'も', 'う', 'ひ', 'と', 'つ' };
+            char[] allLetters = MouhitotsuWordManager.GetAllLetters();
 
             // 3周目は最初から全ての文字が失われている（ただし復活した文字は除く）
             if (isThirdLoop)
@@ -767,17 +769,25 @@ namespace NovelGame
             {
                 if (completedScenariosInDarkMode.Contains(i))
                 {
-                    lostLetters.Add(allLetters[i - 1]);
+                    char letter = MouhitotsuWordManager.GetLetterByScenarioId(i);
+                    if (letter != '\0')
+                    {
+                        lostLetters.Add(letter);
+                    }
                 }
             }
 
             // シナリオ6のプレイ中（または終了直後）は、追加の消失（累積的なものなど）を抑制する場合があるが、
             // 既に完了したシナリオの文字は消えたままにする。
             var currentScenario = GetCurrentScenario();
-            if (currentScenario != null && currentScenario.id >= 1 && currentScenario.id <= 5)
+            if (currentScenario != null && MouhitotsuWordManager.IsValidScenarioId(currentScenario.id))
             {
                 // 現在プレイ中のシナリオに対応する文字も「消失」として扱う（シナリオ1〜5のみ）
-                lostLetters.Add(allLetters[currentScenario.id - 1]);
+                char letter = MouhitotsuWordManager.GetLetterByScenarioId(currentScenario.id);
+                if (letter != '\0')
+                {
+                    lostLetters.Add(letter);
+                }
             }
             
             // スコアがシナリオ数+1ごとに1文字ずつ累積的に失われる演出

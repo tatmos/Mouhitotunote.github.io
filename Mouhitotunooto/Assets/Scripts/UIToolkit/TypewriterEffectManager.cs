@@ -167,7 +167,7 @@ namespace NovelGame
                 
                 // ダークモード用に「も」「う」「ひ」「と」「つ」が「※」に置換されたパターンを生成
                 List<string> dynamicPatterns = new List<string>();
-                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                char[] letters = MouhitotsuWordManager.GetAllLetters();
                 
                 foreach (var p in patterns)
                 {
@@ -494,9 +494,9 @@ namespace NovelGame
                 string line = lines[lineIndex];
                 
                 // ダークモード用に「も」「う」「ひ」「と」「つ」が「※」に置換されたパターンを考慮
-                string[] patterns = { "【もうひとつ】", "もうひとつ" };
+                string[] patterns = { MouhitotsuWordManager.GetFormattedWord(), MouhitotsuWordManager.GetWord() };
                 List<string> dynamicPatterns = new List<string>();
-                char[] letters = { 'も', 'う', 'ひ', 'と', 'つ' };
+                char[] letters = MouhitotsuWordManager.GetAllLetters();
                 foreach (var p in patterns)
                 {
                     dynamicPatterns.Add(p);

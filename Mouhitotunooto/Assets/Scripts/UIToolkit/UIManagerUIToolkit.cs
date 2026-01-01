@@ -3760,8 +3760,13 @@ namespace NovelGame
             
             // 文字が奪われていく演出
             // 「もうひとつ」の各文字を順番に消していく
-            string[] characters = { "も", "う", "ひ", "と", "つ" };
-            string baseText = "【もうひとつ】ワードゲット数";
+            char[] allLetters = MouhitotsuWordManager.GetAllLetters();
+            string[] characters = new string[allLetters.Length];
+            for (int i = 0; i < allLetters.Length; i++)
+            {
+                characters[i] = allLetters[i].ToString();
+            }
+            string baseText = $"{MouhitotsuWordManager.GetFormattedWord()}ワードゲット数";
             
             // 失われた文字を取得
             var lostLetters = gameManager.GetLostLetters();
