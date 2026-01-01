@@ -386,7 +386,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.7.1 (2026-01-02)";
+                string text = "v1.7.3 (2026-01-02)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -2243,6 +2243,12 @@ namespace NovelGame
                 button.style.backgroundImage = new StyleBackground(image.texture);
                 button.style.backgroundColor = Color.clear; // 背景色をクリア
             }
+            
+            // ボーダーを削除（背景画像を使用する場合はボーダーは不要）
+            button.style.borderTopWidth = 0;
+            button.style.borderRightWidth = 0;
+            button.style.borderBottomWidth = 0;
+            button.style.borderLeftWidth = 0;
             
             // ボタン内のテキストの色を設定
             if (button.text != null)
