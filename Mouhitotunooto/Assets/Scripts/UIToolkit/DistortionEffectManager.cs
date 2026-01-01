@@ -29,7 +29,16 @@ namespace NovelGame
         private Texture2D distortionTexture2D; // 再利用するTexture2D
         
         // 背景テクスチャのキャッシュ（VisualElement → Texture2D）
-        private Dictionary<VisualElement, Texture2D> backgroundTextureCache = new Dictionary<VisualElement, Texture2D>();
+        // UIManagerUIToolkitから共有されるキャッシュへの参照
+        private Dictionary<VisualElement, Texture2D> backgroundTextureCache = null;
+
+        /// <summary>
+        /// 背景テクスチャキャッシュを設定（UIManagerUIToolkitから呼び出される）
+        /// </summary>
+        public void SetBackgroundTextureCache(Dictionary<VisualElement, Texture2D> cache)
+        {
+            backgroundTextureCache = cache;
+        }
 
         private void OnDestroy()
         {
@@ -83,20 +92,24 @@ namespace NovelGame
             if (sourceTexture == null)
             {
                 // テクスチャが見つからない場合は、キャッシュから取得を試みる
-                if (backgroundTextureCache.TryGetValue(backgroundImage, out sourceTexture) && sourceTexture != null)
+                if (backgroundTextureCache != null && backgroundTextureCache.TryGetValue(backgroundImage, out sourceTexture) && sourceTexture != null)
                 {
                     // キャッシュから取得成功
                 }
                 else
                 {
-                    Debug.LogWarning("[DistortionEffectManager] Source texture not found");
+                    // テクスチャが見つからない場合は、歪み効果を適用せずに終了
+                    // 警告は出さない（背景画像が設定されていない場合など、正常なケースもあるため）
                     return;
                 }
             }
             else
             {
-                // キャッシュに保存
-                backgroundTextureCache[backgroundImage] = sourceTexture;
+                // キャッシュに保存（キャッシュが設定されている場合のみ）
+                if (backgroundTextureCache != null)
+                {
+                    backgroundTextureCache[backgroundImage] = sourceTexture;
+                }
             }
 
             currentDistortionSourceTexture = sourceTexture;
@@ -181,7 +194,7 @@ namespace NovelGame
             }
 
             // 元のテクスチャに戻す
-            if (backgroundImage != null && backgroundTextureCache.TryGetValue(backgroundImage, out Texture2D originalTexture))
+            if (backgroundImage != null && backgroundTextureCache != null && backgroundTextureCache.TryGetValue(backgroundImage, out Texture2D originalTexture))
             {
                 if (originalTexture != null)
                 {

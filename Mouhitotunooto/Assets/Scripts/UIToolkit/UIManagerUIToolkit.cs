@@ -215,6 +215,8 @@ namespace NovelGame
             {
                 distortionEffectManager.SetDistortionMaterial(distortionMaterial);
             }
+            // 背景テクスチャキャッシュを共有
+            distortionEffectManager.SetBackgroundTextureCache(backgroundTextureCache);
             
             wordGetEffectManager = gameObject.AddComponent<WordGetEffectManager>();
             wordGetEffectManager.Initialize(gameManager, audioManager, sparkleIcon);

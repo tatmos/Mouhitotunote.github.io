@@ -150,7 +150,7 @@ namespace NovelGame
             // 真実の扉出現音を再生
             if (audioManager != null)
             {
-                audioManager.PlayTruthDoorUnlockSound();
+                audioManager.PlaySparkleSound();
             }
 
             // アニメーション：集まってから飛んでいく
@@ -193,7 +193,7 @@ namespace NovelGame
 
             if (audioManager != null)
             {
-                audioManager.PlaySparkleSound();
+                audioManager.PlayTruthDoorUnlockSound();
             }
 
             float flashDuration = 0.5f;

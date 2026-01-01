@@ -57,7 +57,8 @@ namespace NovelGame
 
         private void Start()
         {
-            // デバッグモードで開始Divisionが指定されている場合、そのDivisionにジャンプ
+            // ゲーム開始時は必ずPrologueから開始する（clearedDivisionsをクリア）
+            // ただし、デバッグモードで開始Divisionが指定されている場合は、そのDivisionにジャンプ
             if (debugMode && debugStartDivision != DebugStartDivision.None)
             {
                 string divisionId = debugStartDivision.ToString();
@@ -67,6 +68,13 @@ namespace NovelGame
                 }
                 JumpToDivision(divisionId);
                 Debug.Log($"[DivisionManager] デバッグモード: Division {divisionId} から開始します。");
+            }
+            else
+            {
+                // デバッグモードでない場合、またはデバッグモードでNoneが指定されている場合は、Prologueから開始
+                // clearedDivisionsをクリアして、初期状態にする
+                clearedDivisions.Clear();
+                Debug.Log("[DivisionManager] ゲームを初期状態（Prologue）にリセットしました。");
             }
         }
 
