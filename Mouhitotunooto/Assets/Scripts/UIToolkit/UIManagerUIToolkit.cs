@@ -990,14 +990,14 @@ namespace NovelGame
             }
 
             // シナリオ6解放演出のチェック
-            // 注意：CreateScenarioButtons() の前に呼ぶと、ボタンが生成されないため、
-            // 内部フラグをチェックして演出が必要ならコルーチンを開始する。
-            // 実際には CheckAndConsumeScenario6Unlocked は初回のみ true を返す。
-            if (!gameManager.IsScenario6Unlocked() && gameManager.CanAccessScenario(6))
+            // 注意：CreateScenarioButtons() の後に呼ぶ必要がある（ボタンが生成されてから演出を開始するため）
+            // CheckAndConsumeScenario6Unlocked は初回のみ true を返す（内部フラグを消費する）
+            if (gameManager.CanAccessScenario(6))
             {
                 // まだ演出していないがアクセス可能な場合
                 if (gameManager.CheckAndConsumeScenario6Unlocked())
                 {
+                    Debug.Log("[UIManagerUIToolkit] 真実の扉出現演出を開始します。");
                     // 真実の扉が開いたタイミングをChapterとして記録
                     if (ChapterManager.Instance != null)
                     {
@@ -1021,6 +1021,14 @@ namespace NovelGame
                             (text, collected, lost) => TextFormatter.FormatText(text, collected, lost, true)
                         ));
                     }
+                    else
+                    {
+                        Debug.LogError("[UIManagerUIToolkit] scenarioUnlockEffectManager が null です。");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"[UIManagerUIToolkit] 真実の扉出現演出をスキップします。IsScenario6Unlocked: {gameManager.IsScenario6Unlocked()}, CanAccessScenario(6): {gameManager.CanAccessScenario(6)}");
                 }
             }
         }
@@ -2026,18 +2034,13 @@ namespace NovelGame
             string text = MouhitotsuWordManager.GetFormattedWord() + "ワードゲット!";
             if (gameManager == null) return text;
 
-            // 3周目の場合は「もうひとつ」を「※※※※※」に置換
-            if (gameManager.IsThirdLoop())
-            {
-                text = "【※※※※※】ワードゲット!";
-            }
-            else
-            {
-                // ダークモード：失われた文字を置換、取得した文字に色を付ける
-                var lostLetters = gameManager.GetLostLetters();
-                var collectedLetters = gameManager.GetCollectedLetters();
-                text = TextFormatter.FormatMouhitotsuWord(text, collectedLetters, lostLetters, true);
-            }
+            // 失われた文字と取得した文字を取得
+            var lostLetters = gameManager.GetLostLetters();
+            var collectedLetters = gameManager.GetCollectedLetters();
+            
+            // 3周目でも復活した文字を表示するため、TextFormatterを使用
+            text = TextFormatter.FormatMouhitotsuWord(text, collectedLetters, lostLetters, true);
+            
             return text;
         }
 
@@ -2086,17 +2089,9 @@ namespace NovelGame
                 var lostLetters = gameManager.GetLostLetters();
                 string scoreText = MouhitotsuWordManager.GetFormattedWord() + "ワードゲット数";
                 
-                // 3周目の場合は「もうひとつ」を「※※※※※」に置換
-                if (gameManager.IsThirdLoop())
-                {
-                    scoreText = "【※※※※※】ワードゲット数";
-                }
-                else
-                {
-                    // 失われた文字を※に置き換え、取得した文字に色を付ける
-                    var collectedLetters = gameManager.GetCollectedLetters();
-                    scoreText = TextFormatter.FormatMouhitotsuWord(scoreText, collectedLetters, lostLetters, true);
-                }
+                // 3周目でも復活した文字を表示するため、TextFormatterを使用
+                var collectedLetters = gameManager.GetCollectedLetters();
+                scoreText = TextFormatter.FormatMouhitotsuWord(scoreText, collectedLetters, lostLetters, true);
                 
                 scoreLabel.text = $"{scoreText}: {currentScore} / {totalScenarios}";
                 
