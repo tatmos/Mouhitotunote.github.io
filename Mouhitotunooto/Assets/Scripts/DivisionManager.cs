@@ -25,9 +25,11 @@ namespace NovelGame
         {
             None,
             Prologue,
+            PreA,
             A,
             B,
             C,
+            PreD,
             D,
             E
         }
@@ -37,6 +39,9 @@ namespace NovelGame
         
         // 全Divisionを表示するデバッグフラグ
         [SerializeField] private bool debugShowAllDivisions = false;
+        
+        // 現在アクティブなDivision（JumpToDivisionで設定された場合）
+        private string currentActiveDivision = null;
 
         [Header("Current Status")]
         [Tooltip("現在実行中のDivision（読み取り専用）")]
@@ -74,6 +79,7 @@ namespace NovelGame
                 // デバッグモードでない場合、またはデバッグモードでNoneが指定されている場合は、Prologueから開始
                 // clearedDivisionsをクリアして、初期状態にする
                 clearedDivisions.Clear();
+                currentActiveDivision = null;
                 Debug.Log("[DivisionManager] ゲームを初期状態（Prologue）にリセットしました。");
             }
         }
@@ -116,6 +122,12 @@ namespace NovelGame
                 return "Unknown";
             }
 
+            // JumpToDivisionで設定されたDivisionがある場合は、それを優先的に返す
+            if (!string.IsNullOrEmpty(currentActiveDivision))
+            {
+                return currentActiveDivision;
+            }
+
             // Division Eがクリアされている
             if (IsDivisionCleared("E"))
             {
@@ -126,6 +138,12 @@ namespace NovelGame
             if (IsDivisionCleared("D"))
             {
                 return "D";
+            }
+
+            // PreD（3周目で真実の扉が開いた）がクリアされている
+            if (IsDivisionCleared("PreD"))
+            {
+                return "PreD";
             }
 
             // Division Cがクリアされている
@@ -146,7 +164,13 @@ namespace NovelGame
                 return "A";
             }
 
-            // まだDivision Aに到達していない
+            // PreA（真実の扉が開いた）がクリアされている
+            if (IsDivisionCleared("PreA"))
+            {
+                return "PreA";
+            }
+
+            // まだDivision PreAに到達していない
             return "Prologue";
         }
 
@@ -231,6 +255,9 @@ namespace NovelGame
                 return;
             }
 
+            // 現在アクティブなDivisionを設定
+            currentActiveDivision = divisionId;
+
             gameManager.ResetGame();
             var scenarios = gameManager.GetScenarios();
             int totalScenarios = scenarios.Count;
@@ -240,6 +267,17 @@ namespace NovelGame
                 case "Prologue":
                     Debug.Log("[DivisionManager] プロローグを開始します。");
                     gameManager.SetGameStartTime(DateTime.Now);
+                    break;
+                case "PreA":
+                    // 真実の扉が開いた状態
+                    LogDivision("PreA", "真実の扉が開いた（シナリオ1-5をクリア）");
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        gameManager.ForceCompleteScenario(i, 1, false);
+                    }
+                    // 演出を表示するため、isScenario6Unlockedをfalseに設定
+                    // ShowSelectionScreenでCheckAndConsumeScenario6Unlocked()がtrueを返すようにする
+                    gameManager.SetIsScenario6Unlocked(false);
                     break;
                 case "A":
                     // 通常モード、未クリア状態
@@ -265,6 +303,18 @@ namespace NovelGame
                         gameManager.ForceCompleteScenario(i, 1, true);
                     }
                     gameManager.ForceCompleteScenario(6, 1, false);
+                    break;
+                case "PreD":
+                    // 3周目で真実の扉が開いた状態
+                    LogDivision("PreD", "真実の扉が開いた（3周目でシナリオ1-5をクリア）");
+                    gameManager.TriggerThirdLoop();
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        gameManager.ForceCompleteScenario(i, 1, false);
+                    }
+                    // 演出を表示するため、isScenario6Unlockedをfalseに設定
+                    // ShowSelectionScreenでCheckAndConsumeScenario6Unlocked()がtrueを返すようにする
+                    gameManager.SetIsScenario6Unlocked(false);
                     break;
                 case "D":
                     // 3周目、開始状態
@@ -299,19 +349,29 @@ namespace NovelGame
         {
             float percentage = 0;
 
-            // 各ディビジョンの基本進捗 (計 5段階想定)
-            // A: 20%, B: 40%, C: 60%, D: 80%, E: 100%
+            // 各ディビジョンの基本進捗 (計 6段階想定)
+            // PreA: 10%, A: 20%, B: 40%, C: 60%, D: 80%, E: 100%
             
-            // 1. Division A 以前 (通常クリア)
-            if (!IsDivisionCleared("A"))
+            // 1. Division PreA 以前 (通常クリア)
+            if (!IsDivisionCleared("PreA"))
             {
-                // シナリオ1-6のクリア状況 (最大6つ)
+                // シナリオ1-5のクリア状況 (最大5つ)
                 int completed = 0;
-                for (int i = 1; i <= 6; i++)
+                for (int i = 1; i <= 5; i++)
                 {
                     if (completedScenarios.Contains(i)) completed++;
                 }
-                percentage = (completed / 6f) * 20f;
+                percentage = (completed / 5f) * 10f; // PreA到達まで10%
+            }
+            else if (!IsDivisionCleared("A"))
+            {
+                // PreA到達済み、Division A 以前
+                percentage = 10f; // PreA到達で10%
+                // シナリオ6のクリア状況
+                if (completedScenarios.Contains(6))
+                {
+                    percentage = 20f; // Division A到達で20%
+                }
             }
             else if (!IsDivisionCleared("B"))
             {
@@ -333,24 +393,33 @@ namespace NovelGame
                     percentage += ((score - 6) * 20f) / 6.0f;
                 }
             }
-            else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
+            else if (!IsDivisionCleared("PreD"))
             {
                 // 3. Division C (3周目、文字の復元)
                 percentage = 60f;
                 
                 // 復元した文字数 (最大5つ)
                 float subProgress = Mathf.Clamp01(restoredLetters.Count / 5f);
-                // 3周目のシナリオ6クリアで一気に100%に近づくため、ここでは80%まで
+                // PreD到達まで80%
                 percentage += subProgress * 20f;
+            }
+            else if (!IsDivisionCleared("D") && !IsDivisionCleared("E"))
+            {
+                // 4. PreD到達済み、Division D/E 以前
+                percentage = 80f;
             }
             else
             {
                 // 5. 最終段階
-                // 4. Division D/E クリア
+                // Division D/E クリア
                 percentage = 80f;
                 
                 // Dのみクリア（不正なしなら）
                 if (IsDivisionCleared("D") && !IsDivisionCleared("E"))
+                {
+                    percentage = 100f;
+                }
+                else if (IsDivisionCleared("E"))
                 {
                     percentage = 100f;
                 }
@@ -365,6 +434,7 @@ namespace NovelGame
         public void ResetDivisions()
         {
             clearedDivisions.Clear();
+            currentActiveDivision = null;
         }
     }
 }

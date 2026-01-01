@@ -382,7 +382,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.7.0 (2026-1-1)";
+                string text = "v1.7.0 (2026-01-02)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -1177,6 +1177,19 @@ namespace NovelGame
                 // まだ演出していないがアクセス可能な場合
                 if (gameManager.CheckAndConsumeScenario6Unlocked())
                 {
+                    // 真実の扉が開いたタイミングをDivisionとして記録
+                    if (DivisionManager.Instance != null)
+                    {
+                        // 3周目の場合はPreD、それ以外はPreA
+                        if (gameManager.IsThirdLoop())
+                        {
+                            DivisionManager.Instance.LogDivision("PreD", "真実の扉が開いた（3周目でシナリオ1-5をクリア）");
+                        }
+                        else
+                        {
+                            DivisionManager.Instance.LogDivision("PreA", "真実の扉が開いた（シナリオ1-5をクリア）");
+                        }
+                    }
                     StartCoroutine(ShowScenario6UnlockAnimation(root));
                 }
             }

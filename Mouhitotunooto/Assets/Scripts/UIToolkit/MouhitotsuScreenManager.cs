@@ -49,52 +49,141 @@ namespace NovelGame
             // 設定UIを追加（物語の解明度の下）
             AddSettingsUI(root);
 
-            var buttonContainer = new VisualElement();
-            buttonContainer.style.flexDirection = FlexDirection.Column;
-            buttonContainer.style.alignItems = Align.Center;
-            buttonContainer.style.width = Length.Percent(100);
+            // 時系列レイアウト用のコンテナ
+            var timelineContainer = new VisualElement();
+            timelineContainer.style.flexDirection = FlexDirection.Row;
+            timelineContainer.style.alignItems = Align.FlexStart;
+            timelineContainer.style.justifyContent = Justify.FlexStart;
+            timelineContainer.style.width = Length.Percent(100);
+            timelineContainer.style.paddingTop = 20;
+            timelineContainer.style.paddingBottom = 20;
+            timelineContainer.style.paddingLeft = 40;
+            timelineContainer.style.paddingRight = 40;
+            timelineContainer.style.flexWrap = Wrap.NoWrap;
 
-            string[] divisions = { "Prologue", "A", "B", "C", "D", "E" };
-            string[] divisionNames = { 
-                "プロローグ",
-                "Division A: 通常の物語", 
-                "Division B: ダークモードへの予兆", 
-                "Division C: 3周目への門", 
-                "Division D: 救済のエンド", 
-                "Division E: 終焉のエンド" 
-            };
-
-            for (int i = 0; i < divisions.Length; i++)
+            // 現在のDivisionを取得
+            string currentDivision = "Prologue";
+            if (DivisionManager.Instance != null)
             {
-                string id = divisions[i];
-                string name = divisionNames[i];
-
-                if (id == "Prologue" || gameManager.IsDivisionCleared(id))
-                {
-                    Button btn = new Button();
-                    btn.text = name;
-                    btn.style.fontSize = 20;
-                    btn.style.paddingLeft = 30;
-                    btn.style.paddingRight = 30;
-                    btn.style.paddingTop = 15;
-                    btn.style.paddingBottom = 15;
-                    btn.style.marginBottom = 15;
-                    btn.style.minWidth = 400;
-                    btn.style.backgroundColor = new Color(0.15f, 0.15f, 0.2f);
-                    btn.style.color = Color.white;
-                    btn.style.borderTopLeftRadius = 5;
-                    btn.style.borderTopRightRadius = 5;
-                    btn.style.borderBottomLeftRadius = 5;
-                    btn.style.borderBottomRightRadius = 5;
-
-                    btn.clicked += () => onDivisionJump?.Invoke(id);
-                    btn.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
-
-                    buttonContainer.Add(btn);
-                }
+                currentDivision = DivisionManager.Instance.GetCurrentDivision(gameManager);
             }
 
-            container.Add(buttonContainer);
+            // Divisionの定義（時系列順）
+            // Prologue → PreA → A/B（分岐） → C → PreD → D/E（分岐）
+            
+            // Prologue
+            var prologueBtn = CreateDivisionButton("Prologue", "プロローグ", "物語の始まり", currentDivision);
+            var prologueContainer = new VisualElement();
+            prologueContainer.style.flexDirection = FlexDirection.Column;
+            prologueContainer.style.alignItems = Align.Center;
+            prologueContainer.style.minWidth = 150;
+            prologueContainer.Add(prologueBtn);
+            timelineContainer.Add(prologueContainer);
+            
+            // PreA
+            if (gameManager.IsDivisionCleared("PreA"))
+            {
+                var line = CreateConnectionLine();
+                timelineContainer.Add(line);
+                
+                var preABtn = CreateDivisionButton("PreA", "PreA", "真実の扉が開いた", currentDivision);
+                var preAContainer = new VisualElement();
+                preAContainer.style.flexDirection = FlexDirection.Column;
+                preAContainer.style.alignItems = Align.Center;
+                preAContainer.style.minWidth = 150;
+                preAContainer.Add(preABtn);
+                timelineContainer.Add(preAContainer);
+            }
+
+            // A/B（分岐）
+            bool hasA = gameManager.IsDivisionCleared("A");
+            bool hasB = gameManager.IsDivisionCleared("B");
+            if (hasA || hasB)
+            {
+                var line = CreateConnectionLine();
+                timelineContainer.Add(line);
+                
+                var abContainer = new VisualElement();
+                abContainer.style.flexDirection = FlexDirection.Column;
+                abContainer.style.alignItems = Align.Center;
+                abContainer.style.minWidth = 150;
+                
+                if (hasA)
+                {
+                    var btnA = CreateDivisionButton("A", "Division A", "通常の物語", currentDivision);
+                    btnA.style.marginBottom = 10;
+                    abContainer.Add(btnA);
+                }
+                
+                if (hasB)
+                {
+                    var btnB = CreateDivisionButton("B", "Division B", "ダークモードへの予兆", currentDivision);
+                    abContainer.Add(btnB);
+                }
+                
+                timelineContainer.Add(abContainer);
+            }
+
+            // C
+            if (gameManager.IsDivisionCleared("C"))
+            {
+                var line = CreateConnectionLine();
+                timelineContainer.Add(line);
+                
+                var cBtn = CreateDivisionButton("C", "Division C", "3周目への門", currentDivision);
+                var cContainer = new VisualElement();
+                cContainer.style.flexDirection = FlexDirection.Column;
+                cContainer.style.alignItems = Align.Center;
+                cContainer.style.minWidth = 150;
+                cContainer.Add(cBtn);
+                timelineContainer.Add(cContainer);
+            }
+
+            // PreD
+            if (gameManager.IsDivisionCleared("PreD"))
+            {
+                var line = CreateConnectionLine();
+                timelineContainer.Add(line);
+                
+                var preDBtn = CreateDivisionButton("PreD", "PreD", "真実の扉が開いた（3周目）", currentDivision);
+                var preDContainer = new VisualElement();
+                preDContainer.style.flexDirection = FlexDirection.Column;
+                preDContainer.style.alignItems = Align.Center;
+                preDContainer.style.minWidth = 150;
+                preDContainer.Add(preDBtn);
+                timelineContainer.Add(preDContainer);
+            }
+
+            // D/E（分岐）
+            bool hasD = gameManager.IsDivisionCleared("D");
+            bool hasE = gameManager.IsDivisionCleared("E");
+            if (hasD || hasE)
+            {
+                var line = CreateConnectionLine();
+                timelineContainer.Add(line);
+                
+                var deContainer = new VisualElement();
+                deContainer.style.flexDirection = FlexDirection.Column;
+                deContainer.style.alignItems = Align.Center;
+                deContainer.style.minWidth = 150;
+                
+                if (hasD)
+                {
+                    var btnD = CreateDivisionButton("D", "Division D", "救済のエンド", currentDivision);
+                    btnD.style.marginBottom = 10;
+                    deContainer.Add(btnD);
+                }
+                
+                if (hasE)
+                {
+                    var btnE = CreateDivisionButton("E", "Division E", "終焉のエンド", currentDivision);
+                    deContainer.Add(btnE);
+                }
+                
+                timelineContainer.Add(deContainer);
+            }
+
+            container.Add(timelineContainer);
         }
 
         /// <summary>
@@ -266,6 +355,63 @@ namespace NovelGame
                     title.parent.Insert(insertIndex, settingsContainer);
                 }
             }
+        }
+
+        /// <summary>
+        /// Divisionボタンを作成
+        /// </summary>
+        private Button CreateDivisionButton(string id, string name, string description, string currentDivision)
+        {
+            Button btn = new Button();
+            btn.text = $"{name}\n{description}";
+            btn.style.fontSize = 16;
+            btn.style.paddingLeft = 20;
+            btn.style.paddingRight = 20;
+            btn.style.paddingTop = 12;
+            btn.style.paddingBottom = 12;
+            btn.style.marginBottom = 0;
+            btn.style.minWidth = 150;
+            btn.style.maxWidth = 150;
+            btn.style.backgroundColor = new Color(0.15f, 0.15f, 0.2f);
+            btn.style.color = Color.white;
+            btn.style.borderTopLeftRadius = 5;
+            btn.style.borderTopRightRadius = 5;
+            btn.style.borderBottomLeftRadius = 5;
+            btn.style.borderBottomRightRadius = 5;
+            btn.style.unityTextAlign = TextAnchor.MiddleCenter;
+            btn.style.whiteSpace = WhiteSpace.Normal;
+
+            // 現在のDivisionの場合は黄色枠を追加
+            if (id == currentDivision)
+            {
+                btn.style.borderLeftWidth = 4;
+                btn.style.borderRightWidth = 4;
+                btn.style.borderTopWidth = 4;
+                btn.style.borderBottomWidth = 4;
+                btn.style.borderLeftColor = Color.yellow;
+                btn.style.borderRightColor = Color.yellow;
+                btn.style.borderTopColor = Color.yellow;
+                btn.style.borderBottomColor = Color.yellow;
+            }
+
+            btn.clicked += () => onDivisionJump?.Invoke(id);
+            btn.RegisterCallback<PointerEnterEvent>(evt => onHoverSound?.Invoke());
+
+            return btn;
+        }
+
+        /// <summary>
+        /// 接続線を作成
+        /// </summary>
+        private VisualElement CreateConnectionLine()
+        {
+            var line = new VisualElement();
+            line.style.width = 40;
+            line.style.height = 3;
+            line.style.backgroundColor = new Color(0.5f, 0.5f, 0.6f);
+            line.style.marginTop = 30; // ボタンの中央に合わせる
+            line.style.alignSelf = Align.Center;
+            return line;
         }
     }
 }
