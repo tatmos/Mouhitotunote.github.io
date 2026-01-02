@@ -428,8 +428,8 @@ namespace NovelGame
                 
                 // 3周目の場合はテキストを変更
                 string mysteryText = gameManager.IsThirdLoop()
-                    ? "謎の声：あなたは「※※※※※」を探す使命を...忘れてはいけません。"
-                    : "謎の声：あなたは【もうひとつ】を探す使命が与えられています。";
+                    ? "謎の声：\nあなたは\n※※※※※ を探す使命を...\n忘れてはいけません。"
+                    : "謎の声：\nあなたは\nもうひとつ を探す使命が\n与えられています。";
 
                 // ダークモード：失われた文字を置換、取得した文字に色を付ける
                 var lostLetters = gameManager.GetLostLetters();
@@ -1386,8 +1386,7 @@ namespace NovelGame
                     epilogueText = result.epilogue;
                     
                     // シナリオ4（魔法学校の試験）の場合、ワードが見つからなかった場合に動物にゆかりのある話題を追加
-                    // 重要: hasWordではなく、wordFoundInCurrentScenarioを使用
-                    if (scenario.id == 4 && !wordFoundInCurrentScenario)
+                    if (scenario.id == 4 )
                     {
                         // シナリオのsetupから動物名を抽出（「試験官：「{animalName}を出現させなさい」」の形式）
                         string animalName = ExtractAnimalNameFromSetup(scenario.setup);

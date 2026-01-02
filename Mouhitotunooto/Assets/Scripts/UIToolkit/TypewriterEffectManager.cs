@@ -342,13 +342,19 @@ namespace NovelGame
                 string line = lines[lineIndex]; // 表示用テキスト（フォーマット後）
                 string originalLine = lineIndex < originalLines.Length ? originalLines[lineIndex] : line; // パターンマッチング用テキスト（フォーマット前）
                 
+                // 行ごとのコンテナを作成（改行せずに表示するため）
+                VisualElement rowContainer = new VisualElement();
+                rowContainer.style.flexDirection = FlexDirection.Row;
+                rowContainer.style.flexWrap = Wrap.Wrap;
+                rowContainer.style.width = new Length(100, LengthUnit.Percent);
+                container.Add(rowContainer);
+
                 // パターンマッチングは元のテキスト（フォーマット前）に対して行う
                 // これにより、3周目で「もうひとつ」が「※※※※※」に置き換えられていても、正しく検出できる
                 string[] patterns = { "【もうひとつ】", "もうひとつ", "もう、ひとつ", "もう,ひとつ", "『もうひとつ』", "\"もうひとつ\"", "「もうひとつ」" };
 
                 int wordStartIndex = -1;
                 int wordLength = 0;
-                string clickableText = "";
                 string matchedPattern = "";
 
                 // 元のテキスト（フォーマット前）でパターンマッチングを行う
@@ -359,22 +365,6 @@ namespace NovelGame
                     {
                         matchedPattern = pattern;
                         wordLength = pattern.Length;
-                        // クリッカブルテキストを抽出（装飾文字を除去）
-                        // 「もう、ひとつ」の場合は、カンマを含む「もう、ひとつ」をクリッカブルテキストとして使用
-                        if (pattern.Contains("もう、ひとつ") || pattern.Contains("もう,ひとつ"))
-                        {
-                            clickableText = "もう、ひとつ";
-                        }
-                        else
-                        {
-                            // 装飾文字（【】、『』、「」、""）を除去
-                            clickableText = pattern
-                                .Replace("【", "").Replace("】", "")
-                                .Replace("『", "").Replace("』", "")
-                                .Replace("「", "").Replace("」", "")
-                                .Replace("\"", "");
-                        }
-                        Debug.Log($"[TypewriterEffectManager] Pattern matched: '{pattern}' at index {wordStartIndex}, originalLine: '{originalLine}', clickableText: '{clickableText}'");
                         break;
                     }
                 }
@@ -388,34 +378,63 @@ namespace NovelGame
                 if (wordStartIndex >= 0 && wordLength > 0)
                 {
                     // 「もうひとつ」または「【もうひとつ】」が見つかった場合
-                    // 前の部分を通常のLabelとして表示
-                    if (wordStartIndex > 0)
+                    
+                    // 装飾文字を分離して、「もうひとつ」の部分だけをクリッカブルにする
+                    string prefixDecoration = "";
+                    string coreWord = matchedPattern;
+                    string suffixDecoration = "";
+
+                    if (matchedPattern.StartsWith("【") && matchedPattern.EndsWith("】"))
                     {
-                        string beforeWord = line.Substring(0, wordStartIndex);
+                        prefixDecoration = "【";
+                        coreWord = matchedPattern.Substring(1, matchedPattern.Length - 2);
+                        suffixDecoration = "】";
+                    }
+                    else if (matchedPattern.StartsWith("『") && matchedPattern.EndsWith("』"))
+                    {
+                        prefixDecoration = "『";
+                        coreWord = matchedPattern.Substring(1, matchedPattern.Length - 2);
+                        suffixDecoration = "』";
+                    }
+                    else if (matchedPattern.StartsWith("「") && matchedPattern.EndsWith("」"))
+                    {
+                        prefixDecoration = "「";
+                        coreWord = matchedPattern.Substring(1, matchedPattern.Length - 2);
+                        suffixDecoration = "」";
+                    }
+                    else if (matchedPattern.StartsWith("\"") && matchedPattern.EndsWith("\""))
+                    {
+                        prefixDecoration = "\"";
+                        coreWord = matchedPattern.Substring(1, matchedPattern.Length - 2);
+                        suffixDecoration = "\"";
+                    }
+
+                    // 表示用テキストを分割
+                    string beforeWordRaw = originalLine.Substring(0, wordStartIndex) + prefixDecoration;
+                    string matchedWordRaw = coreWord;
+                    string afterWordRaw = suffixDecoration + (wordStartIndex + wordLength < originalLine.Length ? originalLine.Substring(wordStartIndex + wordLength) : "");
+
+                    // 前の部分（装飾文字含む）を通常のLabelとして表示
+                    if (beforeWordRaw.Length > 0)
+                    {
                         Label beforeLabel = new Label();
                         beforeLabel.style.fontSize = fontSize;
                         beforeLabel.style.whiteSpace = WhiteSpace.Normal;
-                        beforeLabel.style.alignSelf = Align.FlexStart; // 左揃え
-                        beforeLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         beforeLabel.style.color = brightTextColor;
                         beforeLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-                        container.Add(beforeLabel);
+                        rowContainer.Add(beforeLabel);
                         
-                        // テキストを事前にフォーマット（色付けと伏字化）
-                        string formattedBeforeWord = TextFormatter.FormatText(beforeWord, collectedLetters, lostLetters, true);
-                        
-                        // リッチテキストタグを考慮しながら1文字ずつ表示
-                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(beforeLabel, formattedBeforeWord, beforeWord, lostLetters, charDelay));
+                        // テキストを事前にフォーマット
+                        string formattedBeforeWord = TextFormatter.FormatText(beforeWordRaw, collectedLetters, lostLetters, true);
+                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(beforeLabel, formattedBeforeWord, beforeWordRaw, lostLetters, charDelay));
                     }
                     
-                    // 「もうひとつ」を強調表示（必要に応じてクリッカブル）するLabelとして表示
+                    // 「もうひとつ」の部分のみを青くし、必要に応じてクリッカブルにする
                     Label clickableLabel = new Label("");
                     clickableLabel.style.fontSize = fontSize;
                     clickableLabel.style.whiteSpace = WhiteSpace.Normal;
-                    clickableLabel.style.alignSelf = Align.FlexStart; // 左揃え
-                    clickableLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     
                     if (isClickable)
                     {
@@ -426,42 +445,29 @@ namespace NovelGame
                     }
                     else
                     {
-                        // クリッカブルでない場合も、強調のために少し色を変える（任意）
-                        // ここではシナリオに合わせるため青色にするが、クリックイベントは登録しない
                         clickableLabel.style.color = new StyleColor(new Color(0.2f, 0.6f, 1.0f)); // 青色
                     }
                     
-                    container.Add(clickableLabel);
+                    rowContainer.Add(clickableLabel);
                     
-                    // 強調ワードを1文字ずつ表示（強調のために遅延を長くする）
-                    float emphasizedCharDelay = charDelay * 10.0f; // 通常の10倍の遅延
-                    // テキストを事前にフォーマット（色付けと伏字化）
-                    string formattedClickableText = TextFormatter.FormatText(clickableText, collectedLetters, lostLetters, true);
+                    float emphasizedCharDelay = charDelay * 4.0f;
+                    string formattedClickableText = TextFormatter.FormatText(matchedWordRaw, collectedLetters, lostLetters, true);
+                    yield return StartCoroutine(DisplayRichTextCharacterByCharacter(clickableLabel, formattedClickableText, matchedWordRaw, lostLetters, emphasizedCharDelay));
                     
-                    // リッチテキストタグを考慮しながら1文字ずつ表示
-                    yield return StartCoroutine(DisplayRichTextCharacterByCharacter(clickableLabel, formattedClickableText, clickableText, lostLetters, emphasizedCharDelay));
-                    
-                    // 後の部分を通常のLabelとして表示
-                    int wordEndIndex = wordStartIndex + wordLength;
-                    if (wordEndIndex < line.Length)
+                    // 後の部分（装飾文字含む）を通常のLabelとして表示
+                    if (afterWordRaw.Length > 0)
                     {
-                        string afterWord = line.Substring(wordEndIndex);
                         Label afterLabel = new Label();
                         afterLabel.style.fontSize = fontSize;
                         afterLabel.style.whiteSpace = WhiteSpace.Normal;
-                        afterLabel.style.alignSelf = Align.FlexStart; // 左揃え
-                        afterLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                         // 明るい色を適用
                         Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                         afterLabel.style.color = brightTextColor;
                         afterLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-                        container.Add(afterLabel);
+                        rowContainer.Add(afterLabel);
                         
-                        // テキストを事前にフォーマット（色付けと伏字化）
-                        string formattedAfterWord = TextFormatter.FormatText(afterWord, collectedLetters, lostLetters, true);
-                        
-                        // リッチテキストタグを考慮しながら1文字ずつ表示
-                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(afterLabel, formattedAfterWord, afterWord, lostLetters, charDelay));
+                        string formattedAfterWord = TextFormatter.FormatText(afterWordRaw, collectedLetters, lostLetters, true);
+                        yield return StartCoroutine(DisplayRichTextCharacterByCharacter(afterLabel, formattedAfterWord, afterWordRaw, lostLetters, charDelay));
                     }
                 }
                 else
@@ -470,29 +476,19 @@ namespace NovelGame
                     Label textLabel = new Label();
                     textLabel.style.fontSize = fontSize;
                     textLabel.style.whiteSpace = WhiteSpace.Normal;
-                    textLabel.style.alignSelf = Align.FlexStart; // 左揃え
-                    textLabel.style.unityTextAlign = TextAnchor.UpperLeft; // 左揃え
                     // 明るい色を適用
                     Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
                     textLabel.style.color = brightTextColor;
                     textLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-                    container.Add(textLabel);
+                    rowContainer.Add(textLabel);
                     
-                    // テキストを事前にフォーマット（色付けと伏字化）
                     string formattedLine = TextFormatter.FormatText(line, collectedLetters, lostLetters, true);
-                    
-                    // リッチテキストタグを考慮しながら1文字ずつ表示
                     yield return StartCoroutine(DisplayRichTextCharacterByCharacter(textLabel, formattedLine, line, lostLetters, charDelay));
                 }
                 
-                // 最後の行以外は改行を追加
+                // 行間の遅延
                 if (lineIndex < lines.Length - 1)
                 {
-                    Label lineBreak = new Label("\n");
-                    lineBreak.style.fontSize = 20;
-                    container.Add(lineBreak);
-                    
-                    // 行間の遅延
                     yield return new WaitForSeconds(lineDelay);
                 }
             }
