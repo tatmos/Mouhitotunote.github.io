@@ -15,5 +15,6 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:ScrollView>
+        <ui:Button name="SoundButton" style="position: absolute; right: 40px; bottom: 40px; width: 60px; height: 60px; border-radius: 30px; font-size: 24px; padding: 0; background-color: rgba(0, 0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0;"/>
     </ui:VisualElement>
 </ui:UXML>

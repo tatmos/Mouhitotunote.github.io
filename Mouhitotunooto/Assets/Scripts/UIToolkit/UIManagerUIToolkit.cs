@@ -30,6 +30,7 @@ namespace NovelGame
         [SerializeField] private VisualTreeAsset creditsScreenUXML;
         [SerializeField] private VisualTreeAsset achievementsScreenUXML;
         [SerializeField] private VisualTreeAsset mouhitotsuScreenUXML;
+        [SerializeField] private VisualTreeAsset soundSettingsPanelUXML;
 
         [Header("Background Images")]
         [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
@@ -91,6 +92,7 @@ namespace NovelGame
         [SerializeField] private Sprite achievementsIcon; // 実績用のアイコン（🏆の代替）
         [SerializeField] private Sprite clockIcon; // カウントダウン用のアイコン（⏰の代替）
         [SerializeField] private Sprite sparkleIcon; // スパークル用のアイコン（✨の代替）
+        [SerializeField] private Sprite soundIcon; // サウンド設定用のアイコン（🔊の代替）
 
         private GameManager gameManager;
         private AudioManager audioManager;
@@ -105,6 +107,8 @@ namespace NovelGame
         private AchievementsScreenManager achievementsScreenManager;
         private MouhitotsuScreenManager mouhitotsuScreenManager;
         private CreditsScreenManager creditsScreenManager;
+        private SoundSettingsManager soundSettingsManager;
+        private SelectionScreenManager selectionScreenManager;
         
         // 演出マネージャー
         private LetterFallAnimationManager letterFallAnimationManager;
@@ -1013,6 +1017,43 @@ namespace NovelGame
                 // メニューボタンに画像を適用
                 Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(showMouhitotsuButton, menuButtonImage, menuButtonTextColor);
+            }
+
+            // サウンド設定ボタンの設定
+            var soundButton = root.Q<Button>("SoundButton");
+            if (soundButton != null)
+            {
+                if (soundIcon != null)
+                {
+                    SetupButtonWithIcon(soundButton, soundIcon, "");
+                }
+                else
+                {
+                    soundButton.text = "🔊";
+                }
+
+                soundButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                soundButton.clicked += () => {
+                    if (soundSettingsManager == null)
+                    {
+                        soundSettingsManager = new SoundSettingsManager(root, soundSettingsPanelUXML, PlayHoverSound);
+                    }
+                    soundSettingsManager.Show(root);
+                };
+                
+                // 背景なし、アイコンのみの設定
+                soundButton.style.backgroundColor = Color.clear;
+                soundButton.style.backgroundImage = null;
+                soundButton.style.borderTopWidth = 0;
+                soundButton.style.borderRightWidth = 0;
+                soundButton.style.borderBottomWidth = 0;
+                soundButton.style.borderLeftWidth = 0;
+                
+                // アイコンの色（設定があれば）
+                if (soundIcon == null)
+                {
+                    soundButton.style.color = Color.white;
+                }
             }
 
             UpdateScoreDisplay();
@@ -3633,23 +3674,32 @@ namespace NovelGame
             container.style.alignItems = Align.Center;
             container.style.justifyContent = Justify.Center;
             container.style.flexGrow = 1;
+            container.pickingMode = PickingMode.Ignore;
             
             // アイコンを追加（画像が設定されている場合）
             if (icon != null)
             {
                 var iconImage = new Image();
                 iconImage.sprite = icon;
-                iconImage.style.width = 24f;
-                iconImage.style.height = 24f;
-                iconImage.style.marginRight = 8f;
+                iconImage.style.width = 32f; // 少し大きく
+                iconImage.style.height = 32f;
+                if (!string.IsNullOrEmpty(text))
+                {
+                    iconImage.style.marginRight = 8f;
+                }
+                iconImage.pickingMode = PickingMode.Ignore;
                 container.Add(iconImage);
             }
             
             // テキストラベルを追加
-            var label = new Label(text);
-            label.style.fontSize = 16f;
-            label.style.unityFontStyleAndWeight = FontStyle.Bold;
-            container.Add(label);
+            if (!string.IsNullOrEmpty(text))
+            {
+                var label = new Label(text);
+                label.style.fontSize = 16f;
+                label.style.unityFontStyleAndWeight = FontStyle.Bold;
+                label.pickingMode = PickingMode.Ignore;
+                container.Add(label);
+            }
             
             // コンテナをボタンに追加
             button.Add(container);

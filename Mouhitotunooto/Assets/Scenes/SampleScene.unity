@@ -119,6 +119,61 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &243824126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 243824128}
+  - component: {fileID: 243824127}
+  m_Layer: 5
+  m_Name: SoundSettingsDocument
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &243824127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243824126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: 811b6e4f596fde44cb25c5ca51926443, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: fc150314e14548598a5105f16773bda4, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &243824128
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243824126}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &291218903
 GameObject:
   m_ObjectHideFlags: 0
@@ -868,6 +923,7 @@ MonoBehaviour:
   creditsScreenUXML: {fileID: 9197481963319205126, guid: ac8aaa532cc020d478f2652ec1b882ba, type: 3}
   achievementsScreenUXML: {fileID: 9197481963319205126, guid: 51908d6018affa24d8cbbd83843ce589, type: 3}
   mouhitotsuScreenUXML: {fileID: 9197481963319205126, guid: fa8ca8afed74492bbbf1d45cc74484d9, type: 3}
+  soundSettingsPanelUXML: {fileID: 9197481963319205126, guid: fc150314e14548598a5105f16773bda4, type: 3}
   scenarioBackgrounds:
   - {fileID: 21300000, guid: 4b0debc5d9dd7f240ae5d51bb298778c, type: 3}
   - {fileID: 21300000, guid: da780373390cd394a8342139e51a1bb5, type: 3}
@@ -919,6 +975,7 @@ MonoBehaviour:
   achievementsIcon: {fileID: 21300000, guid: 80fbfb6d006b1ee4bb78bdf29d3596df, type: 3}
   clockIcon: {fileID: 21300000, guid: cc590f52b3b364044b7d4d3434af1547, type: 3}
   sparkleIcon: {fileID: 21300000, guid: aa5f50a6d7220f34ab4fdb61814f0942, type: 3}
+  soundIcon: {fileID: 21300000, guid: c00f011dfb08a4148b8ba3acfad533f3, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0
@@ -931,7 +988,8 @@ Transform:
   m_LocalPosition: {x: 960, y: 1060, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1669754616}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1315741629
@@ -1120,6 +1178,61 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 00ae2bf8c8a624ed38161cab9eeda7f7, type: 3}
+--- !u!1 &1669754615
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1669754616}
+  - component: {fileID: 1669754617}
+  m_Layer: 5
+  m_Name: SoundSettingPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1669754616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669754615}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -960, y: -1060, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1315741628}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1669754617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669754615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: 811b6e4f596fde44cb25c5ca51926443, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: fc150314e14548598a5105f16773bda4, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
 --- !u!1 &1830751964
 GameObject:
   m_ObjectHideFlags: 0
@@ -1245,6 +1358,7 @@ SceneRoots:
   - {fileID: 1118582499}
   - {fileID: 1415366478}
   - {fileID: 2075914291}
+  - {fileID: 243824128}
   - {fileID: 1337415257}
   - {fileID: 291218905}
   - {fileID: 1315741628}

@@ -233,7 +233,7 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// 設定UIを追加（BGM音量スライダー、物語の解明度表示ON/OFF）
+        /// 設定UIを追加（物語の解明度表示ON/OFF、チートモード）
         /// </summary>
         private void AddSettingsUI(VisualElement root)
         {
@@ -269,109 +269,6 @@ namespace NovelGame
             settingsTitle.style.color = new Color(0.9f, 0.9f, 1f);
             settingsTitle.style.marginBottom = 15;
             settingsContainer.Add(settingsTitle);
-
-            // BGM音量スライダー
-            var bgmContainer = new VisualElement();
-            bgmContainer.style.flexDirection = FlexDirection.Row;
-            bgmContainer.style.alignItems = Align.Center;
-            bgmContainer.style.width = Length.Percent(80);
-            bgmContainer.style.maxWidth = 500;
-            bgmContainer.style.marginBottom = 15;
-
-            var bgmLabel = new Label("BGM音量:");
-            bgmLabel.style.fontSize = 16;
-            bgmLabel.style.color = Color.white;
-            bgmLabel.style.minWidth = 100;
-            bgmContainer.Add(bgmLabel);
-
-            var bgmSlider = new Slider(0f, 1f);
-            bgmSlider.style.flexGrow = 1;
-            bgmSlider.style.minWidth = 200;
-            
-            // AudioManagerから現在の音量を取得
-            var audioManager = AudioManager.Instance;
-            float currentVolume = 1.0f;
-            if (audioManager != null)
-            {
-                currentVolume = audioManager.GetBGMVolume();
-                bgmSlider.value = currentVolume;
-            }
-            else
-            {
-                bgmSlider.value = currentVolume;
-            }
-
-            var bgmValueLabel = new Label($"{Mathf.RoundToInt(currentVolume * 100)}%");
-            bgmValueLabel.style.fontSize = 14;
-            bgmValueLabel.style.color = Color.white;
-            bgmValueLabel.style.minWidth = 50;
-            bgmValueLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-
-            // スライダー値変更時のコールバック（音量設定と値ラベル更新を同時に実行）
-            bgmSlider.RegisterValueChangedCallback(evt =>
-            {
-                if (audioManager != null)
-                {
-                    audioManager.SetBGMVolume(evt.newValue);
-                }
-                bgmValueLabel.text = $"{Mathf.RoundToInt(evt.newValue * 100)}%";
-            });
-
-            bgmContainer.Add(bgmSlider);
-            bgmContainer.Add(bgmValueLabel);
-
-            settingsContainer.Add(bgmContainer);
-
-            // SE音量スライダー
-            var seContainer = new VisualElement();
-            seContainer.style.flexDirection = FlexDirection.Row;
-            seContainer.style.alignItems = Align.Center;
-            seContainer.style.width = Length.Percent(80);
-            seContainer.style.maxWidth = 500;
-            seContainer.style.marginBottom = 15;
-
-            var seLabel = new Label("SE音量:");
-            seLabel.style.fontSize = 16;
-            seLabel.style.color = Color.white;
-            seLabel.style.minWidth = 100;
-            seContainer.Add(seLabel);
-
-            var seSlider = new Slider(0f, 1f);
-            seSlider.style.flexGrow = 1;
-            seSlider.style.minWidth = 200;
-            
-            // AudioManagerから現在のSE音量を取得
-            float currentSEVolume = 1.0f;
-            if (audioManager != null)
-            {
-                currentSEVolume = audioManager.GetSEVolume();
-                seSlider.value = currentSEVolume;
-            }
-            else
-            {
-                seSlider.value = currentSEVolume;
-            }
-
-            var seValueLabel = new Label($"{Mathf.RoundToInt(currentSEVolume * 100)}%");
-            seValueLabel.style.fontSize = 14;
-            seValueLabel.style.color = Color.white;
-            seValueLabel.style.minWidth = 50;
-            seValueLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-
-            // スライダー値変更時のコールバック（音量設定と値ラベル更新を同時に実行）
-            seSlider.RegisterValueChangedCallback(evt =>
-            {
-                if (audioManager != null)
-                {
-                    audioManager.SetSEVolume(evt.newValue);
-                }
-                seValueLabel.text = $"{Mathf.RoundToInt(evt.newValue * 100)}%";
-            });
-
-            seContainer.Add(seSlider);
-            seContainer.Add(seValueLabel);
-
-            settingsContainer.Add(seContainer);
 
             // 物語の解明度表示ON/OFFトグル
             var progressToggleContainer = new VisualElement();
