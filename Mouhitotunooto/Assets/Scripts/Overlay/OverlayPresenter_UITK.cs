@@ -255,24 +255,52 @@ namespace NovelGame.Overlay
                 // ランダムな音符を選択
                 string note = musicNotes[Random.Range(0, musicNotes.Length)];
                 
-                // 音符のラベルを作成
-                Label noteLabel = new Label(note);
-                noteLabel.style.fontSize = 24;
-                noteLabel.style.color = new Color(1f, 1f, 0.8f, 1f); // 淡い黄色
-                noteLabel.style.position = Position.Absolute;
+                VisualElement noteElement;
                 
-                // 注意: ♫が文字化けする場合は、ZenMaruGothic-Regularフォントアセットに♫（U+266B）を追加してください
-                // フォントアセットに♫が含まれていれば、特別な処理は不要です
-                // 詳細は MUSIC_NOTE_FONT_GUIDE.md を参照
+                // ♫がフォントに含まれていない場合は、画像として表示
+                if (note == "♫")
+                {
+                    Sprite noteSprite = OverlayAssets.GetMusicNoteSprite(note);
+                    if (noteSprite != null)
+                    {
+                        // 画像として表示
+                        var noteImage = new VisualElement();
+                        noteImage.style.backgroundImage = new StyleBackground(noteSprite);
+                        noteImage.style.width = 24;
+                        noteImage.style.height = 24;
+                        noteImage.style.position = Position.Absolute;
+                        noteImage.style.backgroundColor = Color.clear;
+                        noteElement = noteImage;
+                    }
+                    else
+                    {
+                        // 画像が見つからない場合は、♪に置き換える
+                        note = "♪";
+                        var noteLabel = new Label(note);
+                        noteLabel.style.fontSize = 24;
+                        noteLabel.style.color = new Color(1f, 1f, 0.8f, 1f); // 淡い黄色
+                        noteLabel.style.position = Position.Absolute;
+                        noteElement = noteLabel;
+                    }
+                }
+                else
+                {
+                    // ♪はフォントに含まれているため、テキストとして表示
+                    var noteLabel = new Label(note);
+                    noteLabel.style.fontSize = 24;
+                    noteLabel.style.color = new Color(1f, 1f, 0.8f, 1f); // 淡い黄色
+                    noteLabel.style.position = Position.Absolute;
+                    noteElement = noteLabel;
+                }
                 
                 // 実況者の位置を基準にランダムな位置に配置
                 float randomX = Random.Range(-30f, 30f);
                 float randomY = Random.Range(-20f, 20f);
-                noteLabel.style.left = new Length(50f + randomX, LengthUnit.Percent);
-                noteLabel.style.bottom = new Length(50f + randomY, LengthUnit.Percent);
-                noteLabel.pickingMode = PickingMode.Ignore;
+                noteElement.style.left = new Length(50f + randomX, LengthUnit.Percent);
+                noteElement.style.bottom = new Length(50f + randomY, LengthUnit.Percent);
+                noteElement.pickingMode = PickingMode.Ignore;
                 
-                musicNoteLayer.Add(noteLabel);
+                musicNoteLayer.Add(noteElement);
                 
                 // 音符を上に浮かび上がらせるアニメーション
                 float elapsed = 0f;
@@ -285,33 +313,33 @@ namespace NovelGame.Overlay
                     
                     // 上に移動
                     float currentY = startY + (noteSpeed * elapsed);
-                    noteLabel.style.bottom = new Length(50f + currentY, LengthUnit.Percent);
+                    noteElement.style.bottom = new Length(50f + currentY, LengthUnit.Percent);
                     
                     // フェードイン→フェードアウト
                     if (progress < 0.2f)
                     {
                         // フェードイン
-                        noteLabel.style.opacity = Mathf.Lerp(0f, 1f, progress / 0.2f);
+                        noteElement.style.opacity = Mathf.Lerp(0f, 1f, progress / 0.2f);
                     }
                     else if (progress > 0.8f)
                     {
                         // フェードアウト
-                        noteLabel.style.opacity = Mathf.Lerp(1f, 0f, (progress - 0.8f) / 0.2f);
+                        noteElement.style.opacity = Mathf.Lerp(1f, 0f, (progress - 0.8f) / 0.2f);
                     }
                     else
                     {
-                        noteLabel.style.opacity = 1f;
+                        noteElement.style.opacity = 1f;
                     }
                     
                     // 少し拡大
                     float scale = 1f + (progress * 0.3f);
-                    noteLabel.style.scale = new Scale(new Vector3(scale, scale, 1f));
+                    noteElement.style.scale = new Scale(new Vector3(scale, scale, 1f));
                     
                     yield return null;
                 }
                 
                 // 音符を削除
-                musicNoteLayer.Remove(noteLabel);
+                musicNoteLayer.Remove(noteElement);
                 
                 // 次の音符を生成するまで待機
                 yield return new WaitForSeconds(spawnInterval);

@@ -81,6 +81,25 @@ namespace NovelGame.Overlay
 
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
+
+        /// <summary>
+        /// 音符のSpriteを取得（♫がフォントに含まれていない場合の画像フォールバック）
+        /// </summary>
+        public static Sprite GetMusicNoteSprite(string note)
+        {
+            if (note == "♫")
+            {
+                // ♫の画像を読み込む（オプション、Resources/Overlay/MusicNotes/BeamedNote.pngなど）
+                Sprite sprite = Resources.Load<Sprite>("Overlay/MusicNotes/BeamedNote");
+                if (sprite == null)
+                {
+                    Debug.LogWarning("[OverlayAssets] ♫の画像が見つかりません: Overlay/MusicNotes/BeamedNote");
+                }
+                return sprite;
+            }
+            // ♪はフォントに含まれているため、nullを返す（テキストとして表示）
+            return null;
+        }
     }
 }
 
