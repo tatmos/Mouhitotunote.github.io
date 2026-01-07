@@ -395,7 +395,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.8.1 (2026-01-08)";
+                string text = "v1.8.2 (2026-01-08)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -901,6 +901,8 @@ namespace NovelGame
                 soundButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 // オーバーレイによるブロックを防ぐため、USSクラスを追加
                 soundButton.AddToClassList("button-interactive");
+                // アイコンボタン用のクラスを追加（ホバー時の明るさ効果）
+                soundButton.AddToClassList("icon-button");
                 soundButton.clicked += () => {
                     if (soundSettingsManager == null)
                     {
