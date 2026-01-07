@@ -229,7 +229,7 @@ Button:disabled {
     background-color: rgb(218, 165, 32); /* 金色系（フォールバック） */
     border-radius: 8px;
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, background-color;
+    transition-property: background-color;
     /* 背景画像はコード側で設定（9-slice対応） */
     /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
@@ -244,7 +244,7 @@ Button:disabled {
     background-color: rgb(237, 215, 181); /* 生成り系（フォールバック） */
     border-radius: 8px;
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left, background-color;
+    transition-property: background-color;
     /* 背景画像はコード側で設定（9-slice対応） */
     /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
 }
@@ -301,8 +301,6 @@ Button:disabled {
     font-size: 20px;
     flex-shrink: 0;
     /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
-    transition-duration: 0.1s;
-    transition-property: margin-top, margin-left;
 }
 
 .scenario-button:hover {
@@ -323,7 +321,7 @@ Button:disabled {
     /* 背景画像はコード側で設定（9-slice対応） */
     /* box-shadowはUnity UI Toolkitでサポートされていないため削除 */
     transition-duration: 0.1s;
-    transition-property: margin-top, margin-left;
+    transition-property: background-color;
 }
 
 .choice-button:hover {
@@ -537,5 +535,68 @@ Button:disabled {
     border-radius: 8px;
     padding: 12px 16px;
     min-width: 80px;
+}
+
+/* スクロールバーのスタイル（ブラウン/セピア/金色系） */
+/* ScrollView内のSlider要素にスタイルを適用 */
+ScrollView Slider {
+    /* スクロールバーのトラック（背景） */
+}
+
+ScrollView Slider > .unity-slider__track {
+    background-color: rgba(101, 67, 33, 0.2); /* ブラウン系のトラック（薄め） */
+    border-radius: 6px;
+}
+
+/* スクロールバーのフィル（使用済み部分） */
+ScrollView Slider > .unity-slider__fill {
+    background-color: rgba(184, 134, 11, 0.4); /* 金色系のフィル（半透明） */
+    border-radius: 6px;
+}
+
+/* スクロールバーのサム（つまみ） */
+ScrollView Slider > .unity-slider__thumb {
+    background-color: rgba(218, 165, 32, 0.8); /* 金色系のサム（やや濃い） */
+    border-width: 1px;
+    border-color: rgba(184, 134, 11, 0.9); /* 金色系のボーダー */
+    border-radius: 6px;
+    transition-duration: 0.2s;
+}
+
+/* 縦スクロールバーのサム（幅を設定） */
+ScrollView Slider.vertical > .unity-slider__thumb {
+    width: 10px;
+    min-width: 10px;
+}
+
+/* 横スクロールバーのサム（高さを設定） */
+ScrollView Slider.horizontal > .unity-slider__thumb {
+    height: 10px;
+    min-height: 10px;
+}
+
+/* スクロールバーのサム（ホバー時） */
+ScrollView Slider > .unity-slider__thumb:hover {
+    background-color: rgba(237, 215, 181, 0.9); /* 生成り系のサム（ホバー時） */
+    border-color: rgba(218, 165, 32, 1.0); /* 金色系のボーダー（ホバー時） */
+}
+
+/* スクロールバーのサム（ドラッグ時） */
+ScrollView Slider > .unity-slider__thumb:active {
+    background-color: rgba(184, 134, 11, 1.0); /* 金色系のサム（ドラッグ時） */
+    border-color: rgba(218, 165, 32, 1.0); /* 金色系のボーダー（ドラッグ時） */
+}
+
+/* スクロールバーのスクローラー（コンテナ） */
+ScrollView > .unity-scroll-view__vertical-scroller {
+    width: 12px;
+    background-color: rgba(101, 67, 33, 0.1); /* ブラウン系の背景（非常に薄め） */
+    border-radius: 6px;
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller {
+    height: 12px;
+    background-color: rgba(101, 67, 33, 0.1); /* ブラウン系の背景（非常に薄め） */
+    border-radius: 6px;
 }
 

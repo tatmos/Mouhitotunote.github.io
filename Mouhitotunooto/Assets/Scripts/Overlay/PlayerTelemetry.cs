@@ -13,7 +13,6 @@ namespace NovelGame.Overlay
         private int skipCount = 0;
         private int logViewCount = 0;
         private DateTime lastClickTime = DateTime.MinValue;
-        private float totalPlayTime = 0f;
 
         // 設定
         public float FastClickThreshold { get; set; } = 0.5f; // 0.5秒以下でクリック = 速い
@@ -97,7 +96,6 @@ namespace NovelGame.Overlay
             skipCount = 0;
             logViewCount = 0;
             lastClickTime = DateTime.MinValue;
-            totalPlayTime = 0f;
         }
     }
 }

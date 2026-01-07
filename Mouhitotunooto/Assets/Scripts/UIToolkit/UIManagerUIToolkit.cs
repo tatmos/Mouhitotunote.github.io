@@ -2177,37 +2177,14 @@ namespace NovelGame
         
         /// <summary>
         /// ボタンにホバー効果を追加（マウスオーバー時に数ピクセルずれる）
+        /// 注意：レイアウトが乱れるため、margin変更によるずれ効果は無効化されています
         /// </summary>
         private void AddButtonHoverEffect(Button button)
         {
             if (button == null) return;
             
-            const float hoverOffset = 3f; // ホバー時のずれ量（ピクセル）
-            
-            // マウスオーバー時：少し上にずれる（marginで実現）
-            button.RegisterCallback<MouseEnterEvent>(evt => {
-                button.style.marginTop = -hoverOffset;
-                button.style.marginLeft = -hoverOffset;
-                button.style.transitionDuration = new List<TimeValue> { new TimeValue(0.1f, TimeUnit.Second) };
-            });
-            
-            // マウスアウト時：元の位置に戻る
-            button.RegisterCallback<MouseLeaveEvent>(evt => {
-                button.style.marginTop = 0;
-                button.style.marginLeft = 0;
-            });
-            
-            // クリック時：さらに下に押し込む
-            button.RegisterCallback<MouseDownEvent>(evt => {
-                button.style.marginTop = hoverOffset;
-                button.style.marginLeft = hoverOffset;
-            });
-            
-            // クリック解除時：ホバー位置に戻る
-            button.RegisterCallback<MouseUpEvent>(evt => {
-                button.style.marginTop = -hoverOffset;
-                button.style.marginLeft = -hoverOffset;
-            });
+            // ホバー時のずれ効果は無効化（レイアウトが乱れるため）
+            // 必要に応じて、背景色の変更などの他の効果をここに追加できます
         }
 
         private void CreateScenarioButtons(VisualElement root)
@@ -2698,6 +2675,9 @@ namespace NovelGame
             var root = achievementsScreenDocument.rootVisualElement;
             if (root == null) return;
 
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
+
             // 背景画像を設定（選択画面と同じ背景を使用）
             if (selectionScreenBackground != null)
             {
@@ -2944,7 +2924,13 @@ namespace NovelGame
                 });
             }
             
-            // BGMを再生
+            // シナリオ選択画面のBGMをフェードアウトして停止
+            if (audioManager != null)
+            {
+                audioManager.FadeOutBGM(1.0f);
+            }
+            
+            // エンドクレジットBGMを再生
             audioManager.PlayCreditsBGM();
 
             // 戻るボタン
