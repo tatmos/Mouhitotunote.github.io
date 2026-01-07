@@ -395,7 +395,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.8.0 (2026-01-08)";
+                string text = "v1.8.1 (2026-01-08)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -927,6 +927,9 @@ namespace NovelGame
             UpdateScoreDisplay();
             UpdateStoryProgressDisplay(root);
             CreateScenarioButtons(root);
+            
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
             
             // トランジション開始
             if (screenTransitionManager != null)
@@ -3036,6 +3039,9 @@ namespace NovelGame
                 Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
+
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
 
             // トランジション開始
             if (screenTransitionManager != null)
