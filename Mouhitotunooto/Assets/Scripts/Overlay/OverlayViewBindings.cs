@@ -16,6 +16,7 @@ namespace NovelGame.Overlay
         public const string ThoughtBalloonRoot = "ThoughtBalloonRoot";
         public const string ThoughtBalloonLabel = "ThoughtBalloonLabel";
         public const string PropsLayer = "PropsLayer";
+        public const string MusicNoteLayer = "MusicNoteLayer";
 
         /// <summary>
         /// 要素を取得（null安全）

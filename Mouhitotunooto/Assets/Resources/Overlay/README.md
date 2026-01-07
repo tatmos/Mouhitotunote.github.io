@@ -14,7 +14,8 @@ Assets/Resources/Overlay/
 │   ├── Thinking.png
 │   ├── Annoyed.png
 │   ├── Shock.png
-│   └── Concern.png
+│   ├── Concern.png
+│   └── Singing.png
 └── Room/          # 部屋背景画像（Texture2D）
     ├── CleanDay.png
     ├── NightGlow.png
@@ -37,6 +38,7 @@ Assets/Resources/Overlay/
 - **Annoyed.png** - 困った・イライラ
 - **Shock.png** - ショック
 - **Concern.png** - 心配
+- **Singing.png** - 歌っている（エンドクレジット時に表示）※新規追加
 
 **推奨サイズ**: 200x300px 〜 400x600px（縦長）
 **形式**: PNG（透明背景推奨）
@@ -93,6 +95,7 @@ Assets/Resources/Overlay/
 
 1. **Overlay/Girl/Surprise.png** - 驚きの表情
 2. **Overlay/Room/NightGlow.png** - 夜の光る部屋背景
+3. **Overlay/Girl/Singing.png** - 歌っている表情（エンドクレジット時に表示）
 
 これらの画像を用意して、上記のフォルダ構造に配置してください。
 

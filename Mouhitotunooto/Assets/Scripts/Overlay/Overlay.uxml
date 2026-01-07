@@ -18,6 +18,9 @@
         
         <!-- 小道具レイヤー（任意） -->
         <ui:VisualElement name="PropsLayer" style="position: absolute; width: 200px; height: 150px; right: 20px; bottom: 20px; overflow: hidden; pointer-events: none;"/>
+        
+        <!-- 音符エフェクトレイヤー -->
+        <ui:VisualElement name="MusicNoteLayer" style="position: absolute; width: 200px; height: 150px; right: 20px; bottom: 20px; overflow: visible; pointer-events: none;"/>
     </ui:VisualElement>
 </ui:UXML>
 

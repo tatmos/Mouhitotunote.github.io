@@ -87,6 +87,23 @@ namespace NovelGame.Overlay
     }
 
     /// <summary>
+    /// エンドクレジット開始イベント
+    /// </summary>
+    public class CreditsStartedEvt : IOverlayEvent
+    {
+        public bool IsSpecial { get; }
+        public CreditsStartedEvt(bool isSpecial = false) { IsSpecial = isSpecial; }
+    }
+
+    /// <summary>
+    /// エンドクレジット終了イベント
+    /// </summary>
+    public class CreditsEndedEvt : IOverlayEvent
+    {
+        public CreditsEndedEvt() { }
+    }
+
+    /// <summary>
     /// ゲームモード
     /// </summary>
     public enum GameMode
@@ -132,7 +149,8 @@ namespace NovelGame.Overlay
         Thinking,
         Annoyed,
         Shock,
-        Concern
+        Concern,
+        Singing
     }
 
     /// <summary>

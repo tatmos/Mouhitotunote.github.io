@@ -158,6 +158,8 @@ namespace NovelGame.Overlay
             OverlayEventHub.Subscribe<MouhitotuResultEvt>(OnMouhitotuResult);
             OverlayEventHub.Subscribe<ChoiceSelectedEvt>(OnChoiceSelected);
             OverlayEventHub.Subscribe<ReturnToScenarioSelectEvt>(OnReturnToScenarioSelect);
+            OverlayEventHub.Subscribe<CreditsStartedEvt>(OnCreditsStarted);
+            OverlayEventHub.Subscribe<CreditsEndedEvt>(OnCreditsEnded);
         }
 
         private void OnModeChanged(ModeChangedEvt evt)
@@ -223,7 +225,27 @@ namespace NovelGame.Overlay
 
         private void OnReturnToScenarioSelect(ReturnToScenarioSelectEvt evt)
         {
-            // 特にリアクションなし
+            if (state == null || reactionDirector == null || presenter == null) return;
+            
+            // シナリオ選択画面に戻る時は、Phaseを更新
+            reactionDirector.UpdatePhase();
+            presenter.UpdatePhase(state.CurrentPhase);
+        }
+
+        private void OnCreditsStarted(CreditsStartedEvt evt)
+        {
+            if (presenter == null) return;
+            
+            // エンドクレジット開始：歌う表情に変更し、音符エフェクトを開始
+            presenter.StartCreditsSinging();
+        }
+
+        private void OnCreditsEnded(CreditsEndedEvt evt)
+        {
+            if (presenter == null) return;
+            
+            // エンドクレジット終了：音符エフェクトを停止
+            presenter.StopCreditsSinging();
         }
 
         private void OnDestroy()

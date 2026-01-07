@@ -572,6 +572,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NovelGame.Overlay.OverlayBootstrap
   overlayDocument: {fileID: 0}
   overlayUXML: {fileID: 9197481963319205126, guid: bb8813133fb3086488d10a85d9b6efea, type: 3}
+  overlayStyles: {fileID: 7433441132597879392, guid: a7d86ffd62db2a1488afa6a818fada5e, type: 3}
 --- !u!4 &559925504
 Transform:
   m_ObjectHideFlags: 0

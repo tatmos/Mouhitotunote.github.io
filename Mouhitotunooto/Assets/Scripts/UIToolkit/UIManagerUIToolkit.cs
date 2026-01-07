@@ -672,7 +672,8 @@ namespace NovelGame
 
         public void ShowSelectionScreen()
         {
-            // Overlayイベント発火（シナリオ選択画面に戻る）
+            // Overlayイベント発火（シナリオ選択画面に戻る = エンドクレジット終了）
+            OverlayEventHub.Publish(new CreditsEndedEvt());
             OverlayEventHub.Publish(new ReturnToScenarioSelectEvt());
             
             FadeOutAudioOnSceneChange();
@@ -3102,6 +3103,9 @@ namespace NovelGame
 
         public void ShowCreditsScreen(bool isSpecial = false)
         {
+            // Overlayイベント発火（エンドクレジット開始）
+            OverlayEventHub.Publish(new CreditsStartedEvt(isSpecial));
+            
             HideAllScreens();
             
             if (creditsScreenDocument == null)

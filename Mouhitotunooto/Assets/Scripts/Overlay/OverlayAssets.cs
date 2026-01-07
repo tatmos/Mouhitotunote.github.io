@@ -17,7 +17,8 @@ namespace NovelGame.Overlay
             "Overlay/Girl/Thinking",
             "Overlay/Girl/Annoyed",
             "Overlay/Girl/Shock",
-            "Overlay/Girl/Concern"
+            "Overlay/Girl/Concern",
+            "Overlay/Girl/Singing"
         };
 
         // 部屋背景Texture（Resourcesから読み込む想定）
