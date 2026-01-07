@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using NovelGame.Overlay;
@@ -1032,6 +1033,9 @@ namespace NovelGame
                 ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
             
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
+            
             // トランジション開始
             if (root != null && screenTransitionManager != null)
             {
@@ -1922,6 +1926,9 @@ namespace NovelGame
                 ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
+            
             // トランジション開始
             UpdateScoreDisplay();
             if (screenTransitionManager != null)
@@ -2185,6 +2192,167 @@ namespace NovelGame
             
             // ホバー時のずれ効果は無効化（レイアウトが乱れるため）
             // 必要に応じて、背景色の変更などの他の効果をここに追加できます
+        }
+
+        /// <summary>
+        /// ScrollViewのスクロールバーにカスタムスタイルを適用
+        /// </summary>
+        private void ApplyScrollbarStyles(VisualElement root)
+        {
+            if (root == null) return;
+
+            // すべてのScrollViewを検索
+            var scrollViews = root.Query<ScrollView>().ToList();
+            foreach (var scrollView in scrollViews)
+            {
+                // 縦スクロールバーのコンテナ
+                var verticalScroller = scrollView.Q<VisualElement>(className: "unity-scroll-view__vertical-scroller");
+                if (verticalScroller != null)
+                {
+                    verticalScroller.style.width = 10;
+                    verticalScroller.style.backgroundColor = new Color(0, 0, 0, 0.3f);
+                    verticalScroller.style.borderTopLeftRadius = 5;
+                    verticalScroller.style.borderTopRightRadius = 5;
+                    verticalScroller.style.borderBottomLeftRadius = 5;
+                    verticalScroller.style.borderBottomRightRadius = 5;
+                    // 枠を非表示
+                    verticalScroller.style.borderTopWidth = 0;
+                    verticalScroller.style.borderRightWidth = 0;
+                    verticalScroller.style.borderBottomWidth = 0;
+                    verticalScroller.style.borderLeftWidth = 0;
+
+                    // スクロールバー内のすべての子要素を検索してボタンを非表示
+                    var allChildren = verticalScroller.Children().ToList();
+                    foreach (var child in allChildren)
+                    {
+                        // ボタンっぽい要素を検索（クラス名や名前で判断）
+                        string className = string.Join(" ", child.GetClasses());
+                        string name = child.name;
+                        
+                        if (className.Contains("button") || className.Contains("Button") ||
+                            className.Contains("up") || className.Contains("down") ||
+                            name.Contains("button") || name.Contains("Button") ||
+                            name.Contains("up") || name.Contains("down") ||
+                            name.Contains("Up") || name.Contains("Down"))
+                        {
+                            child.style.display = DisplayStyle.None;
+                        }
+                        
+                        // Button型の要素も非表示
+                        if (child is Button)
+                        {
+                            child.style.display = DisplayStyle.None;
+                        }
+                    }
+
+                    // ドラッガーを検索
+                    var dragger = verticalScroller.Q<VisualElement>(className: "unity-base-slider__dragger");
+                    if (dragger != null)
+                    {
+                        dragger.style.backgroundColor = new Color(218f / 255f, 165f / 255f, 32f / 255f, 0.8f);
+                        dragger.style.borderTopLeftRadius = 4;
+                        dragger.style.borderTopRightRadius = 4;
+                        dragger.style.borderBottomLeftRadius = 4;
+                        dragger.style.borderBottomRightRadius = 4;
+                        dragger.style.width = 8;
+                        dragger.style.marginLeft = 1;
+                        dragger.style.marginRight = 1;
+                        dragger.style.marginTop = 1;
+                        dragger.style.marginBottom = 1;
+                        // 枠を非表示
+                        dragger.style.borderTopWidth = 0;
+                        dragger.style.borderRightWidth = 0;
+                        dragger.style.borderBottomWidth = 0;
+                        dragger.style.borderLeftWidth = 0;
+                    }
+
+                    // トラッカーを検索
+                    var tracker = verticalScroller.Q<VisualElement>(className: "unity-base-slider__tracker");
+                    if (tracker != null)
+                    {
+                        tracker.style.backgroundColor = Color.clear;
+                        // 枠を非表示
+                        tracker.style.borderTopWidth = 0;
+                        tracker.style.borderRightWidth = 0;
+                        tracker.style.borderBottomWidth = 0;
+                        tracker.style.borderLeftWidth = 0;
+                    }
+                }
+
+                // 横スクロールバーのコンテナ
+                var horizontalScroller = scrollView.Q<VisualElement>(className: "unity-scroll-view__horizontal-scroller");
+                if (horizontalScroller != null)
+                {
+                    horizontalScroller.style.height = 10;
+                    horizontalScroller.style.backgroundColor = new Color(0, 0, 0, 0.3f);
+                    horizontalScroller.style.borderTopLeftRadius = 5;
+                    horizontalScroller.style.borderTopRightRadius = 5;
+                    horizontalScroller.style.borderBottomLeftRadius = 5;
+                    horizontalScroller.style.borderBottomRightRadius = 5;
+                    // 枠を非表示
+                    horizontalScroller.style.borderTopWidth = 0;
+                    horizontalScroller.style.borderRightWidth = 0;
+                    horizontalScroller.style.borderBottomWidth = 0;
+                    horizontalScroller.style.borderLeftWidth = 0;
+
+                    // スクロールバー内のすべての子要素を検索してボタンを非表示
+                    var allChildren = horizontalScroller.Children().ToList();
+                    foreach (var child in allChildren)
+                    {
+                        // ボタンっぽい要素を検索（クラス名や名前で判断）
+                        string className = string.Join(" ", child.GetClasses());
+                        string name = child.name;
+                        
+                        if (className.Contains("button") || className.Contains("Button") ||
+                            className.Contains("left") || className.Contains("right") ||
+                            name.Contains("button") || name.Contains("Button") ||
+                            name.Contains("left") || name.Contains("right") ||
+                            name.Contains("Left") || name.Contains("Right"))
+                        {
+                            child.style.display = DisplayStyle.None;
+                        }
+                        
+                        // Button型の要素も非表示
+                        if (child is Button)
+                        {
+                            child.style.display = DisplayStyle.None;
+                        }
+                    }
+
+                    // ドラッガーを検索
+                    var dragger = horizontalScroller.Q<VisualElement>(className: "unity-base-slider__dragger");
+                    if (dragger != null)
+                    {
+                        dragger.style.backgroundColor = new Color(218f / 255f, 165f / 255f, 32f / 255f, 0.8f);
+                        dragger.style.borderTopLeftRadius = 4;
+                        dragger.style.borderTopRightRadius = 4;
+                        dragger.style.borderBottomLeftRadius = 4;
+                        dragger.style.borderBottomRightRadius = 4;
+                        dragger.style.height = 8;
+                        dragger.style.marginLeft = 1;
+                        dragger.style.marginRight = 1;
+                        dragger.style.marginTop = 1;
+                        dragger.style.marginBottom = 1;
+                        // 枠を非表示
+                        dragger.style.borderTopWidth = 0;
+                        dragger.style.borderRightWidth = 0;
+                        dragger.style.borderBottomWidth = 0;
+                        dragger.style.borderLeftWidth = 0;
+                    }
+
+                    // トラッカーを検索
+                    var tracker = horizontalScroller.Q<VisualElement>(className: "unity-base-slider__tracker");
+                    if (tracker != null)
+                    {
+                        tracker.style.backgroundColor = Color.clear;
+                        // 枠を非表示
+                        tracker.style.borderTopWidth = 0;
+                        tracker.style.borderRightWidth = 0;
+                        tracker.style.borderBottomWidth = 0;
+                        tracker.style.borderLeftWidth = 0;
+                    }
+                }
+            }
         }
 
         private void CreateScenarioButtons(VisualElement root)
@@ -2733,6 +2901,9 @@ namespace NovelGame
                 ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
+            
             // トランジション開始
             if (screenTransitionManager != null)
             {
@@ -2945,6 +3116,9 @@ namespace NovelGame
                 ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
             }
 
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyles(root);
+            
             // トランジション開始
             if (screenTransitionManager != null)
             {

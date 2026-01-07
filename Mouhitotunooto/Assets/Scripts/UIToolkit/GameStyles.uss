@@ -538,65 +538,147 @@ Button:disabled {
 }
 
 /* スクロールバーのスタイル（ブラウン/セピア/金色系） */
-/* ScrollView内のSlider要素にスタイルを適用 */
-ScrollView Slider {
-    /* スクロールバーのトラック（背景） */
+/* Unity UI Toolkitの正しいセレクタを使用 */
+
+/* スクロールボタンを非表示 - 複数のパターンで確実に適用 */
+ScrollView > .unity-scroll-view__vertical-scroller > .unity-scroll-view__vertical-scrollbar-up-button {
+    display: none;
 }
 
-ScrollView Slider > .unity-slider__track {
-    background-color: rgba(101, 67, 33, 0.2); /* ブラウン系のトラック（薄め） */
-    border-radius: 6px;
+ScrollView > .unity-scroll-view__vertical-scroller > .unity-scroll-view__vertical-scrollbar-down-button {
+    display: none;
 }
 
-/* スクロールバーのフィル（使用済み部分） */
-ScrollView Slider > .unity-slider__fill {
-    background-color: rgba(184, 134, 11, 0.4); /* 金色系のフィル（半透明） */
-    border-radius: 6px;
+ScrollView > .unity-scroll-view__vertical-scroller > .unity-scroll-view__scrollbar-up-button {
+    display: none;
 }
 
-/* スクロールバーのサム（つまみ） */
-ScrollView Slider > .unity-slider__thumb {
-    background-color: rgba(218, 165, 32, 0.8); /* 金色系のサム（やや濃い） */
-    border-width: 1px;
-    border-color: rgba(184, 134, 11, 0.9); /* 金色系のボーダー */
-    border-radius: 6px;
-    transition-duration: 0.2s;
+ScrollView > .unity-scroll-view__vertical-scroller > .unity-scroll-view__scrollbar-down-button {
+    display: none;
 }
 
-/* 縦スクロールバーのサム（幅を設定） */
-ScrollView Slider.vertical > .unity-slider__thumb {
-    width: 10px;
-    min-width: 10px;
+ScrollView > .unity-scroll-view__horizontal-scroller > .unity-scroll-view__horizontal-scrollbar-left-button {
+    display: none;
 }
 
-/* 横スクロールバーのサム（高さを設定） */
-ScrollView Slider.horizontal > .unity-slider__thumb {
-    height: 10px;
-    min-height: 10px;
+ScrollView > .unity-scroll-view__horizontal-scroller > .unity-scroll-view__horizontal-scrollbar-right-button {
+    display: none;
 }
 
-/* スクロールバーのサム（ホバー時） */
-ScrollView Slider > .unity-slider__thumb:hover {
-    background-color: rgba(237, 215, 181, 0.9); /* 生成り系のサム（ホバー時） */
-    border-color: rgba(218, 165, 32, 1.0); /* 金色系のボーダー（ホバー時） */
+ScrollView > .unity-scroll-view__horizontal-scroller > .unity-scroll-view__scrollbar-left-button {
+    display: none;
 }
 
-/* スクロールバーのサム（ドラッグ時） */
-ScrollView Slider > .unity-slider__thumb:active {
-    background-color: rgba(184, 134, 11, 1.0); /* 金色系のサム（ドラッグ時） */
-    border-color: rgba(218, 165, 32, 1.0); /* 金色系のボーダー（ドラッグ時） */
+ScrollView > .unity-scroll-view__horizontal-scroller > .unity-scroll-view__scrollbar-right-button {
+    display: none;
 }
 
-/* スクロールバーのスクローラー（コンテナ） */
+/* スクロールバー内のすべてのボタン要素を非表示 */
+ScrollView > .unity-scroll-view__vertical-scroller Button {
+    display: none;
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller Button {
+    display: none;
+}
+
+/* 縦スクロールバーのコンテナ */
 ScrollView > .unity-scroll-view__vertical-scroller {
-    width: 12px;
-    background-color: rgba(101, 67, 33, 0.1); /* ブラウン系の背景（非常に薄め） */
-    border-radius: 6px;
+    width: 10px;
+    background-color: rgba(0, 0, 0, 0.3); /* 半透明の背景 */
+    border-radius: 5px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
 }
 
+/* 縦スクロールバーのドラッガー（つまみ）- 複数のパターンで確実に適用 */
+ScrollView > .unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
+    background-color: rgba(218, 165, 32, 0.8); /* 金色系のドラッガー */
+    border-radius: 4px;
+    width: 8px;
+    margin: 1px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+ScrollView > .unity-scroll-view__vertical-scroller > Slider > .unity-base-slider__dragger {
+    background-color: rgba(218, 165, 32, 0.8); /* 金色系のドラッガー */
+    border-radius: 4px;
+    width: 8px;
+    margin: 1px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+ScrollView > .unity-scroll-view__vertical-scroller .unity-base-slider__dragger:hover {
+    background-color: rgb(218, 165, 32); /* ホバーで不透明に */
+}
+
+ScrollView > .unity-scroll-view__vertical-scroller > Slider > .unity-base-slider__dragger:hover {
+    background-color: rgb(218, 165, 32); /* ホバーで不透明に */
+}
+
+ScrollView > .unity-scroll-view__vertical-scroller .unity-base-slider__tracker {
+    background-color: transparent; /* トラッカーは透明 */
+}
+
+ScrollView > .unity-scroll-view__vertical-scroller > Slider > .unity-base-slider__tracker {
+    background-color: transparent; /* トラッカーは透明 */
+}
+
+/* 横スクロールバーのコンテナ */
 ScrollView > .unity-scroll-view__horizontal-scroller {
-    height: 12px;
-    background-color: rgba(101, 67, 33, 0.1); /* ブラウン系の背景（非常に薄め） */
-    border-radius: 6px;
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.3); /* 半透明の背景 */
+    border-radius: 5px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+/* 横スクロールバーのドラッガー（つまみ）- 複数のパターンで確実に適用 */
+ScrollView > .unity-scroll-view__horizontal-scroller .unity-base-slider__dragger {
+    background-color: rgba(218, 165, 32, 0.8); /* 金色系のドラッガー */
+    border-radius: 4px;
+    height: 8px;
+    margin: 1px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller > Slider > .unity-base-slider__dragger {
+    background-color: rgba(218, 165, 32, 0.8); /* 金色系のドラッガー */
+    border-radius: 4px;
+    height: 8px;
+    margin: 1px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller .unity-base-slider__dragger:hover {
+    background-color: rgb(218, 165, 32); /* ホバーで不透明に */
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller > Slider > .unity-base-slider__dragger:hover {
+    background-color: rgb(218, 165, 32); /* ホバーで不透明に */
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller .unity-base-slider__tracker {
+    background-color: transparent; /* トラッカーは透明 */
+}
+
+ScrollView > .unity-scroll-view__horizontal-scroller > Slider > .unity-base-slider__tracker {
+    background-color: transparent; /* トラッカーは透明 */
 }
 
