@@ -1,0 +1,15 @@
+/* Overlay Styles - オーバーレイ用のスタイルシート */
+/* スクロールイベントを透過させるため、pointer-events: noneを設定 */
+
+/* UIDocumentのrootVisualElementに適用されるスタイル */
+.root {
+    pointer-events: none;
+    -unity-picking-mode: ignore;
+}
+
+/* OverlayRootにも確実に適用 */
+#OverlayRoot {
+    pointer-events: none;
+    -unity-picking-mode: ignore;
+}
+

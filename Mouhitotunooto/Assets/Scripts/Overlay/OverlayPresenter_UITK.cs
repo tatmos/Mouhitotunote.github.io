@@ -31,6 +31,15 @@ namespace NovelGame.Overlay
             balloonLabel = OverlayViewBindings.GetElement<Label>(root, OverlayViewBindings.BalloonLabel);
             thoughtBalloonRoot = OverlayViewBindings.GetElement<VisualElement>(root, OverlayViewBindings.ThoughtBalloonRoot);
             thoughtBalloonLabel = OverlayViewBindings.GetElement<Label>(root, OverlayViewBindings.ThoughtBalloonLabel);
+            
+            // すべてのオーバーレイ要素にpickingModeをIgnoreに設定（イベントを無視するため）
+            if (overlayRoot != null) overlayRoot.pickingMode = PickingMode.Ignore;
+            if (roomImage != null) roomImage.pickingMode = PickingMode.Ignore;
+            if (girlImage != null) girlImage.pickingMode = PickingMode.Ignore;
+            if (balloonRoot != null) balloonRoot.pickingMode = PickingMode.Ignore;
+            if (balloonLabel != null) balloonLabel.pickingMode = PickingMode.Ignore;
+            if (thoughtBalloonRoot != null) thoughtBalloonRoot.pickingMode = PickingMode.Ignore;
+            if (thoughtBalloonLabel != null) thoughtBalloonLabel.pickingMode = PickingMode.Ignore;
         }
 
         /// <summary>

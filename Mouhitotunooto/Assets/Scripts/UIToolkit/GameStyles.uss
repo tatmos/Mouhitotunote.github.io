@@ -5,6 +5,33 @@
     background-color: rgb(101, 67, 33); /* ブラウン/セピア系の背景 */
 }
 
+/* リザルト画面のScrollView - オーバーレイによるブロックを防ぐため、pointer-eventsを確実に有効にする */
+.scroll-view-interactive {
+    pointer-events: auto;
+    -unity-picking-mode: auto;
+}
+
+/* シナリオセレクト画面のボタン - オーバーレイによるブロックを防ぐため、pointer-eventsを確実に有効にする */
+.button-interactive {
+    pointer-events: auto;
+    -unity-picking-mode: auto;
+}
+
+.scenario-button {
+    pointer-events: auto;
+    -unity-picking-mode: auto;
+}
+
+.choice-button {
+    pointer-events: auto;
+    -unity-picking-mode: auto;
+}
+
+.choice-button-dark {
+    pointer-events: auto;
+    -unity-picking-mode: auto;
+}
+
 /* カードスタイル（背景は透明） */
 .card {
     background-color: rgba(0, 0, 0, 0); /* 透明 */

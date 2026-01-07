@@ -395,7 +395,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.8.0 (2026-01-07)";
+                string text = "v1.8.0 (2026-01-08)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -705,6 +705,13 @@ namespace NovelGame
             
             selectionScreenDocument.gameObject.SetActive(true);
             currentDocument = selectionScreenDocument;
+            
+            // シナリオセレクト画面のUIDocumentのSort Orderをオーバーレイより高く設定
+            // これにより、ボタンが確実にクリックできるようになる
+            if (selectionScreenDocument != null)
+            {
+                selectionScreenDocument.sortingOrder = 20; // オーバーレイのSort Order (10) より高い
+            }
 
             // シナリオ選択BGMをフェードインして再生（または音量を復元）
             if (audioManager != null && audioManager.GetBgmAudioSource() != null && 
@@ -803,6 +810,8 @@ namespace NovelGame
             {
                 showProfileButton.clicked += ShowProfileScreen;
                 showProfileButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                showProfileButton.AddToClassList("button-interactive");
                 // メニューボタンに画像を適用
                 Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(showProfileButton, menuButtonImage, menuButtonTextColor);
@@ -815,6 +824,8 @@ namespace NovelGame
                 // 絵文字を画像に置き換え
                 SetupButtonWithIcon(showCreditsButton, creditsIcon, "エンドクレジットを見る");
                 showCreditsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                showCreditsButton.AddToClassList("button-interactive");
                 // メニューボタンに画像を適用
                 Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(showCreditsButton, menuButtonImage, menuButtonTextColor);
@@ -852,6 +863,8 @@ namespace NovelGame
                 showAchievementsButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 showAchievementsButton.style.display = DisplayStyle.Flex;
                 showAchievementsButton.clicked += ShowAchievementsScreen;
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                showAchievementsButton.AddToClassList("button-interactive");
                 // メニューボタンに画像を適用
                 Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(showAchievementsButton, menuButtonImage, menuButtonTextColor);
@@ -864,6 +877,8 @@ namespace NovelGame
                 showMouhitotsuButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
                 showMouhitotsuButton.style.display = DisplayStyle.Flex;
                 showMouhitotsuButton.clicked += ShowMouhitotsuScreen;
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                showMouhitotsuButton.AddToClassList("button-interactive");
                 // メニューボタンに画像を適用
                 Color menuButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
                 ApplyButtonImage(showMouhitotsuButton, menuButtonImage, menuButtonTextColor);
@@ -883,6 +898,8 @@ namespace NovelGame
                 }
 
                 soundButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                soundButton.AddToClassList("button-interactive");
                 soundButton.clicked += () => {
                     if (soundSettingsManager == null)
                     {
@@ -1070,6 +1087,13 @@ namespace NovelGame
 
             scenarioScreenDocument.gameObject.SetActive(true);
             currentDocument = scenarioScreenDocument;
+            
+            // シナリオ画面のUIDocumentのSort Orderを設定（オーバーレイより低いが、操作可能）
+            // オーバーレイのSort Order (30) より低いが、pointer-events: noneが設定されているため操作は可能
+            if (scenarioScreenDocument != null)
+            {
+                scenarioScreenDocument.sortingOrder = 20; // オーバーレイのSort Order (30) より低い
+            }
             
             var scenario = gameManager.GetCurrentScenario();
             if (scenario == null) return;
@@ -1352,6 +1376,20 @@ namespace NovelGame
             
             // スクロールバーを非表示にする
             root.style.overflow = Overflow.Hidden;
+            
+            // リザルト画面のUIDocumentのSort Orderをオーバーレイより高く設定
+            // これにより、ScrollViewが確実にイベントを受け取れるようになる
+            if (resultScreenDocument != null)
+            {
+                resultScreenDocument.sortingOrder = 20; // オーバーレイのSort Order (10) より高い
+            }
+            
+            // ScrollViewにUSSクラスを追加して、pointer-eventsを確実に有効にする
+            var scrollView = root.Q<ScrollView>();
+            if (scrollView != null)
+            {
+                scrollView.AddToClassList("scroll-view-interactive");
+            }
             
             // 背景画像を設定
             SetBackgroundImage(scenario.id, false);
@@ -2554,6 +2592,9 @@ namespace NovelGame
                         button.style.backgroundColor = Color.clear;
                     }
                 }
+                
+                // オーバーレイによるブロックを防ぐため、USSクラスを追加
+                button.AddToClassList("button-interactive");
                 
                 string choiceLabelText = $"選択肢{choice.id}：{choice.text}";
                 string previewLabelText = choice.preview;
