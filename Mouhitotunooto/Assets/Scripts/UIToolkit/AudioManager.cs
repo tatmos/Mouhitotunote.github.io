@@ -374,7 +374,29 @@ namespace NovelGame
         {
             if (creditsBGM != null && creditBgmAudioSource != null)
             {
+                // 既存のBGMフェードアウトコルーチンを停止
                 StopFadeOutBGM();
+                
+                // 既存のBGMを即座に停止（クレジットBGMと重ならないように）
+                if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+                {
+                    bgmAudioSource.Stop();
+                }
+                
+                // 既存のフェードインコルーチンも停止
+                if (fadeInCoroutine != null)
+                {
+                    StopCoroutine(fadeInCoroutine);
+                    fadeInCoroutine = null;
+                }
+                
+                // 音量復元コルーチンも停止
+                if (selectionBGMVolumeCoroutine != null)
+                {
+                    StopCoroutine(selectionBGMVolumeCoroutine);
+                    selectionBGMVolumeCoroutine = null;
+                }
+                
                 FadeOutAmbientSound();
                 creditBgmAudioSource.clip = creditsBGM;
                 creditBgmAudioSource.loop = true;
@@ -583,12 +605,35 @@ namespace NovelGame
                 bool isDarkMode = GameManager.Instance != null && GameManager.Instance.IsDarkMode();
                 if (isDarkMode)
                 {
-                    StartCoroutine(FadePitch(LoweredPitch, 1f));
+                    if (pitchFadeCoroutine != null) StopCoroutine(pitchFadeCoroutine);
+                    pitchFadeCoroutine = StartCoroutine(FadePitch(LoweredPitch, 1f));
                 }
                 else
                 {
-                    StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 1f));
+                    if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
+                    lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 1f));
                 }
+            }
+        }
+
+        /// <summary>
+        /// シナリオ選択BGMの音量を復元（プロフィール/実績画面から戻る時用）
+        /// </summary>
+        public void RestoreSelectionBGMVolume()
+        {
+            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+            {
+                if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
+                // 設定されたBGM音量に復元
+                float targetVolume = GetBGMVolume();
+                selectionBGMVolumeCoroutine = StartCoroutine(FadeSelectionBGMVolume(bgmAudioSource.volume, targetVolume, 1f));
+
+                // ピッチとローパスフィルターも復元
+                if (pitchFadeCoroutine != null) StopCoroutine(pitchFadeCoroutine);
+                pitchFadeCoroutine = StartCoroutine(FadePitch(NormalPitch, 1f));
+
+                if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
+                lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 1f));
             }
         }
 

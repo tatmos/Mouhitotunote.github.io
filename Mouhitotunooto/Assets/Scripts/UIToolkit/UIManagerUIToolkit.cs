@@ -706,8 +706,19 @@ namespace NovelGame
             selectionScreenDocument.gameObject.SetActive(true);
             currentDocument = selectionScreenDocument;
 
-            // シナリオ選択BGMをフェードインして再生
-            StartSelectionBGM();
+            // シナリオ選択BGMをフェードインして再生（または音量を復元）
+            if (audioManager != null && audioManager.GetBgmAudioSource() != null && 
+                audioManager.GetBgmAudioSource().clip == audioManager.GetSelectionBGM() && 
+                audioManager.GetBgmAudioSource().isPlaying)
+            {
+                // BGMが既に再生中の場合は音量を復元
+                RestoreSelectionBGMVolume();
+            }
+            else
+            {
+                // BGMが再生中でない場合はフェードインして再生
+                StartSelectionBGM();
+            }
             
             var root = selectionScreenDocument.rootVisualElement;
             if (root == null) return;
@@ -3630,6 +3641,17 @@ namespace NovelGame
             if (audioManager != null)
             {
                 audioManager.LowerSelectionBGMVolume();
+            }
+        }
+
+        /// <summary>
+        /// シナリオ選択BGMの音量を復元（プロフィール/実績画面から戻る時用）
+        /// </summary>
+        private void RestoreSelectionBGMVolume()
+        {
+            if (audioManager != null)
+            {
+                audioManager.RestoreSelectionBGMVolume();
             }
         }
 
