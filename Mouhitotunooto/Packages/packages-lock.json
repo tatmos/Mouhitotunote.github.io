@@ -323,6 +323,15 @@
       "dependencies": {},
       "hash": "c4dea57e1c27567bac512e090a356b08abf83d0b"
     },
+    "io.github.hatayama.uloopmcp": {
+      "version": "https://github.com/hatayama/uLoopMCP.git?path=/Packages/src",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1"
+      },
+      "hash": "b05e0c159093b89f5fbfc8f4faa44c27107e811f"
+    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,
