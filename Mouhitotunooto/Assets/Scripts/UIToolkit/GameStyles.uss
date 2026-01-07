@@ -422,8 +422,8 @@ Button:disabled {
 /* 結果表示のスタイル */
 .word-get-success {
     background-color: rgba(237, 215, 181, 0.9); /* 生成り系の背景（質感重視） */
-    border-width: 2px;
-    border-color: rgb(218, 165, 32); /* 金色系のボーダー（質感重視） */
+    border-width: 1px;
+    border-color: rgba(218, 165, 32, 0.3); /* 金色系のボーダー（控えめ） */
     border-radius: 8px;
     padding: 16px;
     color: rgb(101, 67, 33); /* ブラウン系のテキスト */

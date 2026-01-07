@@ -1510,7 +1510,8 @@ namespace NovelGame
                 scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
             }
             
-            // ワードゲットテキストに明るい色を適用
+            // ワードゲットテキストに明るい色を適用（初期化時は背景画像を設定しない）
+            // 背景画像は、実際に表示される時（SetupWordGetLabelWithSparkle）に設定される
             if (wordGetLabel != null)
             {
                 wordGetLabel.style.color = brightTextColor;
@@ -1931,6 +1932,13 @@ namespace NovelGame
             {
                 wordGetLabel.ClearClassList();
                 wordGetLabel.text = ""; // テキストは後で設定
+                // 非表示時は背景画像をクリア（小さく表示されるのを防ぐ）
+                wordGetLabel.style.backgroundImage = null;
+                wordGetLabel.style.backgroundColor = Color.clear;
+                wordGetLabel.style.paddingTop = 0;
+                wordGetLabel.style.paddingBottom = 0;
+                wordGetLabel.style.paddingLeft = 0;
+                wordGetLabel.style.paddingRight = 0;
             }
             
             // 後日談のタイトルも更新
@@ -3835,6 +3843,18 @@ namespace NovelGame
             
             // テキストラベル
             label.text = text;
+            
+            // ワードゲット数の背景画像と同じ背景画像を適用
+            if (scoreDisplayBackgroundImage != null && scoreDisplayBackgroundImage.texture != null)
+            {
+                label.style.backgroundImage = new StyleBackground(scoreDisplayBackgroundImage.texture);
+                label.style.backgroundColor = Color.clear;
+                label.style.paddingTop = 8;
+                label.style.paddingBottom = 8;
+                label.style.paddingLeft = 16;
+                label.style.paddingRight = 16;
+            }
+            
             horizontalContainer.Add(label);
             
             // 右側のスパークルアイコン
