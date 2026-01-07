@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using NovelGame.Overlay;
 
 namespace NovelGame
 {
@@ -332,6 +333,9 @@ namespace NovelGame
             var root = titleScreenDocument.rootVisualElement;
             if (root == null) return;
             
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
+            
             // 背景画像を設定（シナリオ選択背景を使用）
             if (selectionScreenBackground != null)
             {
@@ -390,7 +394,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.7.3 (2026-01-02)";
+                string text = "v1.8.0 (2026-01-07)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -667,6 +671,9 @@ namespace NovelGame
 
         public void ShowSelectionScreen()
         {
+            // Overlayイベント発火（シナリオ選択画面に戻る）
+            OverlayEventHub.Publish(new ReturnToScenarioSelectEvt());
+            
             FadeOutAudioOnSceneChange();
             HideAllScreens(true);
             
@@ -703,6 +710,9 @@ namespace NovelGame
             
             var root = selectionScreenDocument.rootVisualElement;
             if (root == null) return;
+            
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
             
             // 背景画像を設定
             if (selectionScreenBackground != null)
@@ -955,6 +965,10 @@ namespace NovelGame
             currentDocument = profileScreenDocument;
             
             var root = profileScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
             
             // 背景画像を設定
             if (root != null && profileScreenBackground != null)
@@ -1049,6 +1063,10 @@ namespace NovelGame
             StartAmbientSound(scenario.id);
 
             var root = scenarioScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
             
             // 背景画像を設定
             SetBackgroundImage(scenario.id, true);
@@ -1315,6 +1333,10 @@ namespace NovelGame
             if (result == null) return;
 
             var root = resultScreenDocument.rootVisualElement;
+            if (root == null) return;
+            
+            // スクロールバーを非表示にする
+            root.style.overflow = Overflow.Hidden;
             
             // 背景画像を設定
             SetBackgroundImage(scenario.id, false);
@@ -1641,6 +1663,9 @@ namespace NovelGame
                                             // resultを再取得
                                             result = gameManager.GetScenarioResult(scenario.id);
                                             
+                                            // Overlayイベント発火（「もうひとつ」成功）
+                                            OverlayEventHub.Publish(new MouhitotuResultEvt(scenario.id, true, "カウントダウン中に発見"));
+                                            
                                             // wordGetLabelのテキストを設定（HandleChoiceの後なので、取得した文字が反映される）
                                             if (wordGetLabel != null)
                                             {
@@ -1661,6 +1686,12 @@ namespace NovelGame
                                         else
                                         {
                                             // ワードが見つからなかった場合
+                                            // Overlayイベント発火（「もうひとつ」失敗）
+                                            if (scenario != null)
+                                            {
+                                                OverlayEventHub.Publish(new MouhitotuResultEvt(scenario.id, false, "カウントダウン終了"));
+                                            }
+                                            
                                             if (wordGetLabel != null)
                                             {
                                                 wordGetLabel.ClearClassList();
@@ -1676,6 +1707,12 @@ namespace NovelGame
                         if (found)
                         {
                             wordFoundInCurrentScenario = true;
+                            
+                            // Overlayイベント発火（「もうひとつ」成功）
+                            if (scenario != null)
+                            {
+                                OverlayEventHub.Publish(new MouhitotuResultEvt(scenario.id, true, "クリックで発見"));
+                            }
                             
                             // 効果音を再生（ワードゲット数が増える時の音 + ランダムなワードゲット音）
                             if (audioManager != null)

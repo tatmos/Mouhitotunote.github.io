@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using unityroom.Api;
+using NovelGame.Overlay;
 
 namespace NovelGame
 {
@@ -172,6 +173,9 @@ namespace NovelGame
             var scenarios = GetScenarios();
             currentScenarioIndex = scenarios.FindIndex(s => s.id == scenarioId);
             
+            // Overlayイベント発火
+            OverlayEventHub.Publish(new ScenarioStartedEvt(scenarioId));
+            
             // ダークモード時にシナリオ（1-5のみ）を開始した場合、そのシナリオの文字を失う
             if (IsDarkMode() && !isThirdLoop && MouhitotsuWordManager.IsValidScenarioId(scenarioId))
             {
@@ -217,6 +221,9 @@ namespace NovelGame
             // 選択されたブランチの情報を取得
             var branch = scenario.branches[choiceId];
             var scenarioId = scenario.id;
+
+            // Overlayイベント発火（選択肢選択）
+            OverlayEventHub.Publish(new ChoiceSelectedEvt(scenarioId, choiceId.ToString()));
 
             // シナリオ開始時のモードを記録（エンド記録用）
             // HandleChoiceの中でモードが変わる可能性があるため、現在のモードを保持しておく
@@ -369,6 +376,9 @@ namespace NovelGame
                 Debug.Log("[GameManager] チートモードが有効なため、Unityroomへのスコア送信をスキップしました。");
             }
 
+            // Overlayイベント発火（シナリオクリア）
+            OverlayEventHub.Publish(new ScenarioClearedEvt(scenarioId, hasWord));
+
             OnScenarioCompleted?.Invoke();
         }
 
@@ -461,8 +471,17 @@ namespace NovelGame
 
         public void SetDarkMode(bool enabled)
         {
+            bool wasDarkMode = isDarkMode;
             isDarkMode = enabled;
             pendingDarkMode = false; // 明示的な設定時は予約を解除
+            
+            // Overlayイベント発火（モード変更）
+            if (wasDarkMode != enabled)
+            {
+                GameMode mode = isThirdLoop ? GameMode.Third : (enabled ? GameMode.Dark : GameMode.Normal);
+                OverlayEventHub.Publish(new ModeChangedEvt(mode));
+            }
+            
             CheckLostLettersUpdate();
         }
 
@@ -476,6 +495,11 @@ namespace NovelGame
                 isDarkMode = true;
                 pendingDarkMode = false;
                 Debug.Log("[GameManager] 予約されていたダークモードを有効化しました。");
+                
+                // Overlayイベント発火（モード変更）
+                GameMode mode = isThirdLoop ? GameMode.Third : GameMode.Dark;
+                OverlayEventHub.Publish(new ModeChangedEvt(mode));
+                
                 CheckLostLettersUpdate();
                 OnScoreChanged?.Invoke(); // 伏字表示の更新などのために通知
             }
@@ -692,6 +716,10 @@ namespace NovelGame
             isThirdLoop = true; // 2周目開始（isThirdLoop == true の時点で2周目）
             pendingDarkMode = false;
             // scenarioThirdLoopCountsはクリアしない（各シナリオの3周目以降のカウントを維持）
+            
+            // Overlayイベント発火（モード変更）
+            OverlayEventHub.Publish(new ModeChangedEvt(GameMode.Third));
+            
             OnScoreChanged?.Invoke();
         }
 

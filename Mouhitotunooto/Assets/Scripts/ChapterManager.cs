@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using NovelGame.Overlay;
 
 namespace NovelGame
 {
@@ -226,6 +227,21 @@ namespace NovelGame
             {
                 Debug.Log($"[ChapterManager] chapter {chapterId}: {message}");
                 clearedChapters.Add(chapterId);
+                
+                // Overlayイベント発火（Division進入）
+                Division division = chapterId switch
+                {
+                    "A" => Division.A,
+                    "B" => Division.B,
+                    "C" => Division.C,
+                    "D" => Division.D,
+                    "E" => Division.E,
+                    _ => Division.None
+                };
+                if (division != Division.None)
+                {
+                    OverlayEventHub.Publish(new DivisionEnteredEvt(division));
+                }
             }
         }
 

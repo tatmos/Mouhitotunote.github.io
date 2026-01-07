@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="OverlayRoot" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none;">
+        <!-- 部屋背景 -->
+        <ui:VisualElement name="RoomImage" style="position: absolute; width: 200px; height: 150px; right: 20px; bottom: 20px; background-size: contain; background-repeat: no-repeat; background-position: center;"/>
+        
+        <!-- 実況者立ち絵 -->
+        <ui:VisualElement name="GirlImage" style="position: absolute; width: 200px; height: 150px; right: 20px; bottom: 20px; background-size: contain; background-repeat: no-repeat; background-position: center;"/>
+        
+        <!-- 通常吹き出し -->
+        <ui:VisualElement name="BalloonRoot" style="position: absolute; right: 240px; bottom: 20px; min-width: 200px; max-width: 300px; padding: 10px; background-color: rgba(255, 255, 255, 0.9); border-radius: 10px; display: none; overflow: hidden;">
+            <ui:Label name="BalloonLabel" style="font-size: 14px; white-space: normal; color: rgb(0, 0, 0); overflow: hidden;"/>
+        </ui:VisualElement>
+        
+        <!-- 心の声（点線枠） -->
+        <ui:VisualElement name="ThoughtBalloonRoot" style="position: absolute; right: 240px; bottom: 20px; min-width: 200px; max-width: 300px; padding: 10px; background-color: rgba(255, 255, 255, 0.7); border-radius: 10px; border-width: 2px; border-style: dashed; border-color: rgba(0, 0, 0, 0.5); display: none; overflow: hidden;">
+            <ui:Label name="ThoughtBalloonLabel" style="font-size: 14px; white-space: normal; color: rgb(0, 0, 0); overflow: hidden;"/>
+        </ui:VisualElement>
+        
+        <!-- 小道具レイヤー（任意） -->
+        <ui:VisualElement name="PropsLayer" style="position: absolute; width: 200px; height: 150px; right: 20px; bottom: 20px; overflow: hidden;"/>
+    </ui:VisualElement>
+</ui:UXML>
+
