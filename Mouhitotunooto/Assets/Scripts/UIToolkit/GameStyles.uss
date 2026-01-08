@@ -376,18 +376,19 @@ Button:disabled {
 
 /* ダークモードの選択肢ボタン */
 .choice-button-dark {
-    background-color: rgb(220, 38, 38); /* red-600（フォールバック） */
-    border-width: 2px;
-    border-color: rgb(248, 113, 113); /* red-400 */
+    background-color: rgba(127, 29, 29, 0.3); /* red-900の薄い背景（赤みがかった感じ） */
+    border-width: 1px;
+    border-color: rgba(220, 38, 38, 0.4); /* red-600の控えめなボーダー */
     transition-duration: 0.1s;
     transition-property: background-color, -unity-background-image-tint-color;
     /* 背景画像はコード側で設定（9-slice対応） */
+    -unity-background-image-tint-color: rgba(127, 29, 29, 0.2); /* 背景画像に赤みを追加 */
 }
 
 .choice-button-dark:hover {
     /* ホバー時の背景色変更は、画像が設定されている場合は無効化 */
-    background-color: rgb(185, 28, 28); /* red-700 */
-    -unity-background-image-tint-color: rgba(255, 255, 255, 0.2); /* ホバー時に少し明るく */
+    background-color: rgba(127, 29, 29, 0.4); /* ホバー時は少し濃く */
+    -unity-background-image-tint-color: rgba(127, 29, 29, 0.3); /* ホバー時に赤みを強く */
 }
 
 /* テキストスタイル */
@@ -417,6 +418,12 @@ Button:disabled {
     font-size: 24px;
     color: rgb(239, 68, 68); /* red-500 */
     -unity-font-style: bold;
+    background-color: rgba(127, 29, 29, 0.3); /* red-900の薄い背景（赤みがかった感じ） */
+    border-radius: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 /* 結果表示のスタイル */

@@ -1400,7 +1400,8 @@ namespace NovelGame
             // 背景画像を設定
             SetBackgroundImage(scenario.id, false);
 
-            bool isDarkMode = gameManager.IsDarkMode();
+            // ダークモード判定：予約されているダークモードも考慮
+            bool isDarkMode = gameManager.IsDarkMode() || gameManager.GetPendingDarkMode();
             
             // 明るい色を定義（メソッド全体で使用）
             Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
@@ -2125,11 +2126,22 @@ namespace NovelGame
                 if (currentScore > totalScenarios || lostLetters.Count > 0)
                 {
                     scoreLabel.AddToClassList("score-text-anomaly");
+                    // 背景画像がある場合も赤みを追加（背景色を半透明にして重ねる）
+                    if (scoreDisplayBackgroundImage != null && scoreDisplayBackgroundImage.texture != null)
+                    {
+                        // 背景色を半透明の赤に設定して、背景画像の上に重ねる
+                        scoreLabel.style.backgroundColor = new Color(127f / 255f, 29f / 255f, 29f / 255f, 0.3f); /* red-900の薄い背景 */
+                    }
                 }
                 else
                 {
                     // 選択画面以外（シナリオ、リザルト）でも適切なスタイルが適用されるようにする
                     // USSで .score-text が定義されている
+                    // 背景色をクリア（背景画像のみ表示）
+                    if (scoreDisplayBackgroundImage != null && scoreDisplayBackgroundImage.texture != null)
+                    {
+                        scoreLabel.style.backgroundColor = Color.clear;
+                    }
                 }
             }
             
@@ -2194,7 +2206,7 @@ namespace NovelGame
 
         private IEnumerator AnimateScoreCountUp(Label label, string baseText, int start, int end, int total)
         {
-            float duration = 0.5f;
+            float duration = 0.2f; // 0.5fから0.2fに短縮（カウントアップを速く）
             float elapsed = 0f;
             while (elapsed < duration)
             {

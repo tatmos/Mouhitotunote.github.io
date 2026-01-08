@@ -486,6 +486,14 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// 予約されているダークモードを取得
+        /// </summary>
+        public bool GetPendingDarkMode()
+        {
+            return pendingDarkMode;
+        }
+
+        /// <summary>
         /// 予約されているダークモードを有効化する
         /// </summary>
         public void ActivatePendingDarkMode()
