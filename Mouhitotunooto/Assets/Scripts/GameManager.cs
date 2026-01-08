@@ -755,6 +755,20 @@ namespace NovelGame
         }
 
         /// <summary>
+        /// シナリオの2周目以降のクリア回数を取得
+        /// </summary>
+        /// <param name="scenarioId">シナリオID</param>
+        /// <returns>2周目以降のクリア回数</returns>
+        public int GetScenarioThirdLoopCount(int scenarioId)
+        {
+            if (scenarioThirdLoopCounts.ContainsKey(scenarioId))
+            {
+                return scenarioThirdLoopCounts[scenarioId];
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// シナリオを強制的に完了させる（デバッグ用）
         /// </summary>
         public void ForceCompleteScenario(int scenarioId, int choiceId, bool inDarkMode)

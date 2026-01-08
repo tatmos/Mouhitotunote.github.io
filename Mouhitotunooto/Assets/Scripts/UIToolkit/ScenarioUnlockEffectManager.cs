@@ -26,7 +26,7 @@ namespace NovelGame
         }
 
         /// <summary>
-        /// シナリオ6解放演出を表示
+        /// シナリオ6解放演出を表示（α加算合成風の美しいエフェクト）
         /// </summary>
         public IEnumerator ShowScenario6UnlockAnimation(VisualElement root, System.Func<string, System.Collections.Generic.HashSet<char>, System.Collections.Generic.HashSet<char>, string> formatText = null)
         {
@@ -126,23 +126,71 @@ namespace NovelGame
             // レイアウト確定を待つ
             yield return null;
             Vector2 endPos = targetButton.worldBound.center;
+            
+            // 座標をローカル座標に変換
+            Vector2 localStartPos = startPos - root.worldBound.position;
+            Vector2 localEndPos = endPos - root.worldBound.position;
 
-            // 光の粒子演出（金色系に変更）
-            int particleCount = 20;
+            // α加算合成風の背景オーバーレイ（全体を明るく）
+            var glowOverlay = new VisualElement();
+            glowOverlay.style.position = Position.Absolute;
+            glowOverlay.style.left = 0;
+            glowOverlay.style.top = 0;
+            glowOverlay.style.right = 0;
+            glowOverlay.style.bottom = 0;
+            glowOverlay.style.backgroundColor = new Color(1f, 0.95f, 0.8f, 0f); // 温かみのある光
+            glowOverlay.pickingMode = PickingMode.Ignore;
+            effectContainer.Add(glowOverlay);
+
+            // 光の粒子演出（α加算合成風：明るく、多層に）
+            int particleCount = 50; // パーティクル数を増やす
             List<VisualElement> particles = new List<VisualElement>();
+            List<Vector2> particleVelocities = new List<Vector2>();
+            List<float> particleSizes = new List<float>();
+            
             for (int i = 0; i < particleCount; i++)
             {
                 var p = new VisualElement();
                 p.style.position = Position.Absolute;
-                p.style.width = 10;
-                p.style.height = 10;
-                p.style.backgroundColor = new Color(1f, 0.84f, 0f); // 金色系
-                p.style.borderTopLeftRadius = 5;
-                p.style.borderTopRightRadius = 5;
-                p.style.borderBottomLeftRadius = 5;
-                p.style.borderBottomRightRadius = 5;
-                p.style.left = startPos.x;
-                p.style.top = startPos.y;
+                
+                // サイズをランダムに（より多様に）
+                float size = Random.Range(8f, 20f);
+                p.style.width = size;
+                p.style.height = size;
+                particleSizes.Add(size);
+                
+                // α加算合成風の色（明るく、透明度を高めに）
+                float hue = Random.Range(0.08f, 0.18f); // 金色～黄色系
+                float saturation = Random.Range(0.7f, 1.0f);
+                float brightness = Random.Range(0.9f, 1.2f); // 1.0を超えて明るく（加算合成風）
+                Color particleColor = Color.HSVToRGB(hue, saturation, Mathf.Clamp01(brightness));
+                particleColor.a = Random.Range(0.6f, 1.0f); // 透明度を高めに
+                p.style.backgroundColor = particleColor;
+                
+                // 円形
+                float radius = size / 2f;
+                p.style.borderTopLeftRadius = radius;
+                p.style.borderTopRightRadius = radius;
+                p.style.borderBottomLeftRadius = radius;
+                p.style.borderBottomRightRadius = radius;
+                
+                // 初期位置（開始位置から少し広がる）
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                float initialSpread = Random.Range(0f, 30f);
+                Vector2 initialPos = localStartPos + new Vector2(
+                    Mathf.Cos(angle) * initialSpread,
+                    Mathf.Sin(angle) * initialSpread
+                );
+                p.style.left = initialPos.x - size / 2f;
+                p.style.top = initialPos.y - size / 2f;
+                
+                // 速度（終点に向かう方向に、少しランダム性を持たせる）
+                Vector2 direction = (localEndPos - localStartPos).normalized;
+                Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+                float spread = Random.Range(-0.4f, 0.4f);
+                Vector2 velocity = direction * Random.Range(300f, 600f) + perpendicular * spread * 150f;
+                particleVelocities.Add(velocity);
+                
                 effectContainer.Add(p);
                 particles.Add(p);
             }
@@ -153,9 +201,8 @@ namespace NovelGame
                 audioManager.PlaySparkleSound();
             }
 
-
-            // アニメーション：集まってから飛んでいく
-            float duration = 1.0f;
+            // アニメーション：集まってから飛んでいく（α加算合成風）
+            float duration = 1.2f;
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -163,59 +210,139 @@ namespace NovelGame
                 float t = elapsed / duration;
                 float easeT = Mathf.SmoothStep(0, 1, t);
 
+                // 背景オーバーレイの明るさ（α加算合成風）
+                float overlayAlpha = Mathf.Lerp(0f, 0.3f, Mathf.Sin(t * Mathf.PI));
+                glowOverlay.style.backgroundColor = new Color(1f, 0.95f, 0.8f, overlayAlpha);
+
                 for (int i = 0; i < particleCount; i++)
                 {
-                    // 少しバラけさせながら移動
-                    float angle = (i / (float)particleCount) * Mathf.PI * 2;
-                    float spread = (1 - t) * 50f;
-                    Vector2 currentPos = Vector2.Lerp(startPos, endPos, easeT);
-                    particles[i].style.left = currentPos.x + Mathf.Cos(angle) * spread;
-                    particles[i].style.top = currentPos.y + Mathf.Sin(angle) * spread;
-                    particles[i].style.opacity = 1.0f - (t * 0.5f);
-                    particles[i].style.scale = new StyleScale(new Scale(Vector3.one * (1.5f - t)));
+                    var p = particles[i];
+                    Vector2 velocity = particleVelocities[i];
+                    
+                    // 物理的な動き（減速しながら）
+                    float speedMultiplier = 1f - (t * t * 0.5f); // 緩やかに減速
+                    Vector2 currentPos = localStartPos + velocity * elapsed * speedMultiplier;
+                    
+                    p.style.left = currentPos.x - particleSizes[i] / 2f;
+                    p.style.top = currentPos.y - particleSizes[i] / 2f;
+                    
+                    // α加算合成風：透明度を高めに、明るく
+                    float opacity = Mathf.Lerp(1f, 0.3f, t);
+                    float glowIntensity = Mathf.Lerp(1.2f, 0.8f, t); // 加算合成風に明るく
+                    Color currentColor = p.style.backgroundColor.value;
+                    currentColor.a = opacity;
+                    // 明るさを上げる（加算合成風）
+                    float currentBrightness = Mathf.Clamp01(currentColor.r * glowIntensity);
+                    currentColor = new Color(currentBrightness, currentBrightness * 0.95f, currentBrightness * 0.8f, opacity);
+                    p.style.backgroundColor = currentColor;
+                    
+                    // スケール（集まるときに少し大きくなる）
+                    float scale = Mathf.Lerp(1.0f, 1.3f, 1f - t);
+                    p.style.scale = new Scale(new Vector2(scale, scale));
                 }
                 yield return null;
             }
 
-            // 最後に大きな光（金色系に変更）
-            var flash = new VisualElement();
-            flash.style.position = Position.Absolute;
-            flash.style.left = endPos.x - 50;
-            flash.style.top = endPos.y - 50;
-            flash.style.width = 100;
-            flash.style.height = 100;
-            flash.style.backgroundColor = new Color(1f, 0.84f, 0f); // 金色系
-            flash.style.borderTopLeftRadius = 50;
-            flash.style.borderTopRightRadius = 50;
-            flash.style.borderBottomLeftRadius = 50;
-            flash.style.borderBottomRightRadius = 50;
-            flash.style.opacity = 1f;
-            effectContainer.Add(flash);
-
+            // グローエフェクト（複数層でα加算合成風）
+            List<VisualElement> glowLayers = new List<VisualElement>();
+            for (int layer = 0; layer < 3; layer++)
+            {
+                var glow = new VisualElement();
+                glow.style.position = Position.Absolute;
+                float baseSize = 80f + layer * 40f;
+                glow.style.width = baseSize;
+                glow.style.height = baseSize;
+                float radius = baseSize / 2f;
+                glow.style.borderTopLeftRadius = radius;
+                glow.style.borderTopRightRadius = radius;
+                glow.style.borderBottomLeftRadius = radius;
+                glow.style.borderBottomRightRadius = radius;
+                
+                // 各層で色と透明度を変える（α加算合成風）
+                float layerAlpha = 0.4f - layer * 0.1f;
+                Color glowColor = new Color(1f, 0.9f, 0.6f, layerAlpha);
+                glow.style.backgroundColor = glowColor;
+                
+                glow.style.left = localEndPos.x - baseSize / 2f;
+                glow.style.top = localEndPos.y - baseSize / 2f;
+                glow.style.opacity = 0f;
+                effectContainer.Add(glow);
+                glowLayers.Add(glow);
+            }
             
-            // 真実の扉出現音を再生（パーティクルアニメーション開始時）
+            // 真実の扉出現音を再生
             if (audioManager != null)
             {
                 audioManager.PlayTruthDoorUnlockSound();
             }
 
-            float flashDuration = 0.5f;
+            // グローエフェクトのアニメーション
+            float flashDuration = 0.8f;
             elapsed = 0f;
             while (elapsed < flashDuration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / flashDuration;
-                flash.style.opacity = 1.0f - t;
-                flash.style.scale = new StyleScale(new Scale(Vector3.one * (1f + t * 2f)));
+                
+                // 各グローレイヤーをアニメーション
+                for (int layer = 0; layer < glowLayers.Count; layer++)
+                {
+                    var glow = glowLayers[layer];
+                    float layerT = Mathf.Clamp01(t - layer * 0.1f); // レイヤーごとに少しずつ遅延
+                    
+                    // フェードインしてからフェードアウト
+                    float opacity = 0f;
+                    if (layerT < 0.3f)
+                    {
+                        opacity = Mathf.Lerp(0f, 1f, layerT / 0.3f);
+                    }
+                    else
+                    {
+                        opacity = Mathf.Lerp(1f, 0f, (layerT - 0.3f) / 0.7f);
+                    }
+                    glow.style.opacity = opacity;
+                    
+                    // 拡大
+                    float scale = 1f + layerT * 2f;
+                    float baseSize = 80f + layer * 40f;
+                    glow.style.width = baseSize * scale;
+                    glow.style.height = baseSize * scale;
+                    float radius = (baseSize * scale) / 2f;
+                    glow.style.borderTopLeftRadius = radius;
+                    glow.style.borderTopRightRadius = radius;
+                    glow.style.borderBottomLeftRadius = radius;
+                    glow.style.borderBottomRightRadius = radius;
+                    glow.style.left = localEndPos.x - (baseSize * scale) / 2f;
+                    glow.style.top = localEndPos.y - (baseSize * scale) / 2f;
+                    
+                    // α加算合成風：明るさを上げる
+                    Color glowColor = glow.style.backgroundColor.value;
+                    float brightness = 1f + layerT * 0.5f; // 加算合成風に明るく
+                    glowColor.r = Mathf.Clamp01(glowColor.r * brightness);
+                    glowColor.g = Mathf.Clamp01(glowColor.g * brightness);
+                    glowColor.b = Mathf.Clamp01(glowColor.b * brightness);
+                    glow.style.backgroundColor = glowColor;
+                }
                 
                 // ボタンをフェードイン
-                targetButton.style.opacity = t;
+                targetButton.style.opacity = Mathf.Lerp(0f, 1f, t);
                 yield return null;
             }
 
             targetButton.style.opacity = 1f;
+            
+            // 背景オーバーレイをフェードアウト
+            float fadeOutDuration = 0.3f;
+            elapsed = 0f;
+            while (elapsed < fadeOutDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / fadeOutDuration;
+                glowOverlay.style.backgroundColor = new Color(1f, 0.95f, 0.8f, Mathf.Lerp(0.3f, 0f, t));
+                yield return null;
+            }
+            
             effectContainer.RemoveFromHierarchy();
         }
     }
 }
-
