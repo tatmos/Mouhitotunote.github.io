@@ -55,7 +55,7 @@ namespace NovelGame.Overlay
             },
             ["DarkStart_Active"] = new List<string>
             {
-                "うわ、画面が\"直されてる\"。",
+                "うわ、画面が\"直されてる？\"。",
                 "ねえ、今の音…混ざったよね。"
             },
             ["MouhitotuSuccess_First"] = new List<string>

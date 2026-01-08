@@ -1720,9 +1720,21 @@ namespace NovelGame
                                         // HandleChoiceを先に呼び出して、取得した文字をcollectedLettersに反映
                                         if (wordFoundInCurrentScenario && scenario != null && result != null)
                                         {
+                                            int previousScore = gameManager.GetScore();
                                             gameManager.HandleChoice(result.choiceId, true);
                                             // resultを再取得
                                             result = gameManager.GetScenarioResult(scenario.id);
+                                            
+                                            // シナリオ6でスコアが7になった場合、背景を段階的に歪ませる
+                                            int currentScore = gameManager.GetScore();
+                                            if (scenario.id == 6 && previousScore == 6 && currentScore >= 7 && !isDarkMode)
+                                            {
+                                                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                                                if (backgroundImage != null && distortionEffectManager != null)
+                                                {
+                                                    distortionEffectManager.ApplyGradualBackgroundDistortion(backgroundImage, currentScore, 6);
+                                                }
+                                            }
                                             
                                             // Overlayイベント発火（「もうひとつ」成功）
                                             OverlayEventHub.Publish(new MouhitotuResultEvt(scenario.id, true, "カウントダウン中に発見"));
@@ -1798,9 +1810,21 @@ namespace NovelGame
                             // HandleChoiceを呼び出して、取得した文字をcollectedLettersに反映
                             if (scenario != null && result != null)
                             {
+                                int previousScore = gameManager.GetScore();
                                 gameManager.HandleChoice(result.choiceId, true);
                                 // resultを再取得
                                 result = gameManager.GetScenarioResult(scenario.id);
+                                
+                                // シナリオ6でスコアが7になった場合、背景を段階的に歪ませる
+                                int currentScore = gameManager.GetScore();
+                                if (scenario.id == 6 && previousScore == 6 && currentScore >= 7 && !isDarkMode)
+                                {
+                                    var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                                    if (backgroundImage != null && distortionEffectManager != null)
+                                    {
+                                        distortionEffectManager.ApplyGradualBackgroundDistortion(backgroundImage, currentScore, 6);
+                                    }
+                                }
                             }
                             
                             // 綺麗な演出とともに一呼吸してから表示
@@ -1858,9 +1882,21 @@ namespace NovelGame
                                 // クリッカブル判定が完了している場合は、HandleChoiceを呼び出す
                                 if (wordFoundInCurrentScenario && scenario != null && result != null)
                                 {
+                                    int previousScore = gameManager.GetScore();
                                     gameManager.HandleChoice(result.choiceId, true);
                                     // resultを再取得
                                     result = gameManager.GetScenarioResult(scenario.id);
+                                    
+                                    // シナリオ6でスコアが7になった場合、背景を段階的に歪ませる
+                                    int currentScore = gameManager.GetScore();
+                                    if (scenario.id == 6 && previousScore == 6 && currentScore >= 7 && !isDarkMode)
+                                    {
+                                        var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                                        if (backgroundImage != null && distortionEffectManager != null)
+                                        {
+                                            distortionEffectManager.ApplyGradualBackgroundDistortion(backgroundImage, currentScore, 6);
+                                        }
+                                    }
                                 }
                                 StartCoroutine(ShowWordGetWithEffect(root, isDarkMode, scenario, result, epilogueContainer, epilogueLabel, pos));
                             }
@@ -2026,6 +2062,21 @@ namespace NovelGame
                 {
                     creditsScreenManager.StopAutoScroll();
                 }
+                
+                // 不定期な歪み効果を停止
+                if (distortionEffectManager != null)
+                {
+                    var root = creditsScreenDocument.rootVisualElement;
+                    if (root != null)
+                    {
+                        var backgroundImage = root.Q<VisualElement>("BackgroundImage");
+                        if (backgroundImage != null)
+                        {
+                            distortionEffectManager.StopIntermittentDistortionForCredits(backgroundImage);
+                        }
+                    }
+                }
+                
                 if (!keepBgm && audioManager != null)
                 {
                     // BGMをフェードアウト
@@ -2094,6 +2145,26 @@ namespace NovelGame
                 if (wordGetEffectManager != null && lostScoreLabel != null)
                 {
                     StartCoroutine(wordGetEffectManager.PlayWordLostAnimation(currentScore, previousScore, currentDocument.rootVisualElement, lostScoreLabel));
+                }
+            }
+            
+            // シナリオ6のリザルト画面で、スコアに応じて歪み効果を更新
+            var scenario = gameManager.GetCurrentScenario();
+            if (scenario != null && scenario.id == 6 && !gameManager.IsDarkMode())
+            {
+                var backgroundImage = currentDocument.rootVisualElement.Q<VisualElement>("BackgroundImage");
+                if (backgroundImage != null && distortionEffectManager != null)
+                {
+                    // スコアが7以上の場合、歪み効果を更新
+                    if (currentScore >= 7)
+                    {
+                        distortionEffectManager.UpdateDistortionByScore(currentScore, 6);
+                    }
+                    // スコアが6に戻った場合、歪み効果を停止
+                    else if (currentScore == 6 && previousScore > 6)
+                    {
+                        distortionEffectManager.StopScoreBasedDistortion(backgroundImage);
+                    }
                 }
             }
             
@@ -3167,7 +3238,26 @@ namespace NovelGame
                     }
                     
                     // ダークモード時は背景を歪ませる
+                    bool isDarkMode = gameManager != null && gameManager.IsDarkMode();
                     ApplyBackgroundDistortion(backgroundImage);
+                    
+                    // ダークモードでない場合、スコアに応じて不定期な歪み効果を適用
+                    if (!isDarkMode && gameManager != null && distortionEffectManager != null)
+                    {
+                        int currentScore = gameManager.GetScore();
+                        int normalScore = 6;
+                        
+                        // スコアが正常値から離れている場合、不定期な歪み効果を開始
+                        if (currentScore != normalScore)
+                        {
+                            distortionEffectManager.StartIntermittentDistortionForCredits(backgroundImage, currentScore, normalScore);
+                        }
+                        else
+                        {
+                            // スコアが正常値の場合は歪み効果を停止（安定した背景）
+                            distortionEffectManager.StopIntermittentDistortionForCredits(backgroundImage);
+                        }
+                    }
                 }
             }
 
