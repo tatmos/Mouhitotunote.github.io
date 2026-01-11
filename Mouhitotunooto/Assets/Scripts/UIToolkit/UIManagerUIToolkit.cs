@@ -105,12 +105,14 @@ namespace NovelGame
         private TypewriterEffectManager typewriterEffectManager;
         private CountdownManager countdownManager;
         private ScreenTransitionManager screenTransitionManager;
+        private TitleScreenManager titleScreenManager;
         private ProfileScreenManager profileScreenManager;
         private AchievementsScreenManager achievementsScreenManager;
         private MouhitotsuScreenManager mouhitotsuScreenManager;
         private CreditsScreenManager creditsScreenManager;
         private SoundSettingsManager soundSettingsManager;
         private SelectionScreenManager selectionScreenManager;
+        private ScenarioScreenManager scenarioScreenManager;
         
         // 演出マネージャー
         private LetterFallAnimationManager letterFallAnimationManager;
@@ -178,6 +180,38 @@ namespace NovelGame
             }
             countdownManager = gameObject.AddComponent<CountdownManager>();
             screenTransitionManager = gameObject.AddComponent<ScreenTransitionManager>();
+            
+            // TitleScreenManagerを初期化
+            titleScreenManager = new TitleScreenManager(gameManager);
+            titleScreenManager.SetTypewriterEffectManager(typewriterEffectManager);
+            titleScreenManager.SetScreenTransitionManager(screenTransitionManager);
+            titleScreenManager.SetTitleScreenDocument(titleScreenDocument);
+            titleScreenManager.InitializeSettings(selectionScreenBackground, uiButtonNormalImage);
+            titleScreenManager.SetCallbacks(
+                () => {
+                    if (titleScreenDocument != null)
+                    {
+                        var root = titleScreenDocument.rootVisualElement;
+                        if (root != null)
+                        {
+                            var mysteryVoiceText = root.Q<VisualElement>("MysteryVoiceText");
+                            if (mysteryVoiceText != null)
+                            {
+                                StartCoroutine(FadeOutTitleTextAndShowSelection(mysteryVoiceText));
+                            }
+                            else
+                            {
+                                ShowSelectionScreen();
+                            }
+                        }
+                    }
+                },
+                PlayHoverSound,
+                ApplyBackgroundDistortion,
+                (ve, tex) => backgroundTextureCache[ve] = tex,
+                ApplyButtonImage
+            );
+            
             profileScreenManager = new ProfileScreenManager(gameManager);
             profileScreenManager.SetTypewriterEffectManager(typewriterEffectManager);
             profileScreenManager.SetOnHoverSoundCallback(PlayHoverSound);
@@ -334,128 +368,13 @@ namespace NovelGame
             var root = titleScreenDocument.rootVisualElement;
             if (root == null) return;
             
-            // スクロールバーを非表示にする
-            root.style.overflow = Overflow.Hidden;
-            
-            // 背景画像を設定（シナリオ選択背景を使用）
-            if (selectionScreenBackground != null)
+            // TitleScreenManagerを使用してセットアップ
+            if (titleScreenManager != null)
             {
-                var backgroundImage = root.Q<VisualElement>("BackgroundImage");
-                if (backgroundImage != null)
-                {
-                    backgroundImage.style.backgroundImage = new StyleBackground(selectionScreenBackground);
-                    
-                    // 背景テクスチャを事前にキャッシュ
-                    if (selectionScreenBackground != null && selectionScreenBackground.texture != null)
-                    {
-                        backgroundTextureCache[backgroundImage] = selectionScreenBackground.texture;
-                    }
-                    
-                    // ダークモード時は背景を歪ませる
-                    ApplyBackgroundDistortion(backgroundImage);
-                }
-            }
-            
-            // スタートボタンの設定
-            var startButton = root.Q<Button>("StartButton");
-            if (startButton != null)
-            {
-                startButton.clicked += OnStartButtonClicked;
-                startButton.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
-                
-                // 3周目：スタートボタンのテキストも伏字にする
-                var lostLetters = gameManager.GetLostLetters();
-                if (lostLetters.Count > 0)
-                {
-                    string buttonText = "もうひとつを探す";
-                    foreach (char lostLetter in lostLetters)
-                    {
-                        buttonText = buttonText.Replace(lostLetter.ToString(), "※");
-                    }
-                    startButton.text = buttonText;
-                }
-                else
-                {
-                    startButton.text = "もうひとつを探す";
-                }
-                
-                // スタートボタンに画像を適用
-                Color startButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
-                ApplyButtonImage(startButton, uiButtonNormalImage, startButtonTextColor);
-            }
-            
-            // 謎の声テキストを非表示に設定
-            var mysteryVoiceText = root.Q<VisualElement>("MysteryVoiceText");
-            if (mysteryVoiceText != null)
-            {
-                mysteryVoiceText.style.display = DisplayStyle.None;
-            }
-            
-            // バージョン情報の表示（3周目などで伏字にする）
-            var versionText = root.Q<Label>("VersionText");
-            if (versionText != null)
-            {
-                string text = "v1.9.0 (2026-01-11)";
-                var lostLetters = gameManager.GetLostLetters();
-                var collectedLetters = gameManager.GetCollectedLetters();
-                versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
-            }
-            
-            // トランジション開始
-            if (screenTransitionManager != null)
-            {
-                screenTransitionManager.StartScreenTransition(root);
+                titleScreenManager.Setup(root);
             }
         }
         
-        /// <summary>
-        /// スタートボタンがクリックされた時の処理
-        /// </summary>
-        private void OnStartButtonClicked()
-        {
-            if (titleScreenDocument == null) return;
-            
-            var root = titleScreenDocument.rootVisualElement;
-            if (root == null) return;
-            
-            // スタートボタンを非表示
-            var startButton = root.Q<Button>("StartButton");
-            if (startButton != null)
-            {
-                startButton.style.display = DisplayStyle.None;
-            }
-            
-            // 謎の声テキストを表示
-            var mysteryVoiceText = root.Q<VisualElement>("MysteryVoiceText");
-            if (mysteryVoiceText != null && typewriterEffectManager != null)
-            {
-                mysteryVoiceText.style.display = DisplayStyle.Flex;
-                
-                // 3周目の場合はテキストを変更
-                string mysteryText = gameManager.IsThirdLoop()
-                    ? "謎の声：\nあなたは\n※※※※※ を探す使命を...\n忘れてはいけません。"
-                    : "謎の声：\nあなたは\nもうひとつ を探す使命が\n与えられています。";
-
-                // ダークモード：失われた文字を置換、取得した文字に色を付ける
-                var lostLetters = gameManager.GetLostLetters();
-                var collectedLetters = gameManager.GetCollectedLetters();
-                mysteryText = TextFormatter.FormatText(mysteryText, collectedLetters, lostLetters, true);
-
-                // 強調ワードを含むタイプライター効果でテキストを表示（フォントサイズ24、クリック不可、速度を考慮）
-                // StartTypewriterEffectWithClickableWord 内部で speedMultiplier はまだサポートしていないが、
-                // 既に強調（10倍遅延）が入っているので十分印象的になるはず。
-                typewriterEffectManager.StartTypewriterEffectWithClickableWord(mysteryVoiceText, mysteryText, () =>
-                {
-                    // タイプライター効果完了後、テキストを3秒かけてフェードアウト
-                    StartCoroutine(FadeOutTitleTextAndShowSelection(mysteryVoiceText));
-                }, fontSize: 24, isClickable: false);
-            }
-            else
-            {
-                // タイプライター効果が使えない場合は即座に遷移
-                ShowSelectionScreen();
-            }
-        }
         
         /// <summary>
         /// タイトルテキストをフェードアウトしてからシナリオ選択画面を表示
