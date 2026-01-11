@@ -24,45 +24,37 @@ namespace NovelGame
         [SerializeField] private UIDocument achievementsScreenDocument;
         [SerializeField] private UIDocument mouhitotsuScreenDocument;
 
-        [Header("UXML Files")]
-        [SerializeField] private VisualTreeAsset selectionScreenUXML;
-        [SerializeField] private VisualTreeAsset scenarioScreenUXML;
-        [SerializeField] private VisualTreeAsset resultScreenUXML;
-        [SerializeField] private VisualTreeAsset profileScreenUXML;
-        [SerializeField] private VisualTreeAsset creditsScreenUXML;
-        [SerializeField] private VisualTreeAsset achievementsScreenUXML;
-        [SerializeField] private VisualTreeAsset mouhitotsuScreenUXML;
-        [SerializeField] private VisualTreeAsset soundSettingsPanelUXML;
+        // UXML Files (Resourcesから読み込み)
+        private VisualTreeAsset selectionScreenUXML;
+        private VisualTreeAsset scenarioScreenUXML;
+        private VisualTreeAsset resultScreenUXML;
+        private VisualTreeAsset profileScreenUXML;
+        private VisualTreeAsset creditsScreenUXML;
+        private VisualTreeAsset achievementsScreenUXML;
+        private VisualTreeAsset mouhitotsuScreenUXML;
+        private VisualTreeAsset soundSettingsPanelUXML;
 
-        [Header("Background Images")]
-        [SerializeField] private Sprite[] scenarioBackgrounds = new Sprite[6];
-        [SerializeField] private Sprite selectionScreenBackground;
-        [SerializeField] private Sprite profileScreenBackground;
+        // Background Images (Resourcesから読み込み)
+        private Sprite[] scenarioBackgrounds;
+        private Sprite selectionScreenBackground;
+        private Sprite profileScreenBackground;
         
-        [Header("Scenario Button Images")]
-        [Tooltip("クリア前のシナリオボタン画像（9-slice対応）。Unityエディタで画像を選択し、Sprite Editorで9-sliceを設定してください。")]
-        [SerializeField] private Sprite scenarioButtonNormalImage; // クリア前のシナリオボタン画像（9-slice対応）
-        [Tooltip("クリア後のシナリオボタン画像（9-slice対応）。Unityエディタで画像を選択し、Sprite Editorで9-sliceを設定してください。")]
-        [SerializeField] private Sprite scenarioButtonCompletedImage; // クリア後のシナリオボタン画像（9-slice対応）
+        // Scenario Button Images (Resourcesから読み込み)
+        private Sprite scenarioButtonNormalImage; // クリア前のシナリオボタン画像（9-slice対応）
+        private Sprite scenarioButtonCompletedImage; // クリア後のシナリオボタン画像（9-slice対応）
         
-        [Header("UI Button Images")]
-        [Tooltip("通常のUIボタン画像（9-slice対応）。選択肢ボタン、スタートボタン、戻るボタンなどに使用されます。")]
-        [SerializeField] private Sprite uiButtonNormalImage; // 通常のUIボタン画像（9-slice対応）
-        [Tooltip("ダークモード用のUIボタン画像（9-slice対応）。ダークモード時の選択肢ボタンに使用されます。")]
-        [SerializeField] private Sprite uiButtonDarkImage; // ダークモード用のUIボタン画像（9-slice対応）
-        [Tooltip("インディゴ系のUIボタン画像（9-slice対応）。確認ダイアログのキャンセルボタンなどに使用されます。")]
-        [SerializeField] private Sprite uiButtonIndigoImage; // インディゴ系のUIボタン画像（9-slice対応）
+        // UI Button Images (Resourcesから読み込み)
+        private Sprite uiButtonNormalImage; // 通常のUIボタン画像（9-slice対応）
+        private Sprite uiButtonDarkImage; // ダークモード用のUIボタン画像（9-slice対応）
+        private Sprite uiButtonIndigoImage; // インディゴ系のUIボタン画像（9-slice対応）
         
-        [Header("UI Element Images")]
-        [Tooltip("タイトル画像（「ミニノベルゲーム」など）。")]
-        [SerializeField] private Sprite titleImage; // タイトル画像
-        [Tooltip("スコア表示用の背景画像（9-slice対応）。")]
-        [SerializeField] private Sprite scoreDisplayBackgroundImage; // スコア表示用の背景画像
-        [Tooltip("メニューボタン用の画像（9-slice対応）。登場人物、実績、もうひとつボタンなどに使用されます。")]
-        [SerializeField] private Sprite menuButtonImage; // メニューボタン用の画像
+        // UI Element Images (Resourcesから読み込み)
+        private Sprite titleImage; // タイトル画像
+        private Sprite scoreDisplayBackgroundImage; // スコア表示用の背景画像
+        private Sprite menuButtonImage; // メニューボタン用の画像
         
-        [Header("Effects")]
-        [SerializeField] private Material distortionMaterial;
+        // Effects (Resourcesから読み込み)
+        private Material distortionMaterial;
         
         // 背景テクスチャのキャッシュ（VisualElement → Texture2D）
         // 注意: DistortionEffectManagerでも使用するため、共有する必要がある場合はpublicにするか、DistortionEffectManagerに渡す
@@ -184,6 +176,46 @@ namespace NovelGame
             clockIcon = UIResourceLoader.LoadSprite("UI/Icons/clockIcon");
             sparkleIcon = UIResourceLoader.LoadSprite("UI/Icons/sparkleIcon");
             soundIcon = UIResourceLoader.LoadSprite("UI/Icons/soundIcon");
+            
+            // MaterialをResourcesから読み込む
+            distortionMaterial = UIResourceLoader.LoadMaterial("Materials/DistortedMaterial");
+            
+            // UXML FilesをResourcesから読み込む
+            selectionScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/SelectionScreen");
+            scenarioScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/ScenarioScreen");
+            resultScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/ResultScreen");
+            profileScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/ProfileScreen");
+            creditsScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/CreditsScreen");
+            achievementsScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/AchievementsScreen");
+            mouhitotsuScreenUXML = UIResourceLoader.LoadUXML("UI/UXML/MouhitotsuScreen");
+            soundSettingsPanelUXML = UIResourceLoader.LoadUXML("UI/UXML/SoundSettingsPanel");
+            
+            // Background ImagesをResourcesから読み込む
+            scenarioBackgrounds = new Sprite[]
+            {
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario01_MysteryRequest"),
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario02_MysteriousRestaurant"),
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario03_TimeCapsule"),
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario04_MagicSchool"),
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario05_LastPiece"),
+                UIResourceLoader.LoadSprite("UI/Backgrounds/Background_Scenario06_TruthDoor")
+            };
+            selectionScreenBackground = UIResourceLoader.LoadSprite("UI/Backgrounds/Background_SelectionScreen");
+            profileScreenBackground = UIResourceLoader.LoadSprite("UI/Backgrounds/Background_ProfileScreen");
+            
+            // Scenario Button ImagesをResourcesから読み込む
+            scenarioButtonNormalImage = UIResourceLoader.LoadSprite("UI/Buttons/scenarioButtonNormalImage");
+            scenarioButtonCompletedImage = UIResourceLoader.LoadSprite("UI/Buttons/scenarioButtonCompletedImage");
+            
+            // UI Button ImagesをResourcesから読み込む
+            uiButtonNormalImage = UIResourceLoader.LoadSprite("UI/Buttons/uiButtonNormalImage");
+            uiButtonDarkImage = UIResourceLoader.LoadSprite("UI/Buttons/uiButtonDarkImage");
+            uiButtonIndigoImage = UIResourceLoader.LoadSprite("UI/Buttons/uiButtonIndigoImage");
+            
+            // UI Element ImagesをResourcesから読み込む
+            titleImage = UIResourceLoader.LoadSprite("UI/titleImage");
+            scoreDisplayBackgroundImage = UIResourceLoader.LoadSprite("UI/scoreDisplayBackgroundImage");
+            menuButtonImage = UIResourceLoader.LoadSprite("UI/Buttons/menuButtonImage");
         }
         
         private void Start()
