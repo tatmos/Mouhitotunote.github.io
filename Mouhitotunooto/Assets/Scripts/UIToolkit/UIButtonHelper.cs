@@ -18,18 +18,23 @@ namespace NovelGame
         {
             if (button == null) return;
             
-            // テキストの色を設定
-            button.style.color = textColor;
-            
-            // 背景画像を設定（9-slice対応）
-            if (buttonImage != null)
+            // 背景画像を設定
+            if (buttonImage != null && buttonImage.texture != null)
             {
-                button.style.backgroundImage = new StyleBackground(buttonImage);
-                button.style.backgroundColor = Color.clear; // 背景画像が設定されている場合は背景色をクリア
+                button.style.backgroundImage = new StyleBackground(buttonImage.texture);
+                button.style.backgroundColor = Color.clear; // 背景色をクリア
             }
-            else
+            
+            // ボーダーを削除（背景画像を使用する場合はボーダーは不要）
+            button.style.borderTopWidth = 0;
+            button.style.borderRightWidth = 0;
+            button.style.borderBottomWidth = 0;
+            button.style.borderLeftWidth = 0;
+            
+            // ボタン内のテキストの色を設定
+            if (button.text != null)
             {
-                button.style.backgroundImage = StyleKeyword.None;
+                button.style.color = textColor;
             }
         }
         

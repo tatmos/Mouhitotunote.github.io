@@ -2,7 +2,7 @@
 
 ## 概要
 
-UIManagerUIToolkit.cs（3607行）を整理するため、優先度の高い項目から実装を進めます。
+UIManagerUIToolkit.cs（3789行）を整理するため、優先度の高い項目から実装を進めます。
 
 ## 実装順序
 
@@ -65,11 +65,32 @@ UIManagerUIToolkit.cs（3607行）を整理するため、優先度の高い項�
    - 既存のコードを壊さないように、段階的に移行
    - 動作確認を十分に行う
 
+## 完了したタスク
+
+### 高優先度
+- ✅ **TitleScreenManager** - 完了（既に実装済み）
+- ✅ **ScenarioScreenManager** - 完了（実装済み）
+- ✅ **ResultScreenManager** - 部分的に完了（後日談、ワードゲット表示、戻るボタンの設定は完了。結果テキスト設定は将来的に検討）
+
+### 中優先度
+- ✅ **UIConstants** - 完了（定数クラスを作成）
+  - カラー定数（DarkBrown、BrightText）
+  - フォントサイズ定数（FontSizeNormal、FontSizeMedium、FontSizeTitle）
+  - オーバーレイ関連の定数
+  - フェード関連の定数
+  - デフォルトのテキストシャドウ設定
+- ✅ **UIButtonHelper** - 完了（ボタンヘルパークラスを作成）
+  - `ApplyButtonImage` メソッド
+  - `SetupButtonWithIcon` メソッド（プレースホルダー）
+  - `SetupButtonWithEvents` メソッド
+
 ## 次のステップ
 
 1. ✅ ScenarioScreenManagerの基本構造を作成（完了）
 2. ✅ ShowScenarioScreenの主要な処理を移行（完了）
 3. ✅ ResultScreenManagerの基本構造を作成（部分的に完了）
-4. ⏳ 定数の抽出（`UIConstants` の作成）- 中優先度
-5. ⏳ ヘルパークラスの作成（`UIButtonHelper`、`UIDialogHelper` など）- 中優先度
-6. ⏳ ResultScreenManagerの結果テキスト設定の実装（将来的に検討）
+4. ✅ 定数の抽出（`UIConstants` の作成）- 完了
+5. ✅ ヘルパークラスの作成（`UIButtonHelper`）- 完了
+6. ⏳ `UIConstants`と`UIButtonHelper`を`UIManagerUIToolkit.cs`内で使用するようにコードを更新
+7. ⏳ `UIDialogHelper`の作成（オプション）- 中優先度
+8. ⏳ ResultScreenManagerの結果テキスト設定の実装（将来的に検討）
