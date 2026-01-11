@@ -113,6 +113,7 @@ namespace NovelGame
         private SoundSettingsManager soundSettingsManager;
         private SelectionScreenManager selectionScreenManager;
         private ScenarioScreenManager scenarioScreenManager;
+        private ResultScreenManager resultScreenManager;
         
         // 演出マネージャー
         private LetterFallAnimationManager letterFallAnimationManager;
@@ -1161,157 +1162,6 @@ namespace NovelGame
                 scrollView.AddToClassList("scroll-view-interactive");
             }
             
-            // 背景画像を設定
-            SetBackgroundImage(scenario.id, false);
-
-            // ダークモード判定：予約されているダークモードも考慮
-            bool isDarkMode = gameManager.IsDarkMode() || gameManager.GetPendingDarkMode();
-            
-            // 明るい色を定義（メソッド全体で使用）
-            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
-
-            // 後日談を設定（最初は非表示）
-            var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
-            var epilogueLabel = root.Q<Label>("EpilogueText");
-            if (epilogueContainer != null)
-            {
-                // 後日談コンテナを最初は非表示にする
-                epilogueContainer.style.display = DisplayStyle.None;
-                
-                // ダークモードの場合はダークスタイルを適用
-                epilogueContainer.ClearClassList();
-                if (isDarkMode)
-                {
-                    epilogueContainer.AddToClassList("epilogue-box-dark");
-                }
-                else
-                {
-                    epilogueContainer.AddToClassList("epilogue-box");
-                }
-            }
-            
-            // 後日談テキストを準備
-            string epilogueText = "";
-            if (epilogueLabel != null)
-            {
-                // 既存のクラスをクリア
-                epilogueLabel.ClearClassList();
-                // 明るい色を適用
-                epilogueLabel.style.color = brightTextColor;
-                epilogueLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-                
-                if (isDarkMode)
-                {
-                    // シナリオごとのダークモードエピローグ
-                    epilogueText = scenario.id switch
-                    {
-                        1 => result.choiceId == 1
-                            ? "【データ破損】もも子のデータは完全に崩壊しました。\n写真から人物の姿が消え、存在が不安定になりました。\n「も」という文字が消失し、探偵事務所のデータも歪み始めています。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「も...もど...もどれない...」\n\n【エンド：文字の消失】"
-                            : "【システムエラー】データの修復を試みましたが、失敗しました。\nもも子のデータは完全に破損し、修復不可能な状態です。\n写真の人物は、データの欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
-                        2 => result.choiceId == 1
-                            ? "【データ破損】うみシェフのデータは完全に崩壊しました。\nレストランのメニューが文字化けし、料理のデータが読み込めなくなりました。\n「う」という文字が消失し、レストランの存在が不安定になっています。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「う...うみ...うみへ...」\n\n【エンド：文字の消失】"
-                            : "【システムエラー】システムエラーの報告を行いましたが、無意味でした。\nうみシェフのデータは完全に破損し、レストランは機能しなくなりました。\n料理のデータが欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
-                        3 => result.choiceId == 1
-                            ? "【データ破損】ひろのデータは完全に崩壊しました。\n過去の記憶が歪み、タイムカプセルのデータが欠損しています。\n「ひ」という文字が消失し、友情の記憶が失われました。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「ひ...ひろ...ひろが...」\n\n【エンド：文字の消失】"
-                            : "【システムエラー】データの修復を試みましたが、失敗しました。\nひろのデータは完全に破損し、過去の記憶が消えてしまいました。\nタイムカプセルは、データの欠片となって崩壊しました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
-                        4 => result.choiceId == 1
-                            ? "【データ破損】とおる試験官のデータは完全に崩壊しました。\n魔法のコードがエラーを起こし、魔法学校のシステムが停止しました。\n「と」という文字が消失し、魔法のデータが読み込めなくなりました。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「と...とおる...とおるが...」\n\n【エンド：文字の消失】"
-                            : "【システムエラー】システムの整合性を確認しましたが、手遅れでした。\nとおる試験官のデータは完全に破損し、魔法学校は機能しなくなりました。\n呪文のコードが欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
-                        5 => result.choiceId == 1
-                            ? "【データ破損】つばさのデータは完全に崩壊しました。\nパズルのピースが永遠に足りず、完成することができなくなりました。\n「つ」という文字が消失し、愛の記憶が消えつつあります。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「つ...つばさ...つばさが...」\n\n【エンド：文字の消失】"
-                            : "【システムエラー】完成できないことに気づきましたが、時既に遅しでした。\nつばさのデータは完全に破損し、パズルは永遠に完成できなくなりました。\n愛の記憶が欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
-                        6 => result.choiceId == 1
-                            ? "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】"
-                            : "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】",
-                        _ => "【データ破損】"
-                    };
-                    epilogueLabel.AddToClassList("epilogue-text-dark");
-                }
-                else
-                {
-                    epilogueText = result.epilogue;
-                    
-                    // シナリオ4（魔法学校の試験）の場合、ワードが見つからなかった場合に動物にゆかりのある話題を追加
-                    if (scenario.id == 4 )
-                    {
-                        // シナリオのsetupから動物名を抽出（「試験官：「{animalName}を出現させなさい」」の形式）
-                        string animalName = ExtractAnimalNameFromSetup(scenario.setup);
-                        
-                        if (!string.IsNullOrEmpty(animalName))
-                        {
-                            string relatedTopic = AnimalNameManager.GetRelatedTopic(animalName);
-                            if (!string.IsNullOrEmpty(relatedTopic))
-                            {
-                                // epilogueに既に動物の話題が含まれていない場合のみ追加
-                                if (!epilogueText.Contains(relatedTopic))
-                                {
-                                    epilogueText += $"\n\n試験官が何か言いかけた。\n試験官：「ところで、{animalName}について...{relatedTopic}」";
-                                }
-                            }
-                        }
-                    }
-                    
-                    epilogueLabel.AddToClassList("epilogue-text");
-                }
-                
-                // 取得した文字に色を付け、失われた文字を伏字化
-                var collectedLetters = gameManager.GetCollectedLetters();
-                var lostLetters = gameManager.GetLostLetters();
-                epilogueText = TextFormatter.FormatText(epilogueText, collectedLetters, lostLetters, true);
-            }
-
-            // ワードゲット表示（最初は非表示、結果テキストのタイプライター効果が完了したら表示）
-            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
-            var wordGetLabel = root.Q<Label>("WordGetText");
-            var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
-            var countdownContainer = root.Q<VisualElement>("CountdownContainer");
-            var countdownText = root.Q<Label>("CountdownText");
-            
-            // スコア表示に明るい色を適用（brightTextColorはメソッド先頭で定義済み）
-            var scoreLabel = root.Q<Label>("ScoreText");
-            if (scoreLabel != null)
-            {
-                scoreLabel.style.color = brightTextColor;
-                scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // ワードゲットテキストに明るい色を適用（初期化時は背景画像を設定しない）
-            // 背景画像は、実際に表示される時（SetupWordGetLabelWithSparkle）に設定される
-            if (wordGetLabel != null)
-            {
-                wordGetLabel.style.color = brightTextColor;
-                wordGetLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // ワードゲット成功メッセージに明るい色を適用
-            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
-            if (wordFoundMessageLabel != null)
-            {
-                wordFoundMessageLabel.style.color = brightTextColor;
-                wordFoundMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // ワードゲット失敗メッセージに明るい色を適用
-            if (wordFailedMessageLabel != null)
-            {
-                wordFailedMessageLabel.style.color = brightTextColor;
-                wordFailedMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // カウントダウンテキストに明るい色を適用
-            if (countdownText != null)
-            {
-                countdownText.style.color = brightTextColor;
-                countdownText.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // 時計アイコンを設定
-            var clockIcon = root.Q<Image>("ClockIcon");
-            if (clockIcon != null && this.clockIcon != null)
-            {
-                clockIcon.sprite = this.clockIcon;
-            }
-            
             // テキストに「もうひとつ」が含まれているかどうかを自動的に検出
             // 重要: hasWordの概念は不要。テキストに「もうひとつ」が含まれていれば、自動的にワードゲット可能
             if (result != null && scenario != null)
@@ -1348,22 +1198,129 @@ namespace NovelGame
                 }
             }
             
-            // 既存のカウントダウンを停止
-            if (countdownManager != null)
+            // ResultScreenManagerを初期化して使用
+            var settings = new ResultScreenSettings
             {
-                countdownManager.StopCountdown();
-            }
+                scenarioBackgrounds = scenarioBackgrounds,
+                uiButtonNormalImage = uiButtonNormalImage,
+                clockIcon = clockIcon
+            };
             
-            // カウントダウンコンテナを非表示にする
-            if (countdownContainer != null)
+            var actions = new ResultScreenActions
             {
-                countdownContainer.style.display = DisplayStyle.None;
-            }
+                onFadeOutAudioOnSceneChange = FadeOutAudioOnSceneChange,
+                onFadeOutAmbientSoundForResult = FadeOutAmbientSoundForResult,
+                onHideAllScreens = HideAllScreens,
+                onSetBackgroundImage = SetBackgroundImage,
+                onUpdateScoreDisplay = UpdateScoreDisplay,
+                onGetMaskedWordGetText = GetMaskedWordGetText,
+                onSetupWordGetLabelWithSparkle = SetupWordGetLabelWithSparkle,
+                onShowWordGetWithEffect = ShowWordGetWithEffect,
+                onAnimateWordGetLabelFadeIn = AnimateWordGetLabelFadeIn,
+                onExtractAnimalNameFromSetup = ExtractAnimalNameFromSetup,
+                onApplyScrollbarStyles = ApplyScrollbarStyles,
+                onShowBackButton = ShowBackButton,
+                onApplyButtonImage = ApplyButtonImage,
+                onShowLetterGetAnimation = (pos, rootElement) =>
+                {
+                    // wordGetEffectManagerがある場合はそれを使用、なければShowLetterGetAnimationを使用
+                    if (wordGetEffectManager != null)
+                    {
+                        return wordGetEffectManager.ShowLetterGetAnimation(pos, rootElement);
+                    }
+                    else
+                    {
+                        return ShowLetterGetAnimation(pos);
+                    }
+                },
+                onShowSelectionScreen = ShowSelectionScreen,
+                onShowTitleScreenWithFade = ShowTitleScreenWithFade
+            };
             
-            // 失敗メッセージを非表示にする
-            if (wordFailedMessageLabel != null)
+            resultScreenManager = new ResultScreenManager(
+                root,
+                gameManager,
+                audioManager,
+                typewriterEffectManager,
+                countdownManager,
+                screenTransitionManager,
+                wordGetEffectManager,
+                distortionEffectManager,
+                settings,
+                actions
+            );
+            
+            resultScreenManager.Setup(scenario, result, wordFoundInCurrentScenario, this);
+            
+            // ダークモード判定：予約されているダークモードも考慮
+            bool isDarkMode = gameManager.IsDarkMode() || gameManager.GetPendingDarkMode();
+            
+            // 明るい色を定義（メソッド全体で使用）
+            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+            
+            // 結果テキストの設定で使用する要素を取得
+            var epilogueContainer = root.Q<VisualElement>("EpilogueContainer");
+            var epilogueLabel = root.Q<Label>("EpilogueText");
+            var wordGetContainer = root.Q<VisualElement>("WordGetContainer");
+            var wordGetLabel = root.Q<Label>("WordGetText");
+            var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
+            var countdownContainer = root.Q<VisualElement>("CountdownContainer");
+            var countdownText = root.Q<Label>("CountdownText");
+            
+            // 後日談テキストを取得（結果テキストの設定で使用するため）
+            string epilogueText = "";
+            if (epilogueLabel != null)
             {
-                wordFailedMessageLabel.style.display = DisplayStyle.None;
+                if (isDarkMode)
+                {
+                    epilogueText = result.choiceId == 1
+                        ? scenario.id switch
+                        {
+                            1 => "【データ破損】もも子のデータは完全に崩壊しました。\n写真から人物の姿が消え、存在が不安定になりました。\n「も」という文字が消失し、探偵事務所のデータも歪み始めています。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「も...もど...もどれない...」\n\n【エンド：文字の消失】",
+                            2 => "【データ破損】うみシェフのデータは完全に崩壊しました。\nレストランのメニューが文字化けし、料理のデータが読み込めなくなりました。\n「う」という文字が消失し、レストランの存在が不安定になっています。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「う...うみ...うみへ...」\n\n【エンド：文字の消失】",
+                            3 => "【データ破損】ひろのデータは完全に崩壊しました。\n過去の記憶が歪み、タイムカプセルのデータが欠損しています。\n「ひ」という文字が消失し、友情の記憶が失われました。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「ひ...ひろ...ひろが...」\n\n【エンド：文字の消失】",
+                            4 => "【データ破損】とおる試験官のデータは完全に崩壊しました。\n魔法のコードがエラーを起こし、魔法学校のシステムが停止しました。\n「と」という文字が消失し、魔法のデータが読み込めなくなりました。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「と...とおる...とおるが...」\n\n【エンド：文字の消失】",
+                            5 => "【データ破損】つばさのデータは完全に崩壊しました。\nパズルのピースが永遠に足りず、完成することができなくなりました。\n「つ」という文字が消失し、愛の記憶が消えつつあります。\n\nあなたの異常な行動が、世界の一部を破壊してしまいました。\n「つ...つばさ...つばさが...」\n\n【エンド：文字の消失】",
+                            6 => "世界は完全に崩壊しました。\nシミュレーションの整合性は失われ、修復不可能な状態です。\n\n登場人物たちは、データの欠片となって消えていきました。\nもも子、うみ、ひろ、とおる、つばさ...\nすべてが、あなたの異常な行動の結果です。\n\nあなたは、空っぽの世界に一人取り残されました。\n「もう...戻れない...」\n\n【エンド：世界崩壊】",
+                            _ => "【データ破損】"
+                        }
+                        : scenario.id switch
+                        {
+                            1 => "【システムエラー】データの修復を試みましたが、失敗しました。\nもも子のデータは完全に破損し、修復不可能な状態です。\n写真の人物は、データの欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
+                            2 => "【システムエラー】システムエラーの報告を行いましたが、無意味でした。\nうみシェフのデータは完全に破損し、レストランは機能しなくなりました。\n料理のデータが欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
+                            3 => "【システムエラー】データの修復を試みましたが、失敗しました。\nひろのデータは完全に破損し、過去の記憶が消えてしまいました。\nタイムカプセルは、データの欠片となって崩壊しました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
+                            4 => "【システムエラー】システムの整合性を確認しましたが、手遅れでした。\nとおる試験官のデータは完全に破損し、魔法学校は機能しなくなりました。\n呪文のコードが欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
+                            5 => "【システムエラー】完成できないことに気づきましたが、時既に遅しでした。\nつばさのデータは完全に破損し、パズルは永遠に完成できなくなりました。\n愛の記憶が欠片となって消えていきました。\n\n「もう...戻れない...」\n\n【エンド：修復不可能】",
+                            6 => "あなたは、世界の真実を知ってしまいました。\nこの世界は、シミュレーションだったのです。\n\nしかし、あなたの異常な行動が、世界を破壊してしまいました。\n登場人物たちは、バグによって歪んだ姿となっています。\n\nもも子は「も」という文字を失い、\nうみは「う」という文字を失い、\nひろは「ひ」という文字を失い、\nとおるは「と」という文字を失い、\nつばさは「つ」という文字を失いました。\n\n「もうひとつ」という言葉は、永遠に失われました。\n\n【エンド：言葉の消失】",
+                            _ => "【データ破損】"
+                        };
+                }
+                else
+                {
+                    epilogueText = result.epilogue;
+                    
+                    // シナリオ4（魔法学校の試験）の場合、ワードが見つからなかった場合に動物にゆかりのある話題を追加
+                    if (scenario.id == 4)
+                    {
+                        string animalName = ExtractAnimalNameFromSetup(scenario.setup);
+                        if (!string.IsNullOrEmpty(animalName))
+                        {
+                            string relatedTopic = AnimalNameManager.GetRelatedTopic(animalName);
+                            if (!string.IsNullOrEmpty(relatedTopic))
+                            {
+                                if (!epilogueText.Contains(relatedTopic))
+                                {
+                                    epilogueText += $"\n\n試験官が何か言いかけた。\n試験官：「ところで、{animalName}について...{relatedTopic}」";
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 取得した文字に色を付け、失われた文字を伏字化
+                var collectedLetters = gameManager.GetCollectedLetters();
+                var lostLetters = gameManager.GetLostLetters();
+                epilogueText = TextFormatter.FormatText(epilogueText, collectedLetters, lostLetters, true);
             }
             
             // 結果テキストを設定（タイプライター効果で表示）
@@ -1758,36 +1715,6 @@ namespace NovelGame
                 // 明るい色を適用（クラス追加後に適用して上書き）
                 epilogueTitle.style.color = brightTextColor;
                 epilogueTitle.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-
-            // 戻るボタン（最初は非表示）
-            var backButton = root.Q<Button>("BackToSelectionButton");
-            if (backButton != null)
-            {
-                backButton.style.display = DisplayStyle.None;
-                backButton.clicked += () => {
-                    // 予約されているダークモードがあれば有効化
-                    gameManager.ActivatePendingDarkMode();
-                    ShowSelectionScreen();
-                };
-                // 戻るボタンに画像を適用
-                Color backButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
-                ApplyButtonImage(backButton, uiButtonNormalImage, backButtonTextColor);
-            }
-
-            // タイトル画面に戻るボタン（もしあれば。最初は非表示）
-            var backToTitleButton = root.Q<Button>("BackToTitleButton");
-            if (backToTitleButton != null)
-            {
-                backToTitleButton.style.display = DisplayStyle.None;
-                backToTitleButton.clicked += () => {
-                    // 予約されているダークモードがあれば有効化
-                    gameManager.ActivatePendingDarkMode();
-                    ShowTitleScreenWithFade();
-                };
-                // タイトルに戻るボタンに画像を適用
-                Color backToTitleButtonTextColor = new Color(0x2B / 255f, 0x1F / 255f, 0x18 / 255f, 1f); // #2B1F18（濃茶）
-                ApplyButtonImage(backToTitleButton, uiButtonNormalImage, backToTitleButtonTextColor);
             }
 
             // スクロールバーのスタイルを適用

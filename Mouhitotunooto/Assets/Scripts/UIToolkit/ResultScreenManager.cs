@@ -100,12 +100,12 @@ namespace NovelGame
             // フラグを設定
             this.wordFoundInCurrentScenario = wordFoundInCurrentScenario;
             
-            // オーディオのフェードアウト
-            onFadeOutAudioOnSceneChange?.Invoke();
-            onFadeOutAmbientSoundForResult?.Invoke();
+            // オーディオのフェードアウト（UIManagerUIToolkit側で既に行われているため、ここでは呼び出さない）
+            // onFadeOutAudioOnSceneChange?.Invoke();
+            // onFadeOutAmbientSoundForResult?.Invoke();
             
-            // スクロールバーを非表示にする
-            root.style.overflow = Overflow.Hidden;
+            // スクロールバーを非表示にする（UIManagerUIToolkit側で既に行われているため、ここでは行わない）
+            // root.style.overflow = Overflow.Hidden;
             
             // リザルト画面のUIDocumentのSort Orderをオーバーレイより高く設定
             // これにより、ScrollViewが確実にイベントを受け取れるようになる
@@ -125,7 +125,7 @@ namespace NovelGame
             bool isDarkMode = gameManager.IsDarkMode() || gameManager.GetPendingDarkMode();
             
             // 明るい色を定義（メソッド全体で使用）
-            Color brightTextColor = new Color(0xED / 255f, 0xED / 255f, 0xB5 / 255f, 1f); // #EDD7B5
+            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
             
             // 後日談を設定
             SetupEpilogue(scenario, result, isDarkMode, brightTextColor);
@@ -134,20 +134,31 @@ namespace NovelGame
             SetupWordGetDisplay(scenario, result, isDarkMode, brightTextColor);
             
             // 結果テキストを設定（タイプライター効果で表示）
-            SetupResultText(scenario, result, isDarkMode, brightTextColor, coroutineRunner);
+            // 注意: SetupResultTextは後で実装予定（非常に複雑な処理のため）
+            // SetupResultText(scenario, result, isDarkMode, brightTextColor, coroutineRunner);
             
             // 戻るボタンを設定
             SetupBackButton(brightTextColor);
             
-            // スクロールバーのスタイルを適用
-            onApplyScrollbarStyles?.Invoke(root);
+            // スクロールバーのスタイルを適用（UIManagerUIToolkit側で既に行われているため、ここでは行わない）
+            // onApplyScrollbarStyles?.Invoke(root);
             
-            // トランジション開始
-            onUpdateScoreDisplay?.Invoke();
-            if (screenTransitionManager != null)
-            {
-                screenTransitionManager.StartScreenTransition(root);
-            }
+            // トランジション開始（UIManagerUIToolkit側で既に行われているため、ここでは行わない）
+            // onUpdateScoreDisplay?.Invoke();
+            // if (screenTransitionManager != null)
+            // {
+            //     screenTransitionManager.StartScreenTransition(root);
+            // }
+        }
+        
+        /// <summary>
+        /// 結果テキストを設定（タイプライター効果で表示）
+        /// このメソッドは、UIManagerUIToolkitから一時的に呼び出される
+        /// 後でResultScreenManager内に実装を移行する
+        /// </summary>
+        public void SetupResultTextExternal(Scenario scenario, ScenarioResult result, bool isDarkMode, Color brightTextColor, MonoBehaviour coroutineRunner)
+        {
+            SetupResultText(scenario, result, isDarkMode, brightTextColor, coroutineRunner);
         }
         
         private void SetupEpilogue(Scenario scenario, ScenarioResult result, bool isDarkMode, Color brightTextColor)
@@ -383,8 +394,8 @@ namespace NovelGame
         public System.Func<VisualElement, bool, Scenario, ScenarioResult, VisualElement, Label, Vector2, IEnumerator> onShowWordGetWithEffect;
         public System.Func<Label, IEnumerator> onAnimateWordGetLabelFadeIn;
         public System.Func<string, string> onExtractAnimalNameFromSetup;
-        public System.Action onShowBackButton;
         public System.Action<VisualElement> onApplyScrollbarStyles;
+        public System.Action onShowBackButton;
         public System.Action<Button, Sprite, Color> onApplyButtonImage;
         public System.Func<Vector2, VisualElement, IEnumerator> onShowLetterGetAnimation;
         public System.Action onShowSelectionScreen;
