@@ -758,6 +758,11 @@ namespace NovelGame
         }
 
         public AudioSource GetBgmAudioSource() => bgmAudioSource;
+        
+        /// <summary>
+        /// エンドクレジットBGMのAudioSourceを取得
+        /// </summary>
+        public AudioSource GetCreditBgmAudioSource() => creditBgmAudioSource;
 
         /// <summary>
         /// BGM音量を設定（0.0～1.0）

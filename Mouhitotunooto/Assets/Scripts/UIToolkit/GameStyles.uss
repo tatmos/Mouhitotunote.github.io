@@ -573,6 +573,13 @@ Button:disabled {
     margin-bottom: 16px;
 }
 
+/* 歌詞表示のスタイル */
+.lyric-display {
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
 /* クリッカブルな「もうひとつ」のスタイル */
 .clickable-word {
     border-bottom-width: 1px;

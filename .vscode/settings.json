@@ -58,6 +58,7 @@
     },
     "dotrush.roslyn.projectOrSolutionFiles": [
         "d:\\git\\Mouhitotunote.github.io\\Mouhitotunooto\\Mouhitotunooto.sln"
-    ]
+    ],
+    "dotnet.defaultSolution": "Mouhitotunooto/Mouhitotunooto.sln"
     
 }

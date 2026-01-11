@@ -395,7 +395,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.8.2 (2026-01-08)";
+                string text = "v1.9.0 (2026-01-11)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
@@ -3263,14 +3263,18 @@ namespace NovelGame
 
             var creditsContent = root.Q<VisualElement>("CreditsContent");
             var creditsScrollView = root.Q<ScrollView>("CreditsScrollView");
+            var lyricDisplayContainer = root.Q<VisualElement>("LyricDisplayContainer");
             if (creditsContent == null || creditsScrollView == null) return;
+
+            // スクロールエリアの下に歌詞表示用の隙間を追加
+            creditsScrollView.style.marginBottom = 150f;
 
             if (creditsScreenManager != null)
             {
                 creditsScreenManager.CreateCredits(creditsContent, creditsScrollView, isSpecial, () => {
                     // 特別版クレジット終了後の処理（「もうひとつ」の世界へボタンが押された時）
                     StartCoroutine(EndGameRoutine());
-                });
+                }, lyricDisplayContainer);
             }
             
             // シナリオ選択画面のBGMをフェードアウトして停止
@@ -3338,7 +3342,19 @@ namespace NovelGame
             blackOverlay.style.backgroundColor = Color.black;
             blackOverlay.style.justifyContent = Justify.Center;
             blackOverlay.style.alignItems = Align.Center;
+            blackOverlay.style.opacity = 1f; // 初期状態は完全不透明
             root.Add(blackOverlay);
+            
+            // 歌詞表示を再開する（暗転中も歌詞を表示し続ける）
+            // blackOverlayの後に追加することで、歌詞表示がblackOverlayの上に表示される
+            var lyricDisplayContainer = root.Q<VisualElement>("LyricDisplayContainer");
+            if (creditsScreenManager != null && lyricDisplayContainer != null)
+            {
+                // 歌詞表示用のLabelが存在しない場合は再作成
+                creditsScreenManager.CreateLyricDisplayLabel(lyricDisplayContainer);
+                // 歌詞表示を開始
+                creditsScreenManager.StartLyricDisplay();
+            }
             
             // chapter E の場合は最後に「（おや？）」を表示
             if (gameManager.IsThirdLoop() && gameManager.GetScore() >= 7)
@@ -3389,6 +3405,42 @@ namespace NovelGame
                 yield return null;
             }
             progressLabel.style.opacity = 1f;
+            
+            // 歌詞表示とBGM、オーバーレイを1分かけてフェードアウト
+            float fadeOutDuration = 60f; // 1分 = 60秒
+            
+            // 歌詞表示のフェードアウトを開始
+            if (creditsScreenManager != null)
+            {
+                creditsScreenManager.FadeOutLyricDisplay(fadeOutDuration);
+            }
+            
+            // BGMのフェードアウトを開始
+            if (audioManager != null)
+            {
+                audioManager.FadeOutCreditBGM(fadeOutDuration);
+            }
+            
+            // オーバーレイのフェードアウトを開始（歌詞と同時に）
+            float startOverlayOpacity = blackOverlay.style.opacity.value;
+            float elapsedOverlay = 0f;
+            
+            while (elapsedOverlay < fadeOutDuration)
+            {
+                elapsedOverlay += Time.deltaTime;
+                float overlayAlpha = Mathf.Lerp(startOverlayOpacity, 0f, elapsedOverlay / fadeOutDuration);
+                blackOverlay.style.opacity = overlayAlpha;
+                yield return null;
+            }
+            
+            // フェードアウト完了後の処理
+            blackOverlay.style.opacity = 0f;
+            
+            // 歌詞表示を完全に停止
+            if (creditsScreenManager != null)
+            {
+                creditsScreenManager.StopLyricDisplay();
+            }
         }
 
 
