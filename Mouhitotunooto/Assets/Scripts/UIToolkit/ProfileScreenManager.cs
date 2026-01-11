@@ -234,6 +234,40 @@ namespace NovelGame
             nameLabel.style.overflow = Overflow.Hidden;
             detailCard.Add(nameLabel);
 
+            // 登場人物画像（アンロック済みの場合のみ表示）
+            if (isUnlocked)
+            {
+                var characterImage = CharacterProfileImageHelper.GetProfileImage(profile.scenarioId);
+                if (characterImage != null)
+                {
+                    var imageContainer = new VisualElement();
+                    imageContainer.style.width = 200;
+                    imageContainer.style.height = 200;
+                    imageContainer.style.marginTop = 10;
+                    imageContainer.style.marginBottom = 15;
+                    imageContainer.style.alignSelf = Align.Center;
+                    imageContainer.style.backgroundImage = new StyleBackground(characterImage.texture);
+                    imageContainer.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    imageContainer.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    
+                    // ボーダーを追加（オプション）
+                    imageContainer.style.borderTopWidth = 2;
+                    imageContainer.style.borderRightWidth = 2;
+                    imageContainer.style.borderBottomWidth = 2;
+                    imageContainer.style.borderLeftWidth = 2;
+                    imageContainer.style.borderTopColor = borderColor;
+                    imageContainer.style.borderRightColor = borderColor;
+                    imageContainer.style.borderBottomColor = borderColor;
+                    imageContainer.style.borderLeftColor = borderColor;
+                    imageContainer.style.borderTopLeftRadius = 8;
+                    imageContainer.style.borderTopRightRadius = 8;
+                    imageContainer.style.borderBottomLeftRadius = 8;
+                    imageContainer.style.borderBottomRightRadius = 8;
+                    
+                    detailCard.Add(imageContainer);
+                }
+            }
+
             if (isUnlocked)
             {
                 // 情報
