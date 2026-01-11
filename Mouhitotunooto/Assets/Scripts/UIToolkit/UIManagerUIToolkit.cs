@@ -3175,6 +3175,8 @@ namespace NovelGame
                 yield break;
             }
 
+            // 全画面を覆うオーバーレイを作成
+            // 最初から不透明にして追加し、CreditsScreenDocumentの初期状態が見えないようにする
             var overlay = new VisualElement();
             overlay.style.position = Position.Absolute;
             overlay.style.left = 0;
@@ -3182,18 +3184,11 @@ namespace NovelGame
             overlay.style.right = 0;
             overlay.style.bottom = 0;
             overlay.style.backgroundColor = Color.black;
-            overlay.style.opacity = 0f;
+            overlay.style.opacity = 1f; // 最初から不透明
             root.Add(overlay);
 
-            // フェードイン（黒画面へ）
-            float fadeDuration = 1.5f;
-            float elapsed = 0f;
-            while (elapsed < fadeDuration)
-            {
-                elapsed += Time.deltaTime;
-                overlay.style.opacity = Mathf.Min(elapsed / fadeDuration, 1.0f);
-                yield return null;
-            }
+            // 1フレーム待ってから、次の処理に進む
+            yield return null;
 
             yield return new WaitForSeconds(1.0f);
 

@@ -48,6 +48,7 @@ namespace NovelGame
             if (root == null) yield break;
 
             // 全画面を覆うオーバーレイを作成
+            // 最初から不透明にして追加し、TitleScreenDocumentの初期状態が見えないようにする
             var overlay = new VisualElement();
             overlay.style.position = Position.Absolute;
             overlay.style.left = 0;
@@ -55,19 +56,11 @@ namespace NovelGame
             overlay.style.right = 0;
             overlay.style.bottom = 0;
             overlay.style.backgroundColor = Color.black;
-            overlay.style.opacity = 0;
+            overlay.style.opacity = 1f; // 最初から不透明
             root.Add(overlay);
 
-            // フェードイン（2秒）
-            float fadeInDuration = 2.0f;
-            float elapsed = 0f;
-            while (elapsed < fadeInDuration)
-            {
-                elapsed += Time.deltaTime;
-                float alpha = Mathf.Lerp(0f, 1.0f, elapsed / fadeInDuration);
-                overlay.style.opacity = alpha;
-                yield return null;
-            }
+            // 1フレーム待ってから、カットシーン用のラベルを作成
+            yield return null;
 
             // カットシーン用のラベルを作成
             var cutsceneLabel = new Label();
@@ -93,8 +86,8 @@ namespace NovelGame
             }
 
             // ラベルをフェードイン
-            elapsed = 0f;
-            fadeInDuration = 1.0f;
+            float elapsed = 0f;
+            float fadeInDuration = 1.0f;
             while (elapsed < fadeInDuration)
             {
                 elapsed += Time.deltaTime;
@@ -164,11 +157,18 @@ namespace NovelGame
 
             hideAllScreens();
 
+            // タイトル画面をアクティブにする（hideAllScreensで非アクティブになっている可能性があるため）
+            if (titleScreenDocument != null)
+            {
+                titleScreenDocument.gameObject.SetActive(true);
+            }
+
             // タイトル画面のルート要素を取得
             var root = titleScreenDocument.rootVisualElement;
             if (root == null) yield break;
 
             // 全画面を覆うオーバーレイを作成
+            // 最初から不透明にして追加し、TitleScreenDocumentの初期状態が見えないようにする
             var overlay = new VisualElement();
             overlay.style.position = Position.Absolute;
             overlay.style.left = 0;
@@ -176,19 +176,11 @@ namespace NovelGame
             overlay.style.right = 0;
             overlay.style.bottom = 0;
             overlay.style.backgroundColor = Color.black;
-            overlay.style.opacity = 0;
+            overlay.style.opacity = 1f; // 最初から不透明
             root.Add(overlay);
 
-            // フェードイン（2秒）
-            float fadeInDuration = 2.0f;
-            float elapsed = 0f;
-            while (elapsed < fadeInDuration)
-            {
-                elapsed += Time.deltaTime;
-                float alpha = Mathf.Lerp(0f, 1.0f, elapsed / fadeInDuration);
-                overlay.style.opacity = alpha;
-                yield return null;
-            }
+            // 1フレーム待ってから、カットシーン用のラベルを作成
+            yield return null;
 
             // カットシーン用のラベルを作成
             var cutsceneLabel = new Label();
@@ -206,8 +198,8 @@ namespace NovelGame
             string transitionText = "世界が歪み始める...\n\nすべての文字が失われていく...\n";
 
             // ラベルをフェードイン
-            elapsed = 0f;
-            fadeInDuration = 1.0f;
+            float elapsed = 0f;
+            float fadeInDuration = 1.0f;
             while (elapsed < fadeInDuration)
             {
                 elapsed += Time.deltaTime;
