@@ -30,7 +30,7 @@ namespace NovelGame
         private System.Action<int, bool> onSetBackgroundImage; // scenarioId, isScenarioScreen
         private System.Action<Button, Sprite, Color> onApplyButtonImage;
         private System.Action onPlayHoverSound;
-        private System.Action<VisualElement, Scenario> onCreateChoiceButtons;
+        private System.Action<VisualElement, Scenario, System.Action<int>> onCreateChoiceButtons;
         private System.Func<VisualElement, IEnumerator> onShowChoicesSequentially;
         private System.Action<int, bool> onChoiceSelected; // choiceId, wordFound
         private System.Func<Label, IEnumerator> onShakeAnimation;
@@ -119,7 +119,14 @@ namespace NovelGame
             SetupScenarioText(scenario, coroutineRunner);
             
             // 選択肢ボタンを作成
-            onCreateChoiceButtons?.Invoke(root, scenario);
+            if (onCreateChoiceButtons != null && onChoiceSelected != null)
+            {
+                onCreateChoiceButtons(root, scenario, (choiceId) => {
+                    // wordFoundInCurrentScenarioフラグを取得してonChoiceSelectedを呼び出す
+                    bool wordFound = wordFoundInCurrentScenario;
+                    onChoiceSelected(choiceId, wordFound);
+                });
+            }
             
             // スコア表示を更新
             onUpdateScoreDisplay?.Invoke();
@@ -386,7 +393,7 @@ namespace NovelGame
         public System.Action<int, bool> onSetBackgroundImage; // scenarioId, isScenarioScreen
         public System.Action<Button, Sprite, Color> onApplyButtonImage;
         public System.Action onPlayHoverSound;
-        public System.Action<VisualElement, Scenario> onCreateChoiceButtons;
+        public System.Action<VisualElement, Scenario, System.Action<int>> onCreateChoiceButtons; // root, scenario, onChoiceSelected
         public System.Func<VisualElement, IEnumerator> onShowChoicesSequentially;
         public System.Action<int, bool> onChoiceSelected; // choiceId, wordFound
         public System.Func<Label, IEnumerator> onShakeAnimation;

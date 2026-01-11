@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "uLoopMCP": {
+      "command": "node",
+      "args": [
+        "D:\\git\\Mouhitotunote.github.io\\Mouhitotunooto\\Library\\uLoopMCP\\server.bundle.js"
+      ],
+      "env": {
+        "UNITY_TCP_PORT": "8702"
+      }
+    }
+  }
+}

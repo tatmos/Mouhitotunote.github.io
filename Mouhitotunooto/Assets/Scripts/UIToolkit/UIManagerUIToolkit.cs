@@ -2415,7 +2415,7 @@ namespace NovelGame
             ShowScenarioScreen();
         }
 
-        private void CreateChoiceButtons(VisualElement root, Scenario scenario)
+        private void CreateChoiceButtons(VisualElement root, Scenario scenario, System.Action<int> onChoiceSelectedCallback)
         {
             var buttonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
             if (buttonContainer == null) return;
@@ -2492,7 +2492,7 @@ namespace NovelGame
                 button.Add(buttonContent);
 
                 int choiceId = choice.id;
-                button.clicked += () => OnChoiceSelected(choiceId);
+                button.clicked += () => onChoiceSelectedCallback?.Invoke(choiceId);
                 
                 // マウスオーバー時の音を設定
                 button.RegisterCallback<PointerEnterEvent>(evt => PlayHoverSound());
