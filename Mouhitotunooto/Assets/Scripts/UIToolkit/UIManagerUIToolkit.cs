@@ -132,6 +132,8 @@ namespace NovelGame
         // スコア減少演出用
         private int previousScore = -1; // 前回のスコア（-1は初期値）
         
+        #region Initialization
+        
         private void Start()
         {
             if (Instance == null)
@@ -306,7 +308,11 @@ namespace NovelGame
             // 背景オーバーレイのクリーンアップ
             CleanupBackgroundOverlay();
         }
-
+        
+        #endregion
+        
+        #region Screen Management - Title
+        
         /// <summary>
         /// 暗転演出を伴ってタイトル画面を表示
         /// </summary>
@@ -926,7 +932,11 @@ namespace NovelGame
                 screenTransitionManager.StartScreenTransition(root);
             }
         }
-
+        
+        #endregion
+        
+        #region Screen Management - Scenario
+        
         public void ShowScenarioScreen()
         {
             FadeOutAudioOnSceneChange();
@@ -1049,7 +1059,11 @@ namespace NovelGame
 
             return false;
         }
-
+        
+        #endregion
+        
+        #region Screen Management - Result
+        
         public void ShowResultScreen()
         {
             FadeOutAudioOnSceneChange();
@@ -1192,7 +1206,11 @@ namespace NovelGame
                 screenTransitionManager.StartScreenTransition(root);
             }
         }
-
+        
+        #endregion
+        
+        #region Utility Methods
+        
         private void HideAllScreens(bool keepBgm = false)
         {
             // 背景オーバーレイをクリーンアップ
@@ -1465,21 +1483,6 @@ namespace NovelGame
                     label.style.color = textColor;
                 }
             }
-            
-            // ホバー効果を追加（マウスオーバー時に数ピクセルずれる）
-            AddButtonHoverEffect(button);
-        }
-        
-        /// <summary>
-        /// ボタンにホバー効果を追加（マウスオーバー時に数ピクセルずれる）
-        /// 注意：レイアウトが乱れるため、margin変更によるずれ効果は無効化されています
-        /// </summary>
-        private void AddButtonHoverEffect(Button button)
-        {
-            if (button == null) return;
-            
-            // ホバー時のずれ効果は無効化（レイアウトが乱れるため）
-            // 必要に応じて、背景色の変更などの他の効果をここに追加できます
         }
 
         /// <summary>
@@ -2198,7 +2201,11 @@ namespace NovelGame
                 screenTransitionManager.StartScreenTransition(root);
             }
         }
-
+        
+        #endregion
+        
+        #region Screen Management - Mouhitotsu
+        
         public void ShowMouhitotsuScreen()
         {
             FadeOutAudioOnSceneChange();
@@ -3224,6 +3231,8 @@ namespace NovelGame
             // 見つからない場合は抽出した文字列をそのまま返す
             return animalName.Trim();
         }
+        
+        #endregion
     }
 }
 

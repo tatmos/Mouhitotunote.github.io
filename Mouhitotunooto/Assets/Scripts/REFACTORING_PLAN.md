@@ -19,11 +19,7 @@ UIManagerUIToolkit.cs（3758行）を整理するため、優先度の高い項�
 - コルーチンが必要な処理は、コールバック関数として渡す実装
 - `wordFoundInCurrentScenario` フラグは、コールバック経由でUIManagerUIToolkitに通知
 
-### 3. ResultScreenManager ✅ (部分的に完了)
-
-**現状:**
-- `ShowResultScreen()` メソッドが非常に長い（1123行目～）
-- 約500行以上の処理を含む
+### 3. ResultScreenManager ✅ (完了)
 
 **実装済み:**
 - `ResultScreenManager` クラスを作成
@@ -31,22 +27,12 @@ UIManagerUIToolkit.cs（3758行）を整理するため、優先度の高い項�
 - `SetupEpilogue()` メソッドを実装（後日談の設定）
 - `SetupWordGetDisplay()` メソッドを実装（ワードゲット表示の設定）
 - `SetupBackButton()` メソッドを実装（戻るボタンの設定）
-- `ShowResultScreen()` メソッドを部分的に `ResultScreenManager` を使用するように変更
-
-**残りのタスク:**
-- `SetupResultText()` メソッドの実装（結果テキストの設定 - 非常に複雑な処理のため、現時点では `UIManagerUIToolkit` 内に残している）
-
-**依存関係:**
-- `ShowWordGetWithEffect()` メソッド（3509行目～）- コルーチン
-- `AnimateWordGetLabelFadeIn()` メソッド（3483行目～）- コルーチン
-- `SetupWordGetLabelWithSparkle()` メソッド（3894行目～）
-- `ShowSpecialCreditsTransition()` メソッド（3154行目～）- コルーチン
-- `SetBackgroundImage()` メソッド
-- その他多数の処理
+- `SetupResultText()` メソッドを実装（結果テキストの設定 - 約400行の複雑な処理を移行）
+- `ShowResultScreen()` メソッドを `ResultScreenManager` を使用するように変更
 
 **実装方針:**
-- 同様のパターンで実装（完了）
-- 結果テキストの設定は将来的に移行を検討
+- コールバック関数を使用してUIManagerUIToolkitとの依存関係を管理
+- コルーチンが必要な処理は、`coroutineRunner.StartCoroutine`を使用
 
 ## 実装の注意事項
 
@@ -70,7 +56,7 @@ UIManagerUIToolkit.cs（3758行）を整理するため、優先度の高い項�
 ### 高優先度
 - ✅ **TitleScreenManager** - 完了（既に実装済み）
 - ✅ **ScenarioScreenManager** - 完了（実装済み）
-- ✅ **ResultScreenManager** - 部分的に完了（後日談、ワードゲット表示、戻るボタンの設定は完了。結果テキスト設定は将来的に検討）
+- ✅ **ResultScreenManager** - 完了（後日談、ワードゲット表示、戻るボタン、結果テキスト設定のすべてを実装）
 
 ### 中優先度
 - ✅ **UIConstants** - 完了（定数クラスを作成）
@@ -95,9 +81,31 @@ UIManagerUIToolkit.cs（3758行）を整理するため、優先度の高い項�
 
 1. ✅ ScenarioScreenManagerの基本構造を作成（完了）
 2. ✅ ShowScenarioScreenの主要な処理を移行（完了）
-3. ✅ ResultScreenManagerの基本構造を作成（部分的に完了）
-4. ✅ 定数の抽出（`UIConstants` の作成）- 完了
-5. ✅ ヘルパークラスの作成（`UIButtonHelper`）- 完了
-6. ✅ `UIConstants`と`UIButtonHelper`を`UIManagerUIToolkit.cs`内で使用するようにコードを更新（完了）
-7. ✅ `UIDialogHelper`の作成（完了）
-8. ⏳ ResultScreenManagerの結果テキスト設定の実装（将来的に検討）
+3. ✅ ResultScreenManagerの基本構造を作成（完了）
+4. ✅ ResultScreenManagerの結果テキスト設定の実装（完了）
+5. ✅ 定数の抽出（`UIConstants` の作成）- 完了
+6. ✅ ヘルパークラスの作成（`UIButtonHelper`）- 完了
+7. ✅ `UIConstants`と`UIButtonHelper`を`UIManagerUIToolkit.cs`内で使用するようにコードを更新（完了）
+8. ✅ `UIDialogHelper`の作成（完了）
+
+## 完了状況のまとめ
+
+高優先度のリファクタリングはすべて完了しました：
+- ✅ TitleScreenManager
+- ✅ ScenarioScreenManager
+- ✅ ResultScreenManager（SetupResultTextを含む完全実装）
+
+中優先度のリファクタリングもすべて完了しました：
+- ✅ UIConstants
+- ✅ UIButtonHelper
+- ✅ UIDialogHelper
+
+**現状:**
+- 主要なScreenManager（Title, Scenario, Result）はすべて分離済み
+- 既存のScreenManager（Profile, Achievements, Credits, Selection, Mouhitotsu）は既に分離されている
+- 定数とヘルパークラスも作成済み
+- `UIManagerUIToolkit.cs`は大幅に縮小（約3230行、元の3607行から約377行削減）
+
+**今後の検討事項:**
+- 低優先度のリファクタリングが必要かどうか（現在のコードで問題がなければ、そのまま維持する）
+- 他のヘルパークラス（UIStyleHelperなど）が必要かどうか
