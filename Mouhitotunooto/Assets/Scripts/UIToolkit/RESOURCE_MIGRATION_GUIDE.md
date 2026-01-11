@@ -1,42 +1,43 @@
 # リソース移行ガイド
 
-## 重要な注意事項
+## 完了した作業
 
-AudioClipをResources.Loadに移行するには、以下の手順が必要です：
+### Phase 1: AudioClip ✅
 
-### 1. AudioファイルをResourcesフォルダに移動
+AudioClipの移行が完了しました。すべてのオーディオファイルは`Assets/Resources/Audio/`に配置されています。
 
-現在、Audioファイルは`Assets/Audio/`に配置されています。これらを`Resources/Audio/`に移動またはコピーする必要があります。
+### Phase 2: Sprite（アイコン類） 🔄
+
+Sprite（アイコン類）の移行を進めています。
+
+**必要な作業：**
+1. アイコンファイルを`Assets/Resources/UI/Icons/`に移動またはコピー
+2. 以下のファイル名で配置：
+   - `CreditsIcon.png` （エンドクレジット用のアイコン）
+   - `AchievementsIcon.png` （実績用のアイコン）
+   - `ClockIcon.png` （カウントダウン用のアイコン）
+   - `SparkleIcon.png` （スパークル用のアイコン）
+   - `SoundIcon.png` （サウンド設定用のアイコン）
 
 **手順：**
-1. Unityエディタで`Assets/Audio/`フォルダ内のすべてのオーディオファイルを選択
-2. `Assets/Resources/`フォルダ内に`Audio`フォルダを作成（まだない場合）
-3. オーディオファイルを`Assets/Resources/Audio/`に移動またはコピー
-
-**注意：**
-- ファイル名にスペースが含まれている場合（例：`buttonHoverSound .wav`）は、スペースを削除するか、コードで正確なパスを指定してください
-- `word_get_10.mp3`が存在しない場合、配列のインデックスを調整してください
-
-### 2. ファイル名の確認
-
-実際のファイル名を確認し、コード内のパスを調整してください：
-
-- `word_get_1.mp3` → `Resources.Load<AudioClip>("Audio/word_get_1")`
-- `wordGetIncreaseSound.wav` → `Resources.Load<AudioClip>("Audio/wordGetIncreaseSound")`
-- `buttonHoverSound .wav` → `Resources.Load<AudioClip>("Audio/buttonHoverSound ")`（スペースに注意）
-
-### 3. 動作確認
-
-移行後、以下を確認してください：
-- すべてのオーディオクリップが正常に読み込まれる
-- エラーがコンソールに表示されない
-- ゲームが正常に動作する
+1. Unityエディタで`Assets/Resources/`フォルダ内に`UI`フォルダを作成（まだない場合）
+2. `UI`フォルダ内に`Icons`フォルダを作成
+3. 上記のアイコンファイルを`Assets/Resources/UI/Icons/`に移動またはコピー
 
 ## 次のステップ
 
-AudioClipの移行が完了したら、以下の順序で他のリソースも移行できます：
+### Phase 3: Material（優先度：高）
 
-1. **Sprite（アイコン類）** - 優先度：高
-2. **Material** - 優先度：高
-3. **VisualTreeAsset (UXML)** - 優先度：中
-4. **Sprite（ボタン・背景画像）** - 優先度：中
+`distortionMaterial`をResources.Loadに移行：
+- `Assets/Resources/Materials/DistortionMaterial.mat`に配置
+
+### Phase 4: VisualTreeAsset (UXML)（優先度：中）
+
+UXMLファイルをResources.Loadに移行：
+- `Assets/Resources/UI/UXML/`に配置
+
+### Phase 5: Sprite（ボタン・背景画像）（優先度：中）
+
+ボタン画像や背景画像をResources.Loadに移行：
+- `Assets/Resources/UI/Buttons/`にボタン画像を配置
+- `Assets/Resources/UI/Backgrounds/`に背景画像を配置

@@ -89,12 +89,12 @@ namespace NovelGame
         private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         
-        [Header("Emoji Icons (for Web compatibility)")]
-        [SerializeField] private Sprite creditsIcon; // エンドクレジット用のアイコン（🎬の代替）
-        [SerializeField] private Sprite achievementsIcon; // 実績用のアイコン（🏆の代替）
-        [SerializeField] private Sprite clockIcon; // カウントダウン用のアイコン（⏰の代替）
-        [SerializeField] private Sprite sparkleIcon; // スパークル用のアイコン（✨の代替）
-        [SerializeField] private Sprite soundIcon; // サウンド設定用のアイコン（🔊の代替）
+        // Icon Sprites (Resourcesから読み込み)
+        private Sprite creditsIcon; // エンドクレジット用のアイコン（🎬の代替）
+        private Sprite achievementsIcon; // 実績用のアイコン（🏆の代替）
+        private Sprite clockIcon; // カウントダウン用のアイコン（⏰の代替）
+        private Sprite sparkleIcon; // スパークル用のアイコン（✨の代替）
+        private Sprite soundIcon; // サウンド設定用のアイコン（🔊の代替）
 
         private GameManager gameManager;
         private AudioManager audioManager;
@@ -177,6 +177,13 @@ namespace NovelGame
                 UIResourceLoader.LoadAudioClip("Audio/scenario5_ambient"),
                 UIResourceLoader.LoadAudioClip("Audio/scenario6_ambient")
             };
+            
+            // Icon SpritesをResourcesから読み込む
+            creditsIcon = UIResourceLoader.LoadSprite("UI/Icons/creditsIcon");
+            achievementsIcon = UIResourceLoader.LoadSprite("UI/Icons/achievementsIcon");
+            clockIcon = UIResourceLoader.LoadSprite("UI/Icons/clockIcon");
+            sparkleIcon = UIResourceLoader.LoadSprite("UI/Icons/sparkleIcon");
+            soundIcon = UIResourceLoader.LoadSprite("UI/Icons/soundIcon");
         }
         
         private void Start()

@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &243824127
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -989,40 +989,6 @@ MonoBehaviour:
   scoreDisplayBackgroundImage: {fileID: 21300000, guid: 86ff7f43719486445a677a75c3e82031, type: 3}
   menuButtonImage: {fileID: 21300000, guid: a192ac7b29f5b594db724e1d4b160fde, type: 3}
   distortionMaterial: {fileID: 2100000, guid: 24985ac6264dc2949b165aa5bcbd70e3, type: 2}
-  wordGetSounds:
-  - {fileID: 8300000, guid: 535f6fa8017f39448bb8998a895b79ac, type: 3}
-  - {fileID: 8300000, guid: 1d2b407ea1ec6fe4f8ce52b11430c355, type: 3}
-  - {fileID: 8300000, guid: 48013087de66cc94c8266f8cae13e9c1, type: 3}
-  - {fileID: 8300000, guid: 41ff584278f4c79438f38c27f0cd69ad, type: 3}
-  - {fileID: 8300000, guid: 48a8251c1efc0d8469a74bd45d8b9be0, type: 3}
-  - {fileID: 8300000, guid: 8b75610aa8c3b734d8806e90eaf0c676, type: 3}
-  - {fileID: 8300000, guid: 187648bb92221fc48aa888ca018370f4, type: 3}
-  - {fileID: 8300000, guid: bb255be79ba1e2747bc36599dfa97f97, type: 3}
-  - {fileID: 8300000, guid: b61483592e5abbc4db51363082ab9768, type: 3}
-  - {fileID: 8300000, guid: f609ed1bd690ebe46a1920d6ae9557ca, type: 3}
-  - {fileID: 8300000, guid: decebb2258d154c49928332fd93b060a, type: 3}
-  wordGetIncreaseSound: {fileID: 8300000, guid: 7166a4088901bf64296769fd63bcae55, type: 3}
-  wordGetDecreaseSound: {fileID: 8300000, guid: 1765dcfa46ab38b4a99c146b0066519b, type: 3}
-  creditsBGM: {fileID: 8300000, guid: a48efce50e11fac449c33dd731373f08, type: 3}
-  selectionBGM: {fileID: 8300000, guid: e5fe1fc23fd7a7e4a950c9fd4d2f0200, type: 3}
-  typewriterSound: {fileID: 8300000, guid: c9a87ef262e90a94789ca788cd69684e, type: 3}
-  lostLetterSound: {fileID: 8300000, guid: 2cc2317b562a8264cbec632929c47d64, type: 3}
-  sparkleSound: {fileID: 8300000, guid: 126e265408ba40a4fb1d86a84a64da9b, type: 3}
-  buttonHoverSound: {fileID: 8300000, guid: 856de598b7fd38244aa32e9a626fca82, type: 3}
-  thunderSound: {fileID: 8300000, guid: 4c394882dba1d9f469fcd3ddc7c352e9, type: 3}
-  truthDoorUnlockSound: {fileID: 8300000, guid: 0698a718edb7f484f8fbb9ac0491fb48, type: 3}
-  ambientSounds:
-  - {fileID: 8300000, guid: 88aca895a4e71434bb7c4bca400ce278, type: 3}
-  - {fileID: 8300000, guid: 14328a3ed4a090844831509f9043c734, type: 3}
-  - {fileID: 8300000, guid: e87c8f14f3638a442828d86790c6e9b2, type: 3}
-  - {fileID: 8300000, guid: a33cafce7abe4e74d98fe5f04baab6a6, type: 3}
-  - {fileID: 8300000, guid: 47ba95424ebe1cd468452ec7b54bb4b0, type: 3}
-  - {fileID: 8300000, guid: ce1f971c50baebd409d6a1c3bb1ac5be, type: 3}
-  creditsIcon: {fileID: 21300000, guid: 4b9dee69d0e75f746b00834db382c67b, type: 3}
-  achievementsIcon: {fileID: 21300000, guid: 80fbfb6d006b1ee4bb78bdf29d3596df, type: 3}
-  clockIcon: {fileID: 21300000, guid: cc590f52b3b364044b7d4d3434af1547, type: 3}
-  sparkleIcon: {fileID: 21300000, guid: aa5f50a6d7220f34ab4fdb61814f0942, type: 3}
-  soundIcon: {fileID: 21300000, guid: c00f011dfb08a4148b8ba3acfad533f3, type: 3}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0
@@ -1351,7 +1317,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2075914290
 MonoBehaviour:
   m_ObjectHideFlags: 0
