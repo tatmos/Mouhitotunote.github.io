@@ -74,19 +74,19 @@ namespace NovelGame
         private const float BackgroundOverlayOpacity = 0.6f; // オーバーレイの不透明度（0.3 = 30%の暗さ）
         private const float BackgroundOverlayFadeDuration = 0.5f; // フェードイン時間（秒）
         
-        [Header("Audio")]
-        [SerializeField] private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
-        [SerializeField] private AudioClip wordGetIncreaseSound; // ワードゲット数が増える時の効果音
-        [SerializeField] private AudioClip wordGetDecreaseSound; // ワードゲット数が減る時の効果音
-        [SerializeField] private AudioClip creditsBGM; // エンドクレジットBGM
-        [SerializeField] private AudioClip selectionBGM; // シナリオ選択画面BGM
-        [SerializeField] private AudioClip typewriterSound; // タイプライター文字表示時の効果音
-        [SerializeField] private AudioClip lostLetterSound; // ダークモードで「※」が表示される時の専用効果音
-        [SerializeField] private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
-        [SerializeField] private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
-        [SerializeField] private AudioClip thunderSound; // 3周目移行時の雷のような音
-        [SerializeField] private AudioClip truthDoorUnlockSound; // 真実の扉出現時の効果音
-        [SerializeField] private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
+        // Audio Clips (Resourcesから読み込み)
+        private AudioClip[] wordGetSounds; // 「もうひとつ」をゲットした時の効果音（複数からランダムに選択）
+        private AudioClip wordGetIncreaseSound; // ワードゲット数が増える時の効果音
+        private AudioClip wordGetDecreaseSound; // ワードゲット数が減る時の効果音
+        private AudioClip creditsBGM; // エンドクレジットBGM
+        private AudioClip selectionBGM; // シナリオ選択画面BGM
+        private AudioClip typewriterSound; // タイプライター文字表示時の効果音
+        private AudioClip lostLetterSound; // ダークモードで「※」が表示される時の専用効果音
+        private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
+        private AudioClip buttonHoverSound; // ボタンにマウスオーバーした時の効果音（「ぱっ」）
+        private AudioClip thunderSound; // 3周目移行時の雷のような音
+        private AudioClip truthDoorUnlockSound; // 真実の扉出現時の効果音
+        private AudioClip[] ambientSounds; // 各シナリオの環境音（インデックス0=シナリオ1, 1=シナリオ2, ...）
         
         
         [Header("Emoji Icons (for Web compatibility)")]
@@ -133,6 +133,51 @@ namespace NovelGame
         private int previousScore = -1; // 前回のスコア（-1は初期値）
         
         #region Initialization
+        
+        private void Awake()
+        {
+            LoadResources();
+        }
+        
+        private void LoadResources()
+        {
+            // Audio ClipsをResourcesから読み込む
+            wordGetSounds = new AudioClip[]
+            {
+                UIResourceLoader.LoadAudioClip("Audio/word_get_1"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_2"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_3"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_4"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_5"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_6"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_7"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_8"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_9"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_11"),
+                UIResourceLoader.LoadAudioClip("Audio/word_get_12")
+            };
+            
+            wordGetIncreaseSound = UIResourceLoader.LoadAudioClip("Audio/wordGetIncreaseSound");
+            wordGetDecreaseSound = UIResourceLoader.LoadAudioClip("Audio/wordGetDecreaseSound");
+            creditsBGM = UIResourceLoader.LoadAudioClip("Audio/creditsBGM");
+            selectionBGM = UIResourceLoader.LoadAudioClip("Audio/selection_bgm");
+            typewriterSound = UIResourceLoader.LoadAudioClip("Audio/typewriterSound");
+            lostLetterSound = UIResourceLoader.LoadAudioClip("Audio/lostLetterSound");
+            sparkleSound = UIResourceLoader.LoadAudioClip("Audio/sparkleSound");
+            buttonHoverSound = UIResourceLoader.LoadAudioClip("Audio/buttonHoverSound"); // ファイル名にスペースが含まれる
+            thunderSound = UIResourceLoader.LoadAudioClip("Audio/thunderSound");
+            truthDoorUnlockSound = UIResourceLoader.LoadAudioClip("Audio/truthDoorUnlockSound");
+            
+            ambientSounds = new AudioClip[]
+            {
+                UIResourceLoader.LoadAudioClip("Audio/scenario1_ambient"),
+                UIResourceLoader.LoadAudioClip("Audio/scenario2_ambient"),
+                UIResourceLoader.LoadAudioClip("Audio/scenario3_ambient"),
+                UIResourceLoader.LoadAudioClip("Audio/scenario4_ambient"),
+                UIResourceLoader.LoadAudioClip("Audio/scenario5_ambient"),
+                UIResourceLoader.LoadAudioClip("Audio/scenario6_ambient")
+            };
+        }
         
         private void Start()
         {
