@@ -34,7 +34,7 @@ namespace NovelGame
         private System.Func<VisualElement, IEnumerator> onShowChoicesSequentially;
         private System.Action<int, bool> onChoiceSelected; // choiceId, wordFound
         private System.Func<Label, IEnumerator> onShakeAnimation;
-        private System.Func<Vector2, IEnumerator> onShowLetterGetAnimation;
+        private System.Func<Vector2, VisualElement, IEnumerator> onShowLetterGetAnimation;
         private System.Action onShowSelectionScreen;
         private System.Action onShowTitleScreenWithFade;
         
@@ -341,7 +341,7 @@ namespace NovelGame
                         // スコア表示へ光が飛んでいく演出を開始
                         if (!isDarkMode && !isThirdLoop && coroutineRunner != null && onShowLetterGetAnimation != null)
                         {
-                            coroutineRunner.StartCoroutine(onShowLetterGetAnimation(pos));
+                            coroutineRunner.StartCoroutine(onShowLetterGetAnimation(pos, root));
                         }
                     }
                 });
@@ -390,7 +390,7 @@ namespace NovelGame
         public System.Func<VisualElement, IEnumerator> onShowChoicesSequentially;
         public System.Action<int, bool> onChoiceSelected; // choiceId, wordFound
         public System.Func<Label, IEnumerator> onShakeAnimation;
-        public System.Func<Vector2, IEnumerator> onShowLetterGetAnimation;
+        public System.Func<Vector2, VisualElement, IEnumerator> onShowLetterGetAnimation;
         public System.Action onShowSelectionScreen;
         public System.Action onShowTitleScreenWithFade;
     }

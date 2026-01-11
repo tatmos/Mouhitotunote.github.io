@@ -1029,215 +1029,60 @@ namespace NovelGame
             var root = scenarioScreenDocument.rootVisualElement;
             if (root == null) return;
             
-            // スクロールバーを非表示にする
-            root.style.overflow = Overflow.Hidden;
+            // ScenarioScreenManagerを使用してシナリオ画面をセットアップ
+            var settings = new ScenarioScreenSettings
+            {
+                scenarioBackgrounds = scenarioBackgrounds,
+                uiButtonNormalImage = uiButtonNormalImage,
+                uiButtonDarkImage = uiButtonDarkImage,
+                clockIcon = clockIcon
+            };
             
-            // 背景画像を設定
-            SetBackgroundImage(scenario.id, true);
-
-            // タイトルと設定テキストを設定
-            var titleLabel = root.Q<Label>("ScenarioTitleText");
-            if (titleLabel != null)
+            var actions = new ScenarioScreenActions
             {
-                bool isDarkMode = gameManager.IsDarkMode();
-                if (isDarkMode)
+                onStartAmbientSound = StartAmbientSound,
+                onUpdateScoreDisplay = UpdateScoreDisplay,
+                onSetBackgroundImage = SetBackgroundImage,
+                onApplyButtonImage = ApplyButtonImage,
+                onPlayHoverSound = PlayHoverSound,
+                onCreateChoiceButtons = CreateChoiceButtons,
+                onShowChoicesSequentially = ShowChoicesSequentially,
+                onChoiceSelected = (choiceId, wordFound) =>
                 {
-                    // ダークモード時のタイトル
-                    string darkTitle = scenario.id switch
+                    // wordFoundInCurrentScenarioフラグをwordFoundとして使用
+                    wordFoundInCurrentScenario = wordFound;
+                    OnChoiceSelected(choiceId);
+                },
+                onShakeAnimation = (label) => ShakeAnimation(label),
+                onShowLetterGetAnimation = (pos, rootElement) =>
+                {
+                    // wordGetEffectManagerがある場合はそれを使用、なければShowLetterGetAnimationを使用
+                    if (wordGetEffectManager != null)
                     {
-                        1 => "謎の依頼【データ破損】",
-                        2 => "不思議なレストラン【データ破損】",
-                        3 => "タイムカプセル【データ破損】",
-                        4 => "魔法学校の試験【データ破損】",
-                        5 => "最後のピース【データ破損】",
-                        6 => "真実の扉【ダークモード】",
-                        _ => scenario.title + "【データ破損】"
-                    };
-                    titleLabel.text = darkTitle;
-                    titleLabel.AddToClassList("title-text-dark");
-                }
-                else
-                {
-                    titleLabel.text = scenario.title;
-                    titleLabel.AddToClassList("title-text");
-                }
-                // 明るい色を適用
-                Color textColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
-                titleLabel.style.color = textColor;
-                titleLabel.style.textShadow = new TextShadow { offset = new Vector2(2, 2), blurRadius = 4, color = new Color(0, 0, 0, 0.8f) };
-            }
-
-            var setupContainer = root.Q<VisualElement>("SetupText");
-            // SetupText内のLabelに明るい色を適用
-            if (setupContainer != null)
-            {
-                Color textColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
-                foreach (var child in setupContainer.Children())
-                {
-                    if (child is Label label)
-                    {
-                        label.style.color = textColor;
-                        label.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
+                        return wordGetEffectManager.ShowLetterGetAnimation(pos, rootElement);
                     }
-                }
-            }
-            var choiceButtonContainer = root.Q<VisualElement>("ChoiceButtonContainer");
-            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
-            var wordFailedMessageLabel = root.Q<Label>("WordFailedMessage");
-            var countdownContainer = root.Q<VisualElement>("CountdownContainer");
-            var countdownText = root.Q<Label>("CountdownText");
-            
-            // 明るい色を適用
-            Color brightTextColor = new Color(0xED / 255f, 0xD7 / 255f, 0xB5 / 255f, 1f); // #EDD7B5
-            
-            // スコア表示に明るい色を適用
-            var scoreLabel = root.Q<Label>("ScoreText");
-            if (scoreLabel != null)
-            {
-                scoreLabel.style.color = brightTextColor;
-                scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // ワードゲット成功メッセージに明るい色を適用
-            if (wordFoundMessageLabel != null)
-            {
-                wordFoundMessageLabel.style.color = brightTextColor;
-                wordFoundMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // ワードゲット失敗メッセージに明るい色を適用
-            if (wordFailedMessageLabel != null)
-            {
-                wordFailedMessageLabel.style.color = brightTextColor;
-                wordFailedMessageLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // カウントダウンテキストに明るい色を適用
-            if (countdownText != null)
-            {
-                countdownText.style.color = brightTextColor;
-                countdownText.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
-            }
-            
-            // 時計アイコンを設定
-            var clockIcon = root.Q<Image>("ClockIcon");
-            if (clockIcon != null && this.clockIcon != null)
-            {
-                clockIcon.sprite = this.clockIcon;
-            }
-            
-            // フラグをリセット
-            wordFoundInCurrentScenario = false;
-            
-            // 既存のカウントダウンを停止
-            if (countdownManager != null)
-            {
-                countdownManager.StopCountdown();
-            }
-            
-            // 選択肢ボタンコンテナを最初は非表示にする
-            if (choiceButtonContainer != null)
-            {
-                choiceButtonContainer.style.display = DisplayStyle.None;
-            }
-            
-            // メッセージラベルを非表示にする
-            if (wordFoundMessageLabel != null)
-            {
-                wordFoundMessageLabel.style.display = DisplayStyle.None;
-            }
-            
-            if (wordFailedMessageLabel != null)
-            {
-                wordFailedMessageLabel.style.display = DisplayStyle.None;
-            }
-            
-            // カウントダウンコンテナを非表示にする
-            if (countdownContainer != null)
-            {
-                countdownContainer.style.display = DisplayStyle.None;
-            }
-            
-            if (setupContainer != null)
-            {
-                // 既存の子要素をクリア
-                setupContainer.Clear();
-                
-                // ダークモード時のsetupテキストを取得
-                bool isDarkMode = gameManager.IsDarkMode() && !gameManager.IsThirdLoop();
-                bool isThirdLoop = gameManager.IsThirdLoop();
-                string setupText = scenario.setup;
-                
-                if (isDarkMode)
-                {
-                    setupText = scenario.id switch
+                    else
                     {
-                        1 => $"【エラー】探偵事務所のデータが破損しています。\n写真の人物が歪み、存在が不安定になっています。\nバグの影響で「も」という文字が消失しました。\n\n{scenario.setup}",
-                        2 => $"【エラー】レストランのデータが破損しています。\nメニューが文字化けし、料理のデータが読み込めません。\nバグの影響で「う」という文字が消失しました。\n\n{scenario.setup}",
-                        3 => $"【エラー】タイムカプセルのデータが破損しています。\n過去の記憶が歪み、データが欠損しています。\nバグの影響で「ひ」という文字が消失しました。\n\n{scenario.setup}",
-                        4 => $"【エラー】魔法学校のデータが破損しています。\n呪文のコードがエラーを起こし、魔法が機能しません。\nバグの影響で「と」という文字が消失しました。\n\n{scenario.setup}",
-                        5 => $"【エラー】パズルのデータが破損しています。\nピースの整合性が失われ、完成することができません。\nバグの影響で「つ」という文字が消失しました。\n\n{scenario.setup}",
-                        6 => scenario.setup,
-                        _ => scenario.setup
-                    };
-                }
-                
-                // タイプライター効果で表示（完了後に選択肢ボタンを表示）
-                if (typewriterEffectManager != null)
-                {
-                    typewriterEffectManager.StartTypewriterEffectWithClickableWord(setupContainer, setupText, () =>
-                    {
-                        // タイプライター効果が完了したら選択肢ボタンを順次表示
-                        StartCoroutine(ShowChoicesSequentially(root));
-                    }, (found, pos) => {
-                        if (found)
-                        {
-                            wordFoundInCurrentScenario = true;
-                            
-                            // 効果音を再生（ワードゲット数が増える時の音 + ランダムなワードゲット音）
-                            if (audioManager != null)
-                            {
-                                audioManager.PlayWordGetIncreaseSound();
-                                audioManager.PlayWordGetSound();
-                            }
-                            
-                            // メッセージを表示
-                            var wordFoundMessageLabel = root.Q<Label>("WordFoundMessage");
-                            if (wordFoundMessageLabel != null)
-                            {
-                                wordFoundMessageLabel.text = isDarkMode || isThirdLoop
-                                    ? "⚠️ システムエラー：データ破損を検出 ⚠️"
-                                    : "あなたは何かをみつけた気がした";
-                                wordFoundMessageLabel.style.display = DisplayStyle.Flex;
-                                StartCoroutine(ShakeAnimation(wordFoundMessageLabel));
-                            }
-                            
-                            // 選択肢ボタンを順次表示
-                            StartCoroutine(ShowChoicesSequentially(root));
-
-                            // スコア表示へ光が飛んでいく演出を開始
-                            if (!isDarkMode && !isThirdLoop)
-                            {
-                                StartCoroutine(ShowLetterGetAnimation(pos));
-                            }
-                        }
-                    });
-                }
-            }
-            else
-            {
-                // タイプライター効果がない場合は即座に選択肢ボタンを順次表示
-                StartCoroutine(ShowChoicesSequentially(root));
-            }
-
-            CreateChoiceButtons(root, scenario);
-            UpdateScoreDisplay();
-
-            // トランジション開始（シナリオ画面のみスケールアニメーションあり）
-            if (screenTransitionManager != null)
-            {
-                screenTransitionManager.StartScreenTransition(root, withScale: true);
-            }
+                        return ShowLetterGetAnimation(pos);
+                    }
+                },
+                onShowSelectionScreen = ShowSelectionScreen,
+                onShowTitleScreenWithFade = ShowTitleScreenWithFade
+            };
+            
+            scenarioScreenManager = new ScenarioScreenManager(
+                root,
+                gameManager,
+                audioManager,
+                typewriterEffectManager,
+                countdownManager,
+                screenTransitionManager,
+                shakeAnimationManager,
+                settings,
+                actions
+            );
+            
+            scenarioScreenManager.Setup(scenario, this);
         }
 
         public bool CheckAndGoToEndCredits()
