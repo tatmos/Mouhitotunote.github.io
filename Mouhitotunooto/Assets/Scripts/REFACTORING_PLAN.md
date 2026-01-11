@@ -2,7 +2,7 @@
 
 ## 概要
 
-UIManagerUIToolkit.cs（3789行）を整理するため、優先度の高い項目から実装を進めます。
+UIManagerUIToolkit.cs（3758行）を整理するため、優先度の高い項目から実装を進めます。
 
 ## 実装順序
 
@@ -83,6 +83,13 @@ UIManagerUIToolkit.cs（3789行）を整理するため、優先度の高い項�
   - `ApplyButtonImage` メソッド
   - `SetupButtonWithIcon` メソッド（プレースホルダー）
   - `SetupButtonWithEvents` メソッド
+- ✅ **UIConstantsとUIButtonHelperの使用** - 完了
+  - `UIManagerUIToolkit.cs`内で`UIConstants`を使用するように更新（色の定数、フォントサイズ）
+  - `UIManagerUIToolkit.cs`内で`UIButtonHelper.ApplyButtonImage`を使用するように更新
+  - ハードコードされた値を定数に置き換え（16箇所の色、6箇所のフォントサイズ）
+- ✅ **UIDialogHelper** - 完了（ダイアログヘルパークラスを作成）
+  - `ShowConfirmationDialog` メソッドを実装
+  - `UIManagerUIToolkit.cs`内の`ShowConfirmationDialog`を`UIDialogHelper`を使用するように変更
 
 ## 次のステップ
 
@@ -91,6 +98,6 @@ UIManagerUIToolkit.cs（3789行）を整理するため、優先度の高い項�
 3. ✅ ResultScreenManagerの基本構造を作成（部分的に完了）
 4. ✅ 定数の抽出（`UIConstants` の作成）- 完了
 5. ✅ ヘルパークラスの作成（`UIButtonHelper`）- 完了
-6. ⏳ `UIConstants`と`UIButtonHelper`を`UIManagerUIToolkit.cs`内で使用するようにコードを更新
-7. ⏳ `UIDialogHelper`の作成（オプション）- 中優先度
+6. ✅ `UIConstants`と`UIButtonHelper`を`UIManagerUIToolkit.cs`内で使用するようにコードを更新（完了）
+7. ✅ `UIDialogHelper`の作成（完了）
 8. ⏳ ResultScreenManagerの結果テキスト設定の実装（将来的に検討）
