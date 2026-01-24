@@ -619,12 +619,7 @@ namespace NovelGame
         {
             if (bgmAudioSource != null && (bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying)
             {
-                if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
-                // 設定されたBGM音量を基準に、その75%に下げる
-                float currentVolume = GetBGMVolume();
-                float loweredVolume = currentVolume * SelectionBGMLoweredVolume;
-                selectionBGMVolumeCoroutine = StartCoroutine(FadeSelectionBGMVolume(bgmAudioSource.volume, loweredVolume, 1f));
-
+                // 音量は維持したまま、フィルターだけをかける（音量を下げない）
                 bool isDarkMode = GameManager.Instance != null && GameManager.Instance.IsDarkMode();
                 if (isDarkMode)
                 {
@@ -635,7 +630,7 @@ namespace NovelGame
                 {
                     if (isWebBuild)
                     {
-                        // Webビルドの場合、フィルター済み音源に切り替え
+                        // Webビルドの場合、フィルター済み音源に切り替え（音量は維持）
                         StartCoroutine(SwitchToMuffledBGM(1f));
                     }
                     else
@@ -649,17 +644,14 @@ namespace NovelGame
 
         /// <summary>
         /// シナリオ選択BGMの音量を復元（プロフィール/実績画面から戻る時用）
+        /// フィルターを解除する（音量は既に維持されているので変更なし）
         /// </summary>
         public void RestoreSelectionBGMVolume()
         {
             if (bgmAudioSource != null && (bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying)
             {
-                if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
-                // 設定されたBGM音量に復元
-                float targetVolume = GetBGMVolume();
-                selectionBGMVolumeCoroutine = StartCoroutine(FadeSelectionBGMVolume(bgmAudioSource.volume, targetVolume, 1f));
-
-                // ピッチとローパスフィルターも復元
+                // 音量は既に維持されているので、フィルターだけを解除する
+                // ピッチとローパスフィルターを復元
                 if (pitchFadeCoroutine != null) StopCoroutine(pitchFadeCoroutine);
                 pitchFadeCoroutine = StartCoroutine(FadePitch(NormalPitch, 1f));
 
@@ -704,56 +696,42 @@ namespace NovelGame
 
         /// <summary>
         /// Webビルド用: フィルター済み音源に切り替える（ローパスフィルターの代わり）
+        /// 音量は維持したまま切り替える
         /// </summary>
         private IEnumerator SwitchToMuffledBGM(float duration)
         {
             if (bgmAudioSource == null || selectionBGMMuffled == null) yield break;
             if (bgmAudioSource.clip == selectionBGMMuffled) yield break; // 既にフィルター済み音源が再生中
             
-            float startVolume = bgmAudioSource.volume;
+            float currentVolume = bgmAudioSource.volume;
             float currentTime = bgmAudioSource.time;
-            float elapsed = 0f;
             
-            // 音量を下げながら切り替え
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / duration;
-                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
-                yield return null;
-            }
-            
-            // 音源を切り替え
+            // 音量を維持したまま、音源を切り替え（フェードなし）
             bgmAudioSource.clip = selectionBGMMuffled;
             bgmAudioSource.time = currentTime;
-            bgmAudioSource.volume = startVolume;
+            bgmAudioSource.volume = currentVolume;
+            
+            yield return null;
         }
 
         /// <summary>
         /// Webビルド用: 通常音源に戻す（ローパスフィルター解除の代わり）
+        /// 音量は維持したまま切り替える
         /// </summary>
         private IEnumerator SwitchToNormalBGM(float duration)
         {
             if (bgmAudioSource == null || selectionBGM == null) yield break;
             if (bgmAudioSource.clip == selectionBGM) yield break; // 既に通常音源が再生中
             
-            float startVolume = bgmAudioSource.volume;
+            float currentVolume = bgmAudioSource.volume;
             float currentTime = bgmAudioSource.time;
-            float elapsed = 0f;
             
-            // 音量を下げながら切り替え
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / duration;
-                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
-                yield return null;
-            }
-            
-            // 音源を切り替え
+            // 音量を維持したまま、音源を切り替え（フェードなし）
             bgmAudioSource.clip = selectionBGM;
             bgmAudioSource.time = currentTime;
-            bgmAudioSource.volume = startVolume;
+            bgmAudioSource.volume = currentVolume;
+            
+            yield return null;
         }
 
         private IEnumerator FadePitch(float targetPitch, float duration)
