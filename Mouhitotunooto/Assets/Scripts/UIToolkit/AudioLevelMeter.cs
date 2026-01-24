@@ -15,7 +15,7 @@ namespace NovelGame
         
         // レベルメータの設定
         private const int MeterSegments = 32; // LEDセグメント数
-        private const float MeterWidth = 0.1f; // 各セグメントの幅（ピクセル）- 極端に狭く設定（1/10）
+        private const float MeterWidth = 0.01f; // 各セグメントの幅（ピクセル）- 極端に狭く設定（1/10）
         private const float UpdateInterval = 0.05f; // 更新間隔（秒）
         
         // ゲームのテーマカラーに合わせたLED風の色設定（ブラウン/セピア/ベージュ系）
