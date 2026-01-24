@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,6 +17,7 @@ namespace NovelGame
         private AudioClip wordGetDecreaseSound; // ワードゲット数が減る時の効果音
         private AudioClip creditsBGM;
         private AudioClip selectionBGM;
+        private AudioClip selectionBGMMuffled; // ローパスフィルター済みのselectionBGM（Webビルド用）
         private AudioClip typewriterSound;
         private AudioClip lostLetterSound;
         private AudioClip sparkleSound;
@@ -35,6 +36,9 @@ namespace NovelGame
         private AudioSource sfxAudioSource;
         private AudioSource ambientAudioSource;
         private AudioLowPassFilter bgmLowPassFilter;
+        
+        // Webビルドかどうかを判定（ローパスフィルターが動作しないため）
+        private bool isWebBuild => Application.platform == RuntimePlatform.WebGLPlayer;
 
         private Coroutine fadeOutCoroutine;
         private Coroutine fadeInCoroutine;
@@ -91,9 +95,13 @@ namespace NovelGame
             bgmAudioSource.volume = savedVolume;
             bgmAudioSource.outputAudioMixerGroup = bgmMixerGroup;
             
-            bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
-            bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
-            bgmLowPassFilter.enabled = true;
+            // Webビルドではローパスフィルターが動作しないため、フィルターコンポーネントは追加しない
+            if (!isWebBuild)
+            {
+                bgmLowPassFilter = bgmObject.AddComponent<AudioLowPassFilter>();
+                bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
+                bgmLowPassFilter.enabled = true;
+            }
             
             // クレジットBGM専用のGameObject
             GameObject creditBgmObject = new GameObject("CreditBGMPlayer");
@@ -131,6 +139,7 @@ namespace NovelGame
             AudioClip wordGetDecreaseSound,
             AudioClip creditsBGM, 
             AudioClip selectionBGM, 
+            AudioClip selectionBGMMuffled,
             AudioClip typewriterSound, 
             AudioClip lostLetterSound, 
             AudioClip sparkleSound, 
@@ -144,6 +153,7 @@ namespace NovelGame
             this.wordGetDecreaseSound = wordGetDecreaseSound;
             this.creditsBGM = creditsBGM;
             this.selectionBGM = selectionBGM;
+            this.selectionBGMMuffled = selectionBGMMuffled;
             this.typewriterSound = typewriterSound;
             this.lostLetterSound = lostLetterSound;
             this.sparkleSound = sparkleSound;
@@ -494,10 +504,18 @@ namespace NovelGame
                 sfxFadeOutCoroutine = StartCoroutine(FadeOutSfxAudioCoroutine(0.5f));
             }
             
-            if (bgmLowPassFilter != null)
+            if (!isWebBuild && bgmLowPassFilter != null)
             {
                 if (lowPassFadeCoroutine != null) { StopCoroutine(lowPassFadeCoroutine); lowPassFadeCoroutine = null; }
                 bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
+            }
+            
+            // Webビルドの場合、フィルター済み音源から通常音源に戻す
+            if (isWebBuild && bgmAudioSource != null && bgmAudioSource.clip == selectionBGMMuffled)
+            {
+                float currentTime = bgmAudioSource.time;
+                bgmAudioSource.clip = selectionBGM;
+                bgmAudioSource.time = currentTime;
             }
 
             StartCoroutine(CheckAndFadeInAmbientAfterSfx());
@@ -536,7 +554,8 @@ namespace NovelGame
         public void StartSelectionBGM()
         {
             if (selectionBGM == null || bgmAudioSource == null) return;
-            if (bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying) return;
+            // Webビルドでも通常音源で開始（フィルターが必要な時だけ切り替える）
+            if ((bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying) return;
 
             // 既存のフェードアウトを停止
             StopFadeOutBGM();
@@ -554,7 +573,7 @@ namespace NovelGame
 
         public void PauseSelectionBGM()
         {
-            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+            if (bgmAudioSource != null && (bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying)
             {
                 StartCoroutine(FadeOutAndPauseSelectionBGM(1f));
             }
@@ -594,7 +613,7 @@ namespace NovelGame
 
         public void LowerSelectionBGMVolume()
         {
-            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+            if (bgmAudioSource != null && (bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying)
             {
                 if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
                 // 設定されたBGM音量を基準に、その75%に下げる
@@ -610,8 +629,16 @@ namespace NovelGame
                 }
                 else
                 {
-                    if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
-                    lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 1f));
+                    if (isWebBuild)
+                    {
+                        // Webビルドの場合、フィルター済み音源に切り替え
+                        StartCoroutine(SwitchToMuffledBGM(1f));
+                    }
+                    else
+                    {
+                        if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
+                        lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassMuffledCutoff, 1f));
+                    }
                 }
             }
         }
@@ -621,7 +648,7 @@ namespace NovelGame
         /// </summary>
         public void RestoreSelectionBGMVolume()
         {
-            if (bgmAudioSource != null && bgmAudioSource.clip == selectionBGM && bgmAudioSource.isPlaying)
+            if (bgmAudioSource != null && (bgmAudioSource.clip == selectionBGM || bgmAudioSource.clip == selectionBGMMuffled) && bgmAudioSource.isPlaying)
             {
                 if (selectionBGMVolumeCoroutine != null) StopCoroutine(selectionBGMVolumeCoroutine);
                 // 設定されたBGM音量に復元
@@ -632,8 +659,16 @@ namespace NovelGame
                 if (pitchFadeCoroutine != null) StopCoroutine(pitchFadeCoroutine);
                 pitchFadeCoroutine = StartCoroutine(FadePitch(NormalPitch, 1f));
 
-                if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
-                lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 1f));
+                if (isWebBuild)
+                {
+                    // Webビルドの場合、通常音源に戻す
+                    StartCoroutine(SwitchToNormalBGM(1f));
+                }
+                else
+                {
+                    if (lowPassFadeCoroutine != null) StopCoroutine(lowPassFadeCoroutine);
+                    lowPassFadeCoroutine = StartCoroutine(FadeLowPassFilter(LowPassNormalCutoff, 1f));
+                }
             }
         }
 
@@ -661,6 +696,60 @@ namespace NovelGame
                 yield return null;
             }
             bgmLowPassFilter.cutoffFrequency = targetCutoff;
+        }
+
+        /// <summary>
+        /// Webビルド用: フィルター済み音源に切り替える（ローパスフィルターの代わり）
+        /// </summary>
+        private IEnumerator SwitchToMuffledBGM(float duration)
+        {
+            if (bgmAudioSource == null || selectionBGMMuffled == null) yield break;
+            if (bgmAudioSource.clip == selectionBGMMuffled) yield break; // 既にフィルター済み音源が再生中
+            
+            float startVolume = bgmAudioSource.volume;
+            float currentTime = bgmAudioSource.time;
+            float elapsed = 0f;
+            
+            // 音量を下げながら切り替え
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                yield return null;
+            }
+            
+            // 音源を切り替え
+            bgmAudioSource.clip = selectionBGMMuffled;
+            bgmAudioSource.time = currentTime;
+            bgmAudioSource.volume = startVolume;
+        }
+
+        /// <summary>
+        /// Webビルド用: 通常音源に戻す（ローパスフィルター解除の代わり）
+        /// </summary>
+        private IEnumerator SwitchToNormalBGM(float duration)
+        {
+            if (bgmAudioSource == null || selectionBGM == null) yield break;
+            if (bgmAudioSource.clip == selectionBGM) yield break; // 既に通常音源が再生中
+            
+            float startVolume = bgmAudioSource.volume;
+            float currentTime = bgmAudioSource.time;
+            float elapsed = 0f;
+            
+            // 音量を下げながら切り替え
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                bgmAudioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                yield return null;
+            }
+            
+            // 音源を切り替え
+            bgmAudioSource.clip = selectionBGM;
+            bgmAudioSource.time = currentTime;
+            bgmAudioSource.volume = startVolume;
         }
 
         private IEnumerator FadePitch(float targetPitch, float duration)

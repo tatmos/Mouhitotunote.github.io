@@ -72,6 +72,7 @@ namespace NovelGame
         private AudioClip wordGetDecreaseSound; // ワードゲット数が減る時の効果音
         private AudioClip creditsBGM; // エンドクレジットBGM
         private AudioClip selectionBGM; // シナリオ選択画面BGM
+        private AudioClip selectionBGMMuffled; // ローパスフィルター済みのselectionBGM（Webビルド用）
         private AudioClip typewriterSound; // タイプライター文字表示時の効果音
         private AudioClip lostLetterSound; // ダークモードで「※」が表示される時の専用効果音
         private AudioClip sparkleSound; // スパークルアイコンクリック時の効果音（「きらん！」）
@@ -153,6 +154,7 @@ namespace NovelGame
             wordGetDecreaseSound = UIResourceLoader.LoadAudioClip("Audio/wordGetDecreaseSound");
             creditsBGM = UIResourceLoader.LoadAudioClip("Audio/creditsBGM");
             selectionBGM = UIResourceLoader.LoadAudioClip("Audio/selection_bgm");
+            selectionBGMMuffled = UIResourceLoader.LoadAudioClip("Audio/selection_bgm_muffled"); // ローパスフィルター済み音源（Webビルド用）
             typewriterSound = UIResourceLoader.LoadAudioClip("Audio/typewriterSound");
             lostLetterSound = UIResourceLoader.LoadAudioClip("Audio/lostLetterSound");
             sparkleSound = UIResourceLoader.LoadAudioClip("Audio/sparkleSound");
@@ -250,6 +252,7 @@ namespace NovelGame
                 wordGetDecreaseSound,
                 creditsBGM, 
                 selectionBGM, 
+                selectionBGMMuffled,
                 typewriterSound, 
                 lostLetterSound, 
                 sparkleSound, 

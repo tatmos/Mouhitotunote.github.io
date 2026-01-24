@@ -177,7 +177,7 @@ namespace NovelGame
             var versionText = root.Q<Label>("VersionText");
             if (versionText != null)
             {
-                string text = "v1.9.0 (2026-01-11)";
+                string text = "v1.10.0 (2026-01-24)";
                 var lostLetters = gameManager.GetLostLetters();
                 var collectedLetters = gameManager.GetCollectedLetters();
                 versionText.text = TextFormatter.FormatText(text, collectedLetters, lostLetters, true);
