@@ -94,6 +94,10 @@ namespace NovelGame
         private UIDocument currentDocument;
         private List<GameObject> currentButtons = new List<GameObject>();
         
+        
+        // Render Texture方式用
+        private UIToolkitRenderTextureManager renderTextureManager;
+        
         // マネージャークラスのインスタンス
         private TypewriterEffectManager typewriterEffectManager;
         private CountdownManager countdownManager;
@@ -679,6 +683,9 @@ namespace NovelGame
             
             var root = selectionScreenDocument.rootVisualElement;
             if (root == null) return;
+            
+            // Render Texture方式を初期化（UIをRender Textureに描き出し、パーティクルとの前後関係を制御）
+            SetupRenderTextureMode();
             
             // スクロールバーを非表示にする
             root.style.overflow = Overflow.Hidden;
@@ -1301,6 +1308,14 @@ namespace NovelGame
         
         private void HideAllScreens(bool keepBgm = false)
         {
+            // Render Texture方式をクリーンアップ
+            if (renderTextureManager != null)
+            {
+                renderTextureManager.Cleanup();
+                Destroy(renderTextureManager);
+                renderTextureManager = null;
+            }
+            
             // 背景オーバーレイをクリーンアップ
             CleanupBackgroundOverlay();
             
@@ -1323,6 +1338,8 @@ namespace NovelGame
                 if (creditsScreenManager != null)
                 {
                     creditsScreenManager.StopAutoScroll();
+                    // AudioLevelMeterもクリーンアップ
+                    creditsScreenManager.CleanupAudioLevelMeter();
                 }
                 
                 // 不定期な歪み効果を停止
@@ -2446,6 +2463,9 @@ namespace NovelGame
             creditsScreenDocument.gameObject.SetActive(true);
             currentDocument = creditsScreenDocument;
             
+            // Render Texture方式を初期化（パーティクルをUIの上に表示するため）
+            SetupRenderTextureMode();
+            
             var root = creditsScreenDocument.rootVisualElement;
             if (root == null) return;
 
@@ -2500,7 +2520,7 @@ namespace NovelGame
                 creditsScreenManager.CreateCredits(creditsContent, creditsScrollView, isSpecial, () => {
                     // 特別版クレジット終了後の処理（「もうひとつ」の世界へボタンが押された時）
                     StartCoroutine(EndGameRoutine());
-                }, lyricDisplayContainer);
+                }, lyricDisplayContainer, root);
             }
             
             // シナリオ選択画面のBGMをフェードアウトして停止
@@ -3077,8 +3097,24 @@ namespace NovelGame
         
         
         /// <summary>
-        /// ボタンにアイコンとテキストを設定（絵文字の代替）
+        /// Render Texture方式をセットアップ（UIをRender Textureに描き出し、パーティクルとの前後関係を制御）
         /// </summary>
+        private void SetupRenderTextureMode()
+        {
+            // 既存のRenderTextureManagerを削除
+            if (renderTextureManager != null)
+            {
+                renderTextureManager.Cleanup();
+                Destroy(renderTextureManager);
+                renderTextureManager = null;
+            }
+            
+            // UIToolkitRenderTextureManagerコンポーネントを追加
+            renderTextureManager = gameObject.AddComponent<UIToolkitRenderTextureManager>();
+            renderTextureManager.Initialize();
+        }
+        
+        
         private void SetupButtonWithIcon(Button button, Sprite icon, string text)
         {
             if (button == null) return;

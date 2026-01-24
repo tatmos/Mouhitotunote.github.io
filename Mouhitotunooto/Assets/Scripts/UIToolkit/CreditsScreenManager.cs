@@ -44,11 +44,14 @@ namespace NovelGame
         private Coroutine lyricDisplayCoroutine;
         private List<LyricItem> lyricItems = new List<LyricItem>();
         private int currentLyricIndex = -1;
+        
+        // オーディオレベルメータ関連
+        private AudioLevelMeter audioLevelMeter;
 
         /// <summary>
         /// クレジット情報を作成
         /// </summary>
-        public void CreateCredits(VisualElement container, ScrollView scrollView, bool isSpecial = false, System.Action onComplete = null, VisualElement lyricDisplayContainer = null)
+        public void CreateCredits(VisualElement container, ScrollView scrollView, bool isSpecial = false, System.Action onComplete = null, VisualElement lyricDisplayContainer = null, VisualElement rootElement = null)
         {
             container.Clear();
             
@@ -186,6 +189,79 @@ namespace NovelGame
             {
                 StartLyricDisplay();
             }
+            
+            // オーディオレベルメータを初期化
+            if (rootElement != null)
+            {
+                InitializeAudioLevelMeter(rootElement);
+            }
+        }
+        
+        /// <summary>
+        /// オーディオレベルメータを初期化
+        /// </summary>
+        private void InitializeAudioLevelMeter(VisualElement root)
+        {
+            // 既存のレベルメータを停止
+            if (audioLevelMeter != null)
+            {
+                audioLevelMeter.Stop();
+            }
+            
+            // レベルメータコンポーネントを取得または作成
+            if (audioLevelMeter == null)
+            {
+                audioLevelMeter = gameObject.GetComponent<AudioLevelMeter>();
+                if (audioLevelMeter == null)
+                {
+                    audioLevelMeter = gameObject.AddComponent<AudioLevelMeter>();
+                }
+            }
+            
+            // エンドクレジットBGMのAudioSourceを取得
+            AudioSource creditBgmAudioSource = GetCreditBgmAudioSource();
+            
+            if (creditBgmAudioSource != null)
+            {
+                // UI CameraまたはMain Cameraを取得
+                Camera uiCamera = Camera.main;
+                
+                // レベルメータを初期化（ParticleSystemはCameraが必要）
+                audioLevelMeter.Initialize(creditBgmAudioSource, uiCamera);
+            }
+            else
+            {
+                Debug.LogWarning("エンドクレジットBGMのAudioSourceが見つかりません。レベルメータを初期化できませんでした。");
+            }
+        }
+        
+        /// <summary>
+        /// Canvasを取得または作成
+        /// </summary>
+        private Canvas GetOrCreateCanvas()
+        {
+            // まず、UIDocumentのGameObjectにCanvasがあるか確認
+            Canvas canvas = gameObject.GetComponent<Canvas>();
+            
+            if (canvas == null)
+            {
+                // Canvasを作成
+                canvas = gameObject.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = 200; // UI Toolkitより上に表示
+                
+                // CanvasScalerを追加（解像度対応）
+                UnityEngine.UI.CanvasScaler scaler = gameObject.GetComponent<UnityEngine.UI.CanvasScaler>();
+                if (scaler == null)
+                {
+                    scaler = gameObject.AddComponent<UnityEngine.UI.CanvasScaler>();
+                    scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                    scaler.referenceResolution = new Vector2(1920, 1080);
+                    scaler.matchWidthOrHeight = 0.5f;
+                }
+            }
+            
+            return canvas;
         }
         
         /// <summary>
@@ -565,6 +641,24 @@ namespace NovelGame
             
             // 歌詞表示も停止
             StopLyricDisplay();
+            
+            // オーディオレベルメータも停止
+            if (audioLevelMeter != null)
+            {
+                audioLevelMeter.Stop();
+            }
+        }
+        
+        /// <summary>
+        /// オーディオレベルメータをクリーンアップ
+        /// </summary>
+        public void CleanupAudioLevelMeter()
+        {
+            if (audioLevelMeter != null)
+            {
+                audioLevelMeter.Stop();
+                audioLevelMeter = null;
+            }
         }
         
         /// <summary>

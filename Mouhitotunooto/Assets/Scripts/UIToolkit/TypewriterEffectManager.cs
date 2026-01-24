@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
 
 namespace NovelGame
 {
@@ -117,14 +118,14 @@ namespace NovelGame
                         
                         // 記号や句読点の場合は待機時間を長くする
                         float delay = IsPunctuationOrSymbol(originalChar) ? baseCharDelay * 2.0f : baseCharDelay;
-                        yield return new WaitForSeconds(delay);
+                        yield return StartCoroutine(WaitWithMouseSkip(delay));
                         
                         originalIndex++;
                     }
                     else
                     {
                         // 元のテキストの範囲外の場合は通常の遅延
-                        yield return new WaitForSeconds(baseCharDelay);
+                        yield return StartCoroutine(WaitWithMouseSkip(baseCharDelay));
                     }
                 }
                 
@@ -195,14 +196,14 @@ namespace NovelGame
                         
                         // 記号や句読点の場合は待機時間を長くする
                         float delay = IsPunctuationOrSymbol(originalChar) ? baseCharDelay * 2.0f : baseCharDelay;
-                        yield return new WaitForSeconds(delay);
+                        yield return StartCoroutine(WaitWithMouseSkip(delay));
                         
                         originalIndex++;
                     }
                     else
                     {
                         // 元のテキストの範囲外の場合は通常の遅延
-                        yield return new WaitForSeconds(baseCharDelay);
+                        yield return StartCoroutine(WaitWithMouseSkip(baseCharDelay));
                     }
                 }
                 
@@ -225,6 +226,24 @@ namespace NovelGame
                    c == '：' || c == ':' ||
                    c == '…' || c == '・' || c == '「' || c == '」' || 
                    c == '（' || c == '）' || c == '【' || c == '】';
+        }
+
+        /// <summary>
+        /// マウスが押されている間は待機時間を0にし、離されたら通常の待機時間で待機する
+        /// </summary>
+        private IEnumerator WaitWithMouseSkip(float delay)
+        {
+            // マウスが押されている間は待機時間を0にする（早送り）
+            if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+            {
+                // マウスが押されている間は即座に進む（待機しない）
+                yield return null;
+            }
+            else
+            {
+                // マウスが離されている間は通常の待機時間で待機
+                yield return new WaitForSeconds(delay);
+            }
         }
 
         /// <summary>
@@ -489,7 +508,7 @@ namespace NovelGame
                 // 行間の遅延
                 if (lineIndex < lines.Length - 1)
                 {
-                    yield return new WaitForSeconds(lineDelay);
+                    yield return StartCoroutine(WaitWithMouseSkip(lineDelay));
                 }
             }
             
@@ -553,7 +572,7 @@ namespace NovelGame
                     label.text = displayedText; // 改行も表示
                     
                     // 行間の遅延
-                    yield return new WaitForSeconds(lineDelay);
+                    yield return StartCoroutine(WaitWithMouseSkip(lineDelay));
                 }
             }
 
