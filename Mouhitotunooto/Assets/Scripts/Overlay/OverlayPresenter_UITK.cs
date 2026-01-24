@@ -35,6 +35,50 @@ namespace NovelGame.Overlay
             thoughtBalloonLabel = OverlayViewBindings.GetElement<Label>(root, OverlayViewBindings.ThoughtBalloonLabel);
             musicNoteLayer = OverlayViewBindings.GetElement<VisualElement>(root, OverlayViewBindings.MusicNoteLayer);
             
+            // デバッグ: 要素が正しく取得できているか確認
+            if (overlayRoot == null)
+            {
+                Debug.LogError("[OverlayPresenter_UITK] OverlayRootが見つかりません。UXMLが正しく読み込まれているか確認してください。");
+            }
+            else
+            {
+                Debug.Log($"[OverlayPresenter_UITK] OverlayRootを正常に取得しました。初期表示状態: {overlayRoot.style.display.value}");
+                Debug.Log($"[OverlayPresenter_UITK] OverlayRoot位置とサイズ: left={overlayRoot.style.left.value}, top={overlayRoot.style.top.value}, width={overlayRoot.style.width.value}, height={overlayRoot.style.height.value}");
+                Debug.Log($"[OverlayPresenter_UITK] OverlayRoot解決サイズ: {overlayRoot.resolvedStyle.width}x{overlayRoot.resolvedStyle.height}");
+            }
+            
+            // 画像要素のデバッグ情報と強制サイズ設定
+            if (girlImage != null)
+            {
+                Debug.Log($"[OverlayPresenter_UITK] GirlImage位置とサイズ: right={girlImage.style.right.value}, bottom={girlImage.style.bottom.value}, width={girlImage.style.width.value}, height={girlImage.style.height.value}");
+                
+                // 強制的にサイズを設定（UXMLの設定が反映されていない場合）
+                if (girlImage.style.width.value.value == 0 || girlImage.style.height.value.value == 0)
+                {
+                    girlImage.style.width = 200;
+                    girlImage.style.height = 150;
+                    girlImage.style.position = Position.Absolute;
+                    girlImage.style.right = 20;
+                    girlImage.style.bottom = 20;
+                    Debug.Log("[OverlayPresenter_UITK] GirlImageのサイズを強制設定しました: 200x150px");
+                }
+            }
+            if (roomImage != null)
+            {
+                Debug.Log($"[OverlayPresenter_UITK] RoomImage位置とサイズ: right={roomImage.style.right.value}, bottom={roomImage.style.bottom.value}, width={roomImage.style.width.value}, height={roomImage.style.height.value}");
+                
+                // 強制的にサイズを設定（UXMLの設定が反映されていない場合）
+                if (roomImage.style.width.value.value == 0 || roomImage.style.height.value.value == 0)
+                {
+                    roomImage.style.width = 200;
+                    roomImage.style.height = 150;
+                    roomImage.style.position = Position.Absolute;
+                    roomImage.style.right = 20;
+                    roomImage.style.bottom = 20;
+                    Debug.Log("[OverlayPresenter_UITK] RoomImageのサイズを強制設定しました: 200x150px");
+                }
+            }
+            
             // すべてのオーバーレイ要素にpickingModeをIgnoreに設定（イベントを無視するため）
             if (overlayRoot != null) overlayRoot.pickingMode = PickingMode.Ignore;
             if (roomImage != null) roomImage.pickingMode = PickingMode.Ignore;
@@ -75,12 +119,21 @@ namespace NovelGame.Overlay
         /// </summary>
         private void SetExpression(GirlExpression expression)
         {
-            if (girlImage == null) return;
+            if (girlImage == null)
+            {
+                Debug.LogWarning("[OverlayPresenter_UITK] SetExpression: girlImageがnullです。");
+                return;
+            }
 
             Sprite sprite = OverlayAssets.GetExpressionSprite(expression);
             if (sprite != null)
             {
                 girlImage.style.backgroundImage = new StyleBackground(sprite);
+                Debug.Log($"[OverlayPresenter_UITK] 表情を設定しました: {expression}");
+            }
+            else
+            {
+                Debug.LogWarning($"[OverlayPresenter_UITK] 表情Spriteが見つかりません: {expression}");
             }
         }
 
@@ -89,12 +142,21 @@ namespace NovelGame.Overlay
         /// </summary>
         private void SetRoomState(RoomState roomState)
         {
-            if (roomImage == null) return;
+            if (roomImage == null)
+            {
+                Debug.LogWarning("[OverlayPresenter_UITK] SetRoomState: roomImageがnullです。");
+                return;
+            }
 
             Texture2D texture = OverlayAssets.GetRoomTexture(roomState);
             if (texture != null)
             {
                 roomImage.style.backgroundImage = new StyleBackground(texture);
+                Debug.Log($"[OverlayPresenter_UITK] 部屋状態を設定しました: {roomState}");
+            }
+            else
+            {
+                Debug.LogWarning($"[OverlayPresenter_UITK] 部屋Textureが見つかりません: {roomState}");
             }
         }
 
@@ -183,9 +245,14 @@ namespace NovelGame.Overlay
         /// </summary>
         public void SetVisible(bool visible)
         {
-            if (overlayRoot == null) return;
+            if (overlayRoot == null)
+            {
+                Debug.LogWarning("[OverlayPresenter_UITK] SetVisible: overlayRootがnullです。");
+                return;
+            }
 
             overlayRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            Debug.Log($"[OverlayPresenter_UITK] SetVisible: {visible} (display = {overlayRoot.style.display.value})");
         }
 
         /// <summary>
@@ -194,7 +261,119 @@ namespace NovelGame.Overlay
         public void UpdatePhase(OverlayPhase phase)
         {
             bool visible = phase != OverlayPhase.Hidden;
+            Debug.Log($"[OverlayPresenter_UITK] UpdatePhase: {phase}, visible: {visible}");
             SetVisible(visible);
+            
+            // PhaseがHidden以外になった時に、デフォルトの画像を設定
+            if (visible)
+            {
+                // テスト用：要素を見やすくするため背景色を追加
+                if (girlImage != null)
+                {
+                    girlImage.style.backgroundColor = new Color(1f, 0f, 0f, 0.5f); // 半透明の赤
+                    Debug.Log($"[OverlayPresenter_UITK] GirlImageにテスト背景色を設定しました。");
+                }
+                if (roomImage != null)
+                {
+                    roomImage.style.backgroundColor = new Color(0f, 1f, 0f, 0.5f); // 半透明の緑
+                    Debug.Log($"[OverlayPresenter_UITK] RoomImageにテスト背景色を設定しました。");
+                }
+                
+                // デフォルトの表情と部屋状態を設定
+                // Phaseが更新された時は、常に画像を設定する（表示を確実にするため）
+                if (girlImage != null)
+                {
+                    var bgImage = girlImage.style.backgroundImage.value;
+                    bool hasImage = bgImage != null && bgImage.texture != null;
+                    if (!hasImage)
+                    {
+                        Debug.Log("[OverlayPresenter_UITK] デフォルトの表情を設定します: Neutral");
+                        SetExpression(GirlExpression.Neutral);
+                    }
+                    else
+                    {
+                        Debug.Log($"[OverlayPresenter_UITK] 表情は既に設定されています: {bgImage.texture.name}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[OverlayPresenter_UITK] girlImageがnullです。");
+                }
+                
+                if (roomImage != null)
+                {
+                    var bgImage = roomImage.style.backgroundImage.value;
+                    bool hasImage = bgImage != null && bgImage.texture != null;
+                    if (!hasImage)
+                    {
+                        Debug.Log("[OverlayPresenter_UITK] デフォルトの部屋状態を設定します: CleanDay");
+                        SetRoomState(RoomState.CleanDay);
+                    }
+                    else
+                    {
+                        Debug.Log($"[OverlayPresenter_UITK] 部屋背景は既に設定されています: {bgImage.texture.name}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[OverlayPresenter_UITK] roomImageがnullです。");
+                }
+                
+                // サイズと座標を強制設定
+                if (girlImage != null && (girlImage.resolvedStyle.width == 0 || girlImage.resolvedStyle.height == 0))
+                {
+                    Debug.LogWarning("[OverlayPresenter_UITK] GirlImageのサイズが0x0です。サイズと座標を強制設定します。");
+                    girlImage.style.position = Position.Absolute;
+                    girlImage.style.right = 20;      // 右から20px
+                    girlImage.style.bottom = 20;     // 下から20px
+                    girlImage.style.width = 200;
+                    girlImage.style.height = 150;
+                    girlImage.style.minWidth = 200;
+                    girlImage.style.minHeight = 150;
+                    girlImage.MarkDirtyRepaint();
+                    Debug.Log("[OverlayPresenter_UITK] ✅ GirlImageの座標とサイズを設定: right=20, bottom=20, 200x150px");
+                }
+                else if (girlImage != null)
+                {
+                    // サイズは正常だが、座標を確認・設定
+                    girlImage.style.position = Position.Absolute;
+                    girlImage.style.right = 20;
+                    girlImage.style.bottom = 20;
+                    Debug.Log($"[OverlayPresenter_UITK] GirlImageの座標を設定: right=20, bottom=20 (サイズは既に正常: {girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height})");
+                }
+                
+                if (roomImage != null && (roomImage.resolvedStyle.width == 0 || roomImage.resolvedStyle.height == 0))
+                {
+                    Debug.LogWarning("[OverlayPresenter_UITK] RoomImageのサイズが0x0です。サイズと座標を強制設定します。");
+                    roomImage.style.position = Position.Absolute;
+                    roomImage.style.right = 20;      // 右から20px  
+                    roomImage.style.bottom = 190;    // 下から190px（GirlImageの上）
+                    roomImage.style.width = 200;
+                    roomImage.style.height = 150;
+                    roomImage.style.minWidth = 200;
+                    roomImage.style.minHeight = 150;
+                    roomImage.MarkDirtyRepaint();
+                    Debug.Log("[OverlayPresenter_UITK] ✅ RoomImageの座標とサイズを設定: right=20, bottom=190, 200x150px");
+                }
+                else if (roomImage != null)
+                {
+                    // サイズは正常だが、座標を確認・設定
+                    roomImage.style.position = Position.Absolute;
+                    roomImage.style.right = 20;
+                    roomImage.style.bottom = 190;
+                    Debug.Log($"[OverlayPresenter_UITK] RoomImageの座標を設定: right=20, bottom=190 (サイズは既に正常: {roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height})");
+                }
+                
+                // 最終確認：実際の要素サイズと座標をログ出力
+                if (girlImage != null)
+                {
+                    Debug.Log($"[OverlayPresenter_UITK] 🟣 最終確認 GirlImage: サイズ={girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height}, 座標=right:{girlImage.style.right.value.value}, bottom:{girlImage.style.bottom.value.value}");
+                }
+                if (roomImage != null)
+                {
+                    Debug.Log($"[OverlayPresenter_UITK] 🟢 最終確認 RoomImage: サイズ={roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height}, 座標=right:{roomImage.style.right.value.value}, bottom:{roomImage.style.bottom.value.value}");
+                }
+            }
         }
 
         /// <summary>

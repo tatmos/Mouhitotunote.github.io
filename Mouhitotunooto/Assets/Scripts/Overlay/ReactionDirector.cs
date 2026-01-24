@@ -76,6 +76,8 @@ namespace NovelGame.Overlay
         /// </summary>
         public void UpdatePhase()
         {
+            OverlayPhase oldPhase = state.CurrentPhase;
+            
             // Division/Modeからフェーズを判定
             if (state.CurrentDivision == Division.B && state.CurrentMode == GameMode.Normal)
             {
@@ -95,6 +97,12 @@ namespace NovelGame.Overlay
             else
             {
                 state.CurrentPhase = OverlayPhase.Hidden;
+            }
+            
+            // デバッグログ
+            if (oldPhase != state.CurrentPhase)
+            {
+                UnityEngine.Debug.Log($"[ReactionDirector] Phase更新: {oldPhase} → {state.CurrentPhase} (Division: {state.CurrentDivision}, Mode: {state.CurrentMode})");
             }
         }
     }
