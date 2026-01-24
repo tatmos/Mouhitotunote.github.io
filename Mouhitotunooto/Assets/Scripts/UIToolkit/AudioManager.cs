@@ -496,7 +496,7 @@ namespace NovelGame
             }
         }
 
-        public void FadeOutAudioOnSceneChange()
+        public void FadeOutAudioOnSceneChange(bool resetBgmFilter = true)
         {
             if (sfxAudioSource != null && sfxAudioSource.isPlaying)
             {
@@ -504,18 +504,22 @@ namespace NovelGame
                 sfxFadeOutCoroutine = StartCoroutine(FadeOutSfxAudioCoroutine(0.5f));
             }
             
-            if (!isWebBuild && bgmLowPassFilter != null)
+            // BGMのフィルターをリセットするかどうか（プロフィール/実績/もうひとつ画面ではfalse）
+            if (resetBgmFilter)
             {
-                if (lowPassFadeCoroutine != null) { StopCoroutine(lowPassFadeCoroutine); lowPassFadeCoroutine = null; }
-                bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
-            }
-            
-            // Webビルドの場合、フィルター済み音源から通常音源に戻す
-            if (isWebBuild && bgmAudioSource != null && bgmAudioSource.clip == selectionBGMMuffled)
-            {
-                float currentTime = bgmAudioSource.time;
-                bgmAudioSource.clip = selectionBGM;
-                bgmAudioSource.time = currentTime;
+                if (!isWebBuild && bgmLowPassFilter != null)
+                {
+                    if (lowPassFadeCoroutine != null) { StopCoroutine(lowPassFadeCoroutine); lowPassFadeCoroutine = null; }
+                    bgmLowPassFilter.cutoffFrequency = LowPassNormalCutoff;
+                }
+                
+                // Webビルドの場合、フィルター済み音源から通常音源に戻す
+                if (isWebBuild && bgmAudioSource != null && bgmAudioSource.clip == selectionBGMMuffled)
+                {
+                    float currentTime = bgmAudioSource.time;
+                    bgmAudioSource.clip = selectionBGM;
+                    bgmAudioSource.time = currentTime;
+                }
             }
 
             StartCoroutine(CheckAndFadeInAmbientAfterSfx());

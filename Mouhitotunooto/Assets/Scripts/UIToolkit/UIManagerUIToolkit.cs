@@ -930,8 +930,9 @@ namespace NovelGame
 
         public void ShowProfileScreen()
         {
-            FadeOutAudioOnSceneChange();
-            // シナリオ選択BGMの音量を下げる（流したまま）
+            // 効果音のみフェードアウト（BGMのフィルターはリセットしない）
+            FadeOutAudioOnSceneChange(false);
+            // シナリオ選択BGMの音量を下げる（流したまま、フィルターをかける）
             LowerSelectionBGMVolume();
             HideAllScreens(true);
             
@@ -1239,7 +1240,7 @@ namespace NovelGame
             
             var actions = new ResultScreenActions
             {
-                onFadeOutAudioOnSceneChange = FadeOutAudioOnSceneChange,
+                onFadeOutAudioOnSceneChange = FadeOutAudioOnSceneChangeForDelegate,
                 onFadeOutAmbientSoundForResult = FadeOutAmbientSoundForResult,
                 onHideAllScreens = HideAllScreens,
                 onSetBackgroundImage = SetBackgroundImage,
@@ -2206,8 +2207,9 @@ namespace NovelGame
 
         public void ShowAchievementsScreen()
         {
-            FadeOutAudioOnSceneChange();
-            // シナリオ選択BGMの音量を下げる（流したまま）
+            // 効果音のみフェードアウト（BGMのフィルターはリセットしない）
+            FadeOutAudioOnSceneChange(false);
+            // シナリオ選択BGMの音量を下げる（流したまま、フィルターをかける）
             LowerSelectionBGMVolume();
             HideAllScreens();
             
@@ -2295,7 +2297,9 @@ namespace NovelGame
         
         public void ShowMouhitotsuScreen()
         {
-            FadeOutAudioOnSceneChange();
+            // 効果音のみフェードアウト（BGMのフィルターはリセットしない）
+            FadeOutAudioOnSceneChange(false);
+            // シナリオ選択BGMの音量を下げる（流したまま、フィルターをかける）
             LowerSelectionBGMVolume();
             HideAllScreens();
             
@@ -2963,12 +2967,20 @@ namespace NovelGame
         /// <summary>
         /// シーン切り替え時にオーディオをフェードアウト（効果音用）
         /// </summary>
-        private void FadeOutAudioOnSceneChange()
+        private void FadeOutAudioOnSceneChange(bool resetBgmFilter = true)
         {
             if (audioManager != null)
             {
-                audioManager.FadeOutAudioOnSceneChange();
+                audioManager.FadeOutAudioOnSceneChange(resetBgmFilter);
             }
+        }
+
+        /// <summary>
+        /// シーン切り替え時にオーディオをフェードアウト（デリゲート用、BGMフィルターをリセット）
+        /// </summary>
+        private void FadeOutAudioOnSceneChangeForDelegate()
+        {
+            FadeOutAudioOnSceneChange(true);
         }
         
         
