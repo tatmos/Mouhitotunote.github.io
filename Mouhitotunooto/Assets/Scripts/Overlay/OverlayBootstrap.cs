@@ -1847,7 +1847,7 @@ namespace NovelGame.Overlay
             
             // Room: 位置は完璧だったので変更なし
             float roomLeft = 950;   
-            float roomTop = 530;    // 580→530に少し上げてバランス調整
+            float roomTop = 700;    // 580→530に少し上げてバランス調整
             
             Debug.Log($"[OverlayBootstrap] 最終完璧座標 - Girl: ({girlLeft}, {girlTop}), Room: ({roomLeft}, {roomTop})");
             Debug.Log($"[OverlayBootstrap] 計算確認 - Girl下端: {girlTop + 150}, Room下端: {roomTop + 150}");
@@ -2780,6 +2780,87 @@ namespace NovelGame.Overlay
             
             Debug.Log("[OverlayBootstrap] 🎉 座標系解明結果の実際のオーバーレイへの適用が完了しました！");
             Debug.Log("[OverlayBootstrap] 🎯 実際のオーバーレイストリーマーが右下に表示されるはずです！");
+        }
+        
+        /// <summary>
+        /// デバッグ用: テスト要素をクリーンアップして実際の背景を表示
+        /// </summary>
+        [ContextMenu("Debug: Cleanup Test Elements")]
+        public void DebugCleanupTestElements()
+        {
+            Debug.Log("[OverlayBootstrap] 🧹 テスト要素をクリーンアップして実際の背景を適用");
+            
+            if (overlayDocument == null || overlayDocument.rootVisualElement == null)
+            {
+                Debug.LogError("[OverlayBootstrap] overlayDocumentまたはrootVisualElementがnull");
+                return;
+            }
+            
+            var root = overlayDocument.rootVisualElement;
+            
+            // すべてのテスト用要素（デバッグで作成された矩形）を削除
+            var testElements = root.Children().Where(child => 
+                child.name.Contains("Debug") || 
+                child.name.Contains("Test") || 
+                child.name.Contains("DirectGirl") ||
+                child.name.Contains("DirectRoom") ||
+                child.name.Contains("AbsolutePerfect") ||
+                child.name.Contains("LegendMark") ||
+                child.name.Contains("Reference") ||
+                child.name.Contains("Corner") ||
+                child.name.Contains("Ultimate") ||
+                child.name.Contains("Perfect") ||
+                child.name.Contains("Final") ||
+                child.name.Contains("Optimized")).ToList();
+                
+            foreach (var element in testElements)
+            {
+                root.Remove(element);
+                Debug.Log($"[OverlayBootstrap] 削除されたテスト要素: {element.name}");
+            }
+            
+            Debug.Log($"[OverlayBootstrap] ✅ {testElements.Count}個のテスト要素を削除しました");
+            
+            // 実際のオーバーレイ要素のスタイルをクリーンアップ
+            var overlayRoot = root.Q<VisualElement>("OverlayRoot");
+            if (overlayRoot != null)
+            {
+                var girlImage = overlayRoot.Q<VisualElement>("GirlImage");
+                var roomImage = overlayRoot.Q<VisualElement>("RoomImage");
+                
+                if (girlImage != null)
+                {
+                    // テスト用の境界線を削除
+                    girlImage.style.borderTopWidth = 0;
+                    girlImage.style.borderBottomWidth = 0;
+                    girlImage.style.borderLeftWidth = 0;
+                    girlImage.style.borderRightWidth = 0;
+                    girlImage.style.borderTopColor = Color.clear;
+                    girlImage.style.borderBottomColor = Color.clear;
+                    girlImage.style.borderLeftColor = Color.clear;
+                    girlImage.style.borderRightColor = Color.clear;
+                    girlImage.MarkDirtyRepaint();
+                    Debug.Log("[OverlayBootstrap] GirlImageのテスト用境界線を削除しました");
+                }
+                
+                if (roomImage != null)
+                {
+                    // テスト用の境界線を削除
+                    roomImage.style.borderTopWidth = 0;
+                    roomImage.style.borderBottomWidth = 0;
+                    roomImage.style.borderLeftWidth = 0;
+                    roomImage.style.borderRightWidth = 0;
+                    roomImage.style.borderTopColor = Color.clear;
+                    roomImage.style.borderBottomColor = Color.clear;
+                    roomImage.style.borderLeftColor = Color.clear;
+                    roomImage.style.borderRightColor = Color.clear;
+                    roomImage.MarkDirtyRepaint();
+                    Debug.Log("[OverlayBootstrap] RoomImageのテスト用境界線を削除しました");
+                }
+            }
+            
+            Debug.Log("[OverlayBootstrap] 🎉 テスト要素のクリーンアップが完了しました！");
+            Debug.Log("[OverlayBootstrap] 🖼️ 実際の背景画像が表示されるはずです！");
         }
         
         /// <summary>

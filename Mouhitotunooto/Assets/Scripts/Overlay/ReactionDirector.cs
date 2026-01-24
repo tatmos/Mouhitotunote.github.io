@@ -94,6 +94,16 @@ namespace NovelGame.Overlay
                     state.CurrentPhase = OverlayPhase.Active;
                 }
             }
+            else if (state.CurrentDivision == Division.A && state.CurrentMode == GameMode.Normal)
+            {
+                // Division=A, Mode=Normal でもオーバーレイストリーマーを表示
+                state.CurrentPhase = OverlayPhase.Active;
+            }
+            else if (state.CurrentDivision != Division.None && state.CurrentMode == GameMode.Normal)
+            {
+                // その他のDivision（C, PreA等）でも基本的にはオーバーレイ表示
+                state.CurrentPhase = OverlayPhase.Active;
+            }
             else
             {
                 state.CurrentPhase = OverlayPhase.Hidden;
