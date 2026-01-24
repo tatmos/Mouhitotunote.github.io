@@ -48,6 +48,12 @@ namespace NovelGame.Overlay
         // 共通セリフ
         private static readonly Dictionary<string, List<string>> commonLines = new Dictionary<string, List<string>>
         {
+            ["DivisionA_Active"] = new List<string>
+            {
+                "やっと始まったね……",
+                "ここから、が本当のスタート。",
+                "この感じ、嫌いじゃない。"
+            },
             ["DivisionB_Presence"] = new List<string>
             {
                 "……今、空気変わったよね。",

@@ -2864,6 +2864,222 @@ namespace NovelGame.Overlay
         }
         
         /// <summary>
+        /// デバッグ用: セリフ表示機能をテスト
+        /// </summary>
+        [ContextMenu("Debug: Test Speech System")]
+        public void DebugTestSpeechSystem()
+        {
+            Debug.Log("[OverlayBootstrap] 🗨️ セリフ表示システムをテスト開始");
+            
+            if (presenter == null)
+            {
+                Debug.LogError("[OverlayBootstrap] presenterがnullです");
+                return;
+            }
+            
+            if (presenter is OverlayPresenter_UITK uiPresenter)
+            {
+                // セリフ表示要素の状態を確認
+                var root = overlayDocument.rootVisualElement;
+                var balloonRoot = root.Q<VisualElement>("BalloonRoot");
+                var balloonLabel = root.Q<Label>("BalloonLabel");
+                var thoughtBalloonRoot = root.Q<VisualElement>("ThoughtBalloonRoot");
+                var thoughtBalloonLabel = root.Q<Label>("ThoughtBalloonLabel");
+                
+                Debug.Log($"[OverlayBootstrap] 🔍 セリフ表示要素の状態:");
+                Debug.Log($"[OverlayBootstrap] - BalloonRoot: {(balloonRoot != null ? "✅ 取得済み" : "❌ null")}");
+                Debug.Log($"[OverlayBootstrap] - BalloonLabel: {(balloonLabel != null ? "✅ 取得済み" : "❌ null")}");
+                Debug.Log($"[OverlayBootstrap] - ThoughtBalloonRoot: {(thoughtBalloonRoot != null ? "✅ 取得済み" : "❌ null")}");
+                Debug.Log($"[OverlayBootstrap] - ThoughtBalloonLabel: {(thoughtBalloonLabel != null ? "✅ 取得済み" : "❌ null")}");
+                
+                // 吹き出し要素の詳細状態をチェック
+                if (balloonRoot != null)
+                {
+                    Debug.Log($"[OverlayBootstrap] BalloonRoot詳細: display={balloonRoot.style.display.value}, left={balloonRoot.style.left.value}, top={balloonRoot.style.top.value}");
+                }
+                if (balloonLabel != null)
+                {
+                    Debug.Log($"[OverlayBootstrap] BalloonLabel詳細: text='{balloonLabel.text}', fontSize={balloonLabel.style.fontSize.value}");
+                }
+                
+                // テストセリフを表示
+                if (balloonRoot != null && balloonLabel != null)
+                {
+                    Debug.Log("[OverlayBootstrap] 🧪 テストセリフを表示中...");
+                    var testPayload = new ReactionPayload
+                    {
+                        Text = "これはテストセリフです！座標系修正版",
+                        Expression = GirlExpression.Smile,
+                        RoomState = RoomState.CleanDay,
+                        DisplayDuration = 5f, // 少し長めに表示
+                        IsThought = false
+                    };
+                    
+                    uiPresenter.ShowReaction(testPayload);
+                    Debug.Log("[OverlayBootstrap] ✅ テストセリフの表示要求を送信しました");
+                    
+                    // さらに心の声もテスト
+                    StartCoroutine(TestThoughtBalloonAfterDelay(uiPresenter, 6f));
+                }
+                else
+                {
+                    Debug.LogError("[OverlayBootstrap] ❌ セリフ表示要素が見つかりません！UXMLファイルを確認してください");
+                    
+                    // 代替案：簡易セリフ表示要素を動的に作成
+                    Debug.Log("[OverlayBootstrap] 🔧 セリフ表示要素を動的作成します...");
+                    CreateSimpleSpeechBalloon(root);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 心の声のテスト（遅延実行）
+        /// </summary>
+        private IEnumerator TestThoughtBalloonAfterDelay(OverlayPresenter_UITK presenter, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            Debug.Log("[OverlayBootstrap] 💭 心の声テストを開始");
+            var thoughtPayload = new ReactionPayload
+            {
+                Text = "これは心の声のテストです……",
+                Expression = GirlExpression.Thinking,
+                RoomState = RoomState.CleanDay,
+                DisplayDuration = 4f,
+                IsThought = true
+            };
+            
+            presenter.ShowReaction(thoughtPayload);
+            Debug.Log("[OverlayBootstrap] ✅ 心の声テストセリフを送信しました");
+        }
+        
+        /// <summary>
+        /// 簡易セリフ吹き出しを動的作成
+        /// </summary>
+        private void CreateSimpleSpeechBalloon(VisualElement root)
+        {
+            var overlayRoot = root.Q<VisualElement>("OverlayRoot");
+            if (overlayRoot == null)
+            {
+                Debug.LogError("[OverlayBootstrap] OverlayRootが見つかりません");
+                return;
+            }
+            
+            // 既存の動的吹き出しを削除
+            var existingBalloon = overlayRoot.Q<VisualElement>("DynamicBalloonRoot");
+            if (existingBalloon != null)
+            {
+                overlayRoot.Remove(existingBalloon);
+            }
+            
+            // 動的セリフ吹き出しを作成（座標系解明結果適用）
+            var balloonRoot = new VisualElement();
+            balloonRoot.name = "DynamicBalloonRoot";
+            balloonRoot.style.position = Position.Absolute;
+            balloonRoot.style.left = 1020; // 座標系解明結果: GirlImage(left=1320)の左側
+            balloonRoot.style.top = 600;   // 座標系解明結果: GirlImage(top=700)より少し上
+            balloonRoot.style.width = 280;
+            balloonRoot.style.height = 80;
+            balloonRoot.style.backgroundColor = new Color(1f, 1f, 1f, 0.9f); // 白い背景
+            balloonRoot.style.borderTopWidth = 2;
+            balloonRoot.style.borderBottomWidth = 2;
+            balloonRoot.style.borderLeftWidth = 2;
+            balloonRoot.style.borderRightWidth = 2;
+            balloonRoot.style.borderTopColor = Color.black;
+            balloonRoot.style.borderBottomColor = Color.black;
+            balloonRoot.style.borderLeftColor = Color.black;
+            balloonRoot.style.borderRightColor = Color.black;
+            balloonRoot.style.paddingTop = 10;
+            balloonRoot.style.paddingBottom = 10;
+            balloonRoot.style.paddingLeft = 15;
+            balloonRoot.style.paddingRight = 15;
+            
+            // セリフテキスト（Division A テストセリフ）
+            var balloonLabel = new Label();
+            balloonLabel.name = "DynamicBalloonLabel";
+            balloonLabel.text = "やっと始まったね……（動的作成版）";
+            balloonLabel.style.fontSize = 16;
+            balloonLabel.style.color = Color.black;
+            balloonLabel.style.whiteSpace = WhiteSpace.Normal;
+            balloonLabel.style.textOverflow = TextOverflow.Clip;
+            balloonLabel.style.unityTextAlign = TextAnchor.MiddleCenter; // 中央揃え
+            
+            balloonRoot.Add(balloonLabel);
+            overlayRoot.Add(balloonRoot);
+            
+            Debug.Log("[OverlayBootstrap] ✅ 動的セリフ吹き出しを作成しました");
+            Debug.Log($"[OverlayBootstrap] 📍 吹き出し位置: left={balloonRoot.style.left.value.value}, top={balloonRoot.style.top.value.value}");
+            Debug.Log($"[OverlayBootstrap] 📏 吹き出しサイズ: {balloonRoot.style.width.value.value}x{balloonRoot.style.height.value.value}");
+            Debug.Log("[OverlayBootstrap] 💬 座標系解明結果を活用した完璧配置で表示します");
+            
+            // 5秒後に自動で非表示
+            StartCoroutine(HideBalloonAfterDelay(balloonRoot, 5f));
+        }
+        
+        /// <summary>
+        /// 指定時間後にセリフ吹き出しを非表示にする
+        /// </summary>
+        private IEnumerator HideBalloonAfterDelay(VisualElement balloon, float delay)
+        {
+            Debug.Log($"[OverlayBootstrap] ⏰ {delay}秒後に吹き出しを自動非表示にします");
+            yield return new WaitForSeconds(delay);
+            
+            if (balloon != null && balloon.parent != null)
+            {
+                balloon.style.opacity = 0f;
+                balloon.style.display = DisplayStyle.None;
+                Debug.Log("[OverlayBootstrap] ✅ セリフ吹き出しを自動非表示にしました");
+            }
+            else
+            {
+                Debug.LogWarning("[OverlayBootstrap] 吹き出し要素が既に削除されています");
+            }
+        }
+        
+        /// <summary>
+        /// デバッグ用: リアクション発動履歴をリセット
+        /// </summary>
+        [ContextMenu("Debug: Reset Reaction History")]
+        public void DebugResetReactionHistory()
+        {
+            if (state == null)
+            {
+                Debug.LogError("[OverlayBootstrap] stateがnullです");
+                return;
+            }
+            
+            // OverlayState のリセット機能を確認
+            if (state is OverlayState overlayState)
+            {
+                Debug.Log("[OverlayBootstrap] 🔄 リアクション発動履歴をリセット中...");
+                
+                // 最終発話時間をリセット
+                var lastSpeechField = typeof(OverlayState).GetField("lastSpeechTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (lastSpeechField != null)
+                {
+                    lastSpeechField.SetValue(overlayState, 0f);
+                    Debug.Log("[OverlayBootstrap] - 最終発話時間をリセット");
+                }
+                
+                // 発話履歴辞書をリセット
+                var spokeDictField = typeof(OverlayState).GetField("spokeOnceDict", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (spokeDictField != null)
+                {
+                    var spokeDict = spokeDictField.GetValue(overlayState) as System.Collections.Generic.Dictionary<string, bool>;
+                    if (spokeDict != null)
+                    {
+                        int count = spokeDict.Count;
+                        spokeDict.Clear();
+                        Debug.Log($"[OverlayBootstrap] - 発話履歴を{count}件クリア");
+                    }
+                }
+                
+                Debug.Log("[OverlayBootstrap] ✅ リアクション発動履歴のリセットが完了しました");
+                Debug.Log("[OverlayBootstrap] 🎯 これでDivision A などのリアクションを再度テストできます");
+            }
+        }
+        
+        /// <summary>
         /// デバッグ用: UIDocument状態を詳細確認
         /// </summary>
         [ContextMenu("Debug: Check UIDocument Status")]

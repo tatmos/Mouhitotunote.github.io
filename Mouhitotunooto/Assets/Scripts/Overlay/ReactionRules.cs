@@ -52,6 +52,25 @@ namespace NovelGame.Overlay
         {
             return new ReactionRule[]
             {
+                // Division A（Active） - 追加！
+                new ReactionRule
+                {
+                    Id = "DivisionA_Active",
+                    Priority = 15,
+                    CooldownSeconds = 10f,
+                    MinPhase = OverlayPhase.Active,
+                    MaxPhase = OverlayPhase.Active,
+                    OncePerKeyEvent = true,
+                    EventKey = "DivisionA_First",
+                    Condition = ctx => ctx.Event is DivisionEnteredEvt evt && evt.Division == Division.A,
+                    PayloadFactory = ctx => new ReactionPayload
+                    {
+                        Text = ReactionLines_JP.GetLine("DivisionA_Active", ctx.PlayerType),
+                        Expression = GirlExpression.Neutral,
+                        RoomState = RoomState.CleanDay,
+                        DisplayDuration = 3f
+                    }
+                },
                 // Division B（Presence）
                 new ReactionRule
                 {

@@ -88,6 +88,52 @@ namespace NovelGame.Overlay
             if (thoughtBalloonRoot != null) thoughtBalloonRoot.pickingMode = PickingMode.Ignore;
             if (thoughtBalloonLabel != null) thoughtBalloonLabel.pickingMode = PickingMode.Ignore;
             if (musicNoteLayer != null) musicNoteLayer.pickingMode = PickingMode.Ignore;
+            
+            // 座標系解明結果に基づいて吹き出し位置を修正
+            FixBalloonCoordinates();
+        }
+
+        /// <summary>
+        /// 座標系解明結果に基づいて吹き出し位置を修正
+        /// </summary>
+        private void FixBalloonCoordinates()
+        {
+            Debug.Log("[OverlayPresenter_UITK] 🔧 座標系解明結果に基づく吹き出し座標修正開始");
+            
+            // GirlImageの解明座標: left=1320, top=700
+            // 吹き出しはGirlImageの左側に配置
+            float balloonLeft = 1020; // GirlImageの左側（1320 - 300px）
+            float balloonTop = 600;   // GirlImageより少し上
+            
+            if (balloonRoot != null)
+            {
+                Debug.Log($"[OverlayPresenter_UITK] 通常吹き出し座標修正: {balloonLeft}, {balloonTop}");
+                balloonRoot.style.position = Position.Absolute;
+                balloonRoot.style.left = balloonLeft;
+                balloonRoot.style.top = balloonTop;
+                balloonRoot.style.right = StyleKeyword.Auto;  // 古いright設定をクリア
+                balloonRoot.style.bottom = StyleKeyword.Auto; // 古いbottom設定をクリア
+                balloonRoot.style.width = 280; // 固定幅
+                balloonRoot.style.maxWidth = 300;
+                balloonRoot.style.minWidth = 200;
+            }
+            
+            if (thoughtBalloonRoot != null)
+            {
+                Debug.Log($"[OverlayPresenter_UITK] 心の声吹き出し座標修正: {balloonLeft}, {balloonTop}");
+                thoughtBalloonRoot.style.position = Position.Absolute;
+                thoughtBalloonRoot.style.left = balloonLeft;
+                thoughtBalloonRoot.style.top = balloonTop;
+                thoughtBalloonRoot.style.right = StyleKeyword.Auto;  // 古いright設定をクリア
+                thoughtBalloonRoot.style.bottom = StyleKeyword.Auto; // 古いbottom設定をクリア
+                thoughtBalloonRoot.style.width = 280; // 固定幅
+                thoughtBalloonRoot.style.maxWidth = 300;
+                thoughtBalloonRoot.style.minWidth = 200;
+            }
+            
+            Debug.Log("[OverlayPresenter_UITK] ✅ 吹き出し座標修正完了");
+            Debug.Log($"[OverlayPresenter_UITK] 📍 吹き出し位置: left={balloonLeft}, top={balloonTop}");
+            Debug.Log($"[OverlayPresenter_UITK] 📍 GirlImage位置: left=1320, top=700（座標系解明結果）");
         }
 
         /// <summary>
@@ -95,7 +141,18 @@ namespace NovelGame.Overlay
         /// </summary>
         public void ShowReaction(ReactionPayload payload)
         {
-            if (payload == null) return;
+            if (payload == null)
+            {
+                Debug.LogWarning("[OverlayPresenter_UITK] ShowReaction: payloadがnullです");
+                return;
+            }
+            
+            Debug.Log($"[OverlayPresenter_UITK] 🎭 リアクション表示開始:");
+            Debug.Log($"[OverlayPresenter_UITK] - テキスト: \"{payload.Text}\"");
+            Debug.Log($"[OverlayPresenter_UITK] - 表情: {payload.Expression}");
+            Debug.Log($"[OverlayPresenter_UITK] - 部屋状態: {payload.RoomState}");
+            Debug.Log($"[OverlayPresenter_UITK] - 心の声: {payload.IsThought}");
+            Debug.Log($"[OverlayPresenter_UITK] - 表示時間: {payload.DisplayDuration}秒");
 
             // 表情を設定
             SetExpression(payload.Expression);
@@ -106,10 +163,12 @@ namespace NovelGame.Overlay
             // 吹き出しを表示
             if (payload.IsThought)
             {
+                Debug.Log("[OverlayPresenter_UITK] 💭 心の声として表示");
                 ShowThoughtBalloon(payload.Text, payload.DisplayDuration);
             }
             else
             {
+                Debug.Log("[OverlayPresenter_UITK] 🗨️ 通常セリフとして表示");
                 ShowBalloon(payload.Text, payload.DisplayDuration);
             }
         }
@@ -165,7 +224,13 @@ namespace NovelGame.Overlay
         /// </summary>
         private void ShowBalloon(string text, float duration)
         {
-            if (balloonRoot == null || balloonLabel == null) return;
+            Debug.Log($"[OverlayPresenter_UITK] 🗨️ 通常吹き出し表示開始: \"{text}\"");
+            
+            if (balloonRoot == null || balloonLabel == null)
+            {
+                Debug.LogError($"[OverlayPresenter_UITK] 吹き出し要素がnull - balloonRoot: {balloonRoot != null}, balloonLabel: {balloonLabel != null}");
+                return;
+            }
 
             // 心の声を非表示
             if (thoughtBalloonRoot != null)
@@ -176,6 +241,12 @@ namespace NovelGame.Overlay
             // 通常吹き出しを表示
             balloonLabel.text = text;
             balloonRoot.style.display = DisplayStyle.Flex;
+            balloonRoot.style.visibility = Visibility.Visible;
+            balloonRoot.style.opacity = 1f;
+            balloonRoot.MarkDirtyRepaint();
+            
+            Debug.Log($"[OverlayPresenter_UITK] ✅ 吹き出し設定完了 - display: {balloonRoot.style.display.value}, opacity: {balloonRoot.style.opacity.value}");
+            Debug.Log($"[OverlayPresenter_UITK] 📍 吹き出し位置: left={balloonRoot.style.left.value.value}, top={balloonRoot.style.top.value.value}");
 
             // フェードイン
             coroutineRunner.StartCoroutine(FadeInAndOut(balloonRoot, duration));
@@ -186,7 +257,13 @@ namespace NovelGame.Overlay
         /// </summary>
         private void ShowThoughtBalloon(string text, float duration)
         {
-            if (thoughtBalloonRoot == null || thoughtBalloonLabel == null) return;
+            Debug.Log($"[OverlayPresenter_UITK] 💭 心の声吹き出し表示開始: \"{text}\"");
+            
+            if (thoughtBalloonRoot == null || thoughtBalloonLabel == null)
+            {
+                Debug.LogError($"[OverlayPresenter_UITK] 心の声要素がnull - thoughtBalloonRoot: {thoughtBalloonRoot != null}, thoughtBalloonLabel: {thoughtBalloonLabel != null}");
+                return;
+            }
 
             // 通常吹き出しを非表示
             if (balloonRoot != null)
@@ -197,6 +274,12 @@ namespace NovelGame.Overlay
             // 心の声を表示
             thoughtBalloonLabel.text = text;
             thoughtBalloonRoot.style.display = DisplayStyle.Flex;
+            thoughtBalloonRoot.style.visibility = Visibility.Visible;
+            thoughtBalloonRoot.style.opacity = 1f;
+            thoughtBalloonRoot.MarkDirtyRepaint();
+            
+            Debug.Log($"[OverlayPresenter_UITK] ✅ 心の声設定完了 - display: {thoughtBalloonRoot.style.display.value}, opacity: {thoughtBalloonRoot.style.opacity.value}");
+            Debug.Log($"[OverlayPresenter_UITK] 📍 心の声位置: left={thoughtBalloonRoot.style.left.value.value}, top={thoughtBalloonRoot.style.top.value.value}");
 
             // フェードイン
             coroutineRunner.StartCoroutine(FadeInAndOut(thoughtBalloonRoot, duration));
@@ -251,8 +334,39 @@ namespace NovelGame.Overlay
                 return;
             }
 
-            overlayRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            Debug.Log($"[OverlayPresenter_UITK] SetVisible: {visible} (display = {overlayRoot.style.display.value})");
+            if (visible)
+            {
+                // 表示時：すべての要素を確実に表示状態にする
+                overlayRoot.style.display = DisplayStyle.Flex;
+                overlayRoot.style.visibility = Visibility.Visible;
+                overlayRoot.style.opacity = 1f;
+                
+                if (girlImage != null)
+                {
+                    girlImage.style.display = DisplayStyle.Flex;
+                    girlImage.style.visibility = Visibility.Visible;
+                    girlImage.style.opacity = 1f;
+                }
+                
+                if (roomImage != null)
+                {
+                    roomImage.style.display = DisplayStyle.Flex;
+                    roomImage.style.visibility = Visibility.Visible;
+                    roomImage.style.opacity = 1f;
+                }
+                
+                overlayRoot.MarkDirtyRepaint();
+                if (girlImage != null) girlImage.MarkDirtyRepaint();
+                if (roomImage != null) roomImage.MarkDirtyRepaint();
+                
+                Debug.Log($"[OverlayPresenter_UITK] SetVisible: {visible} (display = {overlayRoot.style.display.value}) - すべての要素を表示状態に設定");
+            }
+            else
+            {
+                // 非表示時
+                overlayRoot.style.display = DisplayStyle.None;
+                Debug.Log($"[OverlayPresenter_UITK] SetVisible: {visible} (display = {overlayRoot.style.display.value})");
+            }
         }
 
         /// <summary>
@@ -319,67 +433,100 @@ namespace NovelGame.Overlay
                     Debug.LogWarning("[OverlayPresenter_UITK] roomImageがnullです。");
                 }
                 
-                // 座標系解明結果を適用した座標設定
-                if (girlImage != null && (girlImage.resolvedStyle.width == 0 || girlImage.resolvedStyle.height == 0))
+                // 座標系解明結果を適用した座標設定（常に実行）
+                if (girlImage != null)
                 {
-                    Debug.LogWarning("[OverlayPresenter_UITK] GirlImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
+                    bool needsSizeFix = (girlImage.resolvedStyle.width == 0 || girlImage.resolvedStyle.height == 0);
+                    
+                    if (needsSizeFix)
+                    {
+                        Debug.LogWarning("[OverlayPresenter_UITK] GirlImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
+                    }
+                    
+                    // 常に座標系解明結果を適用
                     girlImage.style.position = Position.Absolute;
                     girlImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
                     girlImage.style.top = 700;       // 座標系解明結果：完璧な高さ
                     girlImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
                     girlImage.style.bottom = StyleKeyword.Auto;
-                    girlImage.style.width = 200;
-                    girlImage.style.height = 150;
-                    girlImage.style.minWidth = 200;
-                    girlImage.style.minHeight = 150;
+                    
+                    if (needsSizeFix)
+                    {
+                        girlImage.style.width = 200;
+                        girlImage.style.height = 150;
+                        girlImage.style.minWidth = 200;
+                        girlImage.style.minHeight = 150;
+                    }
+                    
+                    girlImage.style.display = DisplayStyle.Flex;
+                    girlImage.style.visibility = Visibility.Visible;
+                    girlImage.style.opacity = 1f;
                     girlImage.MarkDirtyRepaint();
-                    Debug.Log("[OverlayPresenter_UITK] ✅ GirlImageに座標系解明結果適用: left=1320, top=700, 200x150px");
-                }
-                else if (girlImage != null)
-                {
-                    // サイズは正常だが、座標系解明結果を適用
-                    girlImage.style.position = Position.Absolute;
-                    girlImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
-                    girlImage.style.top = 700;       // 座標系解明結果：完璧な高さ
-                    girlImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
-                    girlImage.style.bottom = StyleKeyword.Auto;
-                    Debug.Log($"[OverlayPresenter_UITK] GirlImageに座標系解明結果適用: left=1320, top=700 (サイズは既に正常: {girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height})");
+                    
+                    Debug.Log($"[OverlayPresenter_UITK] ✅ GirlImageに座標系解明結果適用: left=1320, top=700, サイズ={girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height}");
                 }
                 
-                if (roomImage != null && (roomImage.resolvedStyle.width == 0 || roomImage.resolvedStyle.height == 0))
+                // 座標系解明結果を適用した座標設定（常に実行）
+                if (roomImage != null)
                 {
-                    Debug.LogWarning("[OverlayPresenter_UITK] RoomImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
+                    bool needsSizeFix = (roomImage.resolvedStyle.width == 0 || roomImage.resolvedStyle.height == 0);
+                    
+                    if (needsSizeFix)
+                    {
+                        Debug.LogWarning("[OverlayPresenter_UITK] RoomImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
+                    }
+                    
+                    // 常に座標系解明結果を適用
                     roomImage.style.position = Position.Absolute;
                     roomImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
-                    roomImage.style.top = 700;       // 座標系解明結果：GirlImageの上
+                    roomImage.style.top = 530;        // 座標系解明結果：GirlImageの上
                     roomImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
                     roomImage.style.bottom = StyleKeyword.Auto;
-                    roomImage.style.width = 200;
-                    roomImage.style.height = 150;
-                    roomImage.style.minWidth = 200;
-                    roomImage.style.minHeight = 150;
+                    
+                    if (needsSizeFix)
+                    {
+                        roomImage.style.width = 200;
+                        roomImage.style.height = 150;
+                        roomImage.style.minWidth = 200;
+                        roomImage.style.minHeight = 150;
+                    }
+                    
+                    roomImage.style.display = DisplayStyle.Flex;
+                    roomImage.style.visibility = Visibility.Visible;
+                    roomImage.style.opacity = 1f;
                     roomImage.MarkDirtyRepaint();
-                    Debug.Log("[OverlayPresenter_UITK] ✅ RoomImageに座標系解明結果適用: left=1320, top=530, 200x150px");
-                }
-                else if (roomImage != null)
-                {
-                    // サイズは正常だが、座標系解明結果を適用
-                    roomImage.style.position = Position.Absolute;
-                    roomImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
-                    roomImage.style.top = 700;       // 座標系解明結果：GirlImageの上
-                    roomImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
-                    roomImage.style.bottom = StyleKeyword.Auto;
-                    Debug.Log($"[OverlayPresenter_UITK] RoomImageに座標系解明結果適用: left=1320, top=530 (サイズは既に正常: {roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height})");
+                    
+                    Debug.Log($"[OverlayPresenter_UITK] ✅ RoomImageに座標系解明結果適用: left=1320, top=530, サイズ={roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height}");
                 }
                 
                 // 最終確認：実際の要素サイズと座標をログ出力
                 if (girlImage != null)
                 {
-                    Debug.Log($"[OverlayPresenter_UITK] 🟣 最終確認 GirlImage: サイズ={girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height}, 座標=left:{girlImage.style.left.value.value}, top:{girlImage.style.top.value.value}");
+                    // 表示状態を確実にする
+                    girlImage.style.display = DisplayStyle.Flex;
+                    girlImage.style.visibility = Visibility.Visible;
+                    girlImage.style.opacity = 1f;
+                    girlImage.MarkDirtyRepaint();
+                    Debug.Log($"[OverlayPresenter_UITK] 🟣 最終確認 GirlImage: サイズ={girlImage.resolvedStyle.width}x{girlImage.resolvedStyle.height}, 座標=left:{girlImage.style.left.value.value}, top:{girlImage.style.top.value.value}, display={girlImage.style.display.value}");
                 }
                 if (roomImage != null)
                 {
-                    Debug.Log($"[OverlayPresenter_UITK] 🟢 最終確認 RoomImage: サイズ={roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height}, 座標=left:{roomImage.style.left.value.value}, top:{roomImage.style.top.value.value}");
+                    // 表示状態を確実にする
+                    roomImage.style.display = DisplayStyle.Flex;
+                    roomImage.style.visibility = Visibility.Visible;
+                    roomImage.style.opacity = 1f;
+                    roomImage.MarkDirtyRepaint();
+                    Debug.Log($"[OverlayPresenter_UITK] 🟢 最終確認 RoomImage: サイズ={roomImage.resolvedStyle.width}x{roomImage.resolvedStyle.height}, 座標=left:{roomImage.style.left.value.value}, top:{roomImage.style.top.value.value}, display={roomImage.style.display.value}");
+                }
+                
+                // OverlayRoot自体も確実に表示状態にする
+                if (overlayRoot != null)
+                {
+                    overlayRoot.style.display = DisplayStyle.Flex;
+                    overlayRoot.style.visibility = Visibility.Visible;
+                    overlayRoot.style.opacity = 1f;
+                    overlayRoot.MarkDirtyRepaint();
+                    Debug.Log($"[OverlayPresenter_UITK] ✅ OverlayRoot表示状態確認: display={overlayRoot.style.display.value}, visibility={overlayRoot.style.visibility.value}");
                 }
             }
         }
