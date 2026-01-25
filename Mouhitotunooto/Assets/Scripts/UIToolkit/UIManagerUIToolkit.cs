@@ -684,8 +684,13 @@ namespace NovelGame
             var root = selectionScreenDocument.rootVisualElement;
             if (root == null) return;
             
-            // Render Texture方式を初期化（UIをRender Textureに描き出し、パーティクルとの前後関係を制御）
-            SetupRenderTextureMode();
+            // Render Texture方式をクリーンアップ（他のシーンと同じように直接表示）
+            if (renderTextureManager != null)
+            {
+                renderTextureManager.Cleanup();
+                Destroy(renderTextureManager);
+                renderTextureManager = null;
+            }
             
             // スクロールバーを非表示にする
             root.style.overflow = Overflow.Hidden;
@@ -1789,6 +1794,8 @@ namespace NovelGame
                 
                 // グリッド用のスタイルを適用
                 button.AddToClassList("scenario-button");
+                // オーバーレイによるブロックを防ぐため、pickingModeを設定
+                button.pickingMode = PickingMode.Position;
                 
                 // ボタンの内容を構造化
                 var buttonContent = new VisualElement();
@@ -1801,6 +1808,8 @@ namespace NovelGame
                 buttonContent.style.paddingRight = 12;
                 buttonContent.style.paddingTop = 10;
                 buttonContent.style.paddingBottom = 10;
+                // ボタンコンテンツはクリックイベントを受け取らないようにする（ボタン自体が受け取る）
+                buttonContent.pickingMode = PickingMode.Ignore;
                 
                 string scenarioTitleText = scenario.title;
                 string scenarioDescriptionText = scenario.setup;
@@ -1820,6 +1829,7 @@ namespace NovelGame
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.whiteSpace = WhiteSpace.Normal;
                 titleLabel.style.marginBottom = 3; // 5から3に縮小
+                titleLabel.pickingMode = PickingMode.Ignore; // クリックイベントはボタンが受け取る
                 buttonContent.Add(titleLabel);
                 
                 // シナリオの説明を追加（3行まで）
@@ -1830,6 +1840,7 @@ namespace NovelGame
                 descriptionLabel.style.maxHeight = 90; // 120から90に縮小（ボタンの高さに合わせて調整）
                 descriptionLabel.style.flexGrow = 1; // 利用可能なスペースを埋める
                 descriptionLabel.style.overflow = Overflow.Hidden;
+                descriptionLabel.pickingMode = PickingMode.Ignore; // クリックイベントはボタンが受け取る
                 buttonContent.Add(descriptionLabel);
                 
                 button.Add(buttonContent);
@@ -1843,6 +1854,7 @@ namespace NovelGame
                     var lockLabel = new Label("🔒 ロック");
                     lockLabel.style.fontSize = 11;
                     lockLabel.style.marginTop = 3;
+                    lockLabel.pickingMode = PickingMode.Ignore; // クリックイベントはボタンが受け取る
                     buttonContent.Add(lockLabel);
                     button.AddToClassList("scenario-button-locked");
                     // ロック状態の文字色も設定
@@ -1867,6 +1879,7 @@ namespace NovelGame
                     completedMark.style.top = 3;
                     completedMark.style.right = 3;
                     completedMark.style.color = completedTextColor;
+                    completedMark.pickingMode = PickingMode.Ignore; // クリックイベントはボタンが受け取る
                     button.Add(completedMark);
                     // クリア後の文字色を設定
                     titleLabel.style.color = completedTextColor;
@@ -2474,8 +2487,13 @@ namespace NovelGame
             creditsScreenDocument.gameObject.SetActive(true);
             currentDocument = creditsScreenDocument;
             
-            // Render Texture方式を初期化（パーティクルをUIの上に表示するため）
-            SetupRenderTextureMode();
+            // Render Texture方式をクリーンアップ（他のシーンと同じように直接表示）
+            if (renderTextureManager != null)
+            {
+                renderTextureManager.Cleanup();
+                Destroy(renderTextureManager);
+                renderTextureManager = null;
+            }
             
             var root = creditsScreenDocument.rootVisualElement;
             if (root == null) return;
@@ -2524,7 +2542,7 @@ namespace NovelGame
             if (creditsContent == null || creditsScrollView == null) return;
 
             // スクロールエリアの下に歌詞表示用の隙間を追加
-            creditsScrollView.style.marginBottom = 150f;
+            creditsScrollView.style.marginBottom = 75f; // 150から75に縮小
 
             if (creditsScreenManager != null)
             {
@@ -2542,6 +2560,12 @@ namespace NovelGame
             
             // エンドクレジットBGMを再生
             audioManager.PlayCreditsBGM();
+            
+            // オーディオレベルメータを初期化（BGM再生後に初期化）
+            if (creditsScreenManager != null)
+            {
+                creditsScreenManager.InitializeAudioLevelMeter(root);
+            }
 
             // 戻るボタン
             var backButton = root.Q<Button>("BackToSelectionButtonFromCredits");

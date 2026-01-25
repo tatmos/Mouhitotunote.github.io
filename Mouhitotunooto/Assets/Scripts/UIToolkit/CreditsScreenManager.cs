@@ -85,9 +85,9 @@ namespace NovelGame
             LoadLyricData();
 
             // コンテナの上下に余白を追加
-            container.style.paddingTop = 200f; // 上部余白
+            container.style.paddingTop = 100f; // 上部余白（200から100に縮小）
             // 下部に歌詞表示用の隙間を追加（歌詞表示エリア + ボタンエリア）
-            container.style.paddingBottom = isSpecial ? 600f : 250f; // 特別版は最後にボタンを出すので広めに空ける、通常版は歌詞表示用に250px
+            container.style.paddingBottom = isSpecial ? 300f : 125f; // 特別版は最後にボタンを出すので広めに空ける、通常版は歌詞表示用に125px（250から125に縮小）
 
             // クレジット情報を追加
             AddCreditItem(container, "ゲームデザイン", "tatmos");
@@ -101,8 +101,8 @@ namespace NovelGame
 
             // エンドクレジット楽曲セクション
             var musicSection = new VisualElement();
-            musicSection.style.marginTop = 48;
-            musicSection.style.paddingTop = 32;
+            musicSection.style.marginTop = 24; // 48から24に縮小
+            musicSection.style.paddingTop = 16; // 32から16に縮小
             musicSection.style.borderTopWidth = 1;
             musicSection.style.borderTopColor = new Color(1f, 1f, 1f, 0.3f);
             musicSection.style.width = Length.Percent(100);
@@ -127,14 +127,14 @@ namespace NovelGame
             var musicTitle = new Label(musicTitleText);
             musicTitle.style.fontSize = 36;
             musicTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
-            musicTitle.style.marginBottom = 24;
+            musicTitle.style.marginBottom = 12; // 24から12に縮小
             musicTitle.style.color = new Color(1f, 0.84f, 0f); // yellow-300
             musicSection.Add(musicTitle);
 
             var songInfo = new Label(songInfoText);
             songInfo.style.fontSize = 24;
             songInfo.style.unityFontStyleAndWeight = FontStyle.Bold;
-            songInfo.style.marginBottom = 16;
+            songInfo.style.marginBottom = 8; // 16から8に縮小
             songInfo.style.whiteSpace = WhiteSpace.Normal;
             songInfo.style.maxWidth = Length.Percent(100);
             musicSection.Add(songInfo);
@@ -154,8 +154,8 @@ namespace NovelGame
                 var progressLabel = new Label($"物語の解明度: {storyProgress}%");
                 progressLabel.style.fontSize = 32;
                 progressLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                progressLabel.style.marginTop = isSpecial ? 30 : 100; // 特別版の場合はThank you for playingの下、通常版は音楽セクションの下
-                progressLabel.style.marginBottom = isSpecial ? 100 : 50;
+                progressLabel.style.marginTop = isSpecial ? 15 : 50; // 特別版の場合はThank you for playingの下、通常版は音楽セクションの下（30→15、100→50に縮小）
+                progressLabel.style.marginBottom = isSpecial ? 50 : 25; // 100→50、50→25に縮小
                 progressLabel.style.color = new Color(0.2f, 0.6f, 1.0f); // 青色
                 progressLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
                 container.Add(progressLabel);
@@ -167,8 +167,8 @@ namespace NovelGame
                 var thanksLabel = new Label("Thank you for playing");
                 thanksLabel.style.fontSize = 40;
                 thanksLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-                thanksLabel.style.marginTop = 100;
-                thanksLabel.style.marginBottom = 50;
+                thanksLabel.style.marginTop = 50; // 100から50に縮小
+                thanksLabel.style.marginBottom = 25; // 50から25に縮小
                 thanksLabel.style.color = Color.white;
                 thanksLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
                 container.Add(thanksLabel);
@@ -190,17 +190,22 @@ namespace NovelGame
                 StartLyricDisplay();
             }
             
-            // オーディオレベルメータを初期化
-            if (rootElement != null)
-            {
-                InitializeAudioLevelMeter(rootElement);
-            }
+            // オーディオレベルメータの初期化は、BGM再生後に外部から呼び出す
+            // （BGMが再生される前に初期化すると、AudioSourceが正しく取得できない可能性があるため）
         }
         
         /// <summary>
-        /// オーディオレベルメータを初期化
+        /// オーディオレベルメータを初期化（外部から呼び出し可能）
         /// </summary>
-        private void InitializeAudioLevelMeter(VisualElement root)
+        public void InitializeAudioLevelMeter(VisualElement root)
+        {
+            InitializeAudioLevelMeterInternal(root);
+        }
+        
+        /// <summary>
+        /// オーディオレベルメータを初期化（内部実装）
+        /// </summary>
+        private void InitializeAudioLevelMeterInternal(VisualElement root)
         {
             // 既存のレベルメータを停止
             if (audioLevelMeter != null)
@@ -225,6 +230,26 @@ namespace NovelGame
             {
                 // UI CameraまたはMain Cameraを取得
                 Camera uiCamera = Camera.main;
+                
+                // Camera.mainがnullの場合、シーン内のすべてのカメラを検索
+                if (uiCamera == null)
+                {
+                    Camera[] allCameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+                    if (allCameras != null && allCameras.Length > 0)
+                    {
+                        // 最初に見つかったカメラを使用
+                        uiCamera = allCameras[0];
+                        Debug.Log($"Camera.mainが見つかりませんでした。代わりに{uiCamera.name}を使用します。");
+                    }
+                }
+                
+                if (uiCamera == null)
+                {
+                    Debug.LogError("カメラが見つかりません。レベルメータを初期化できませんでした。");
+                    return;
+                }
+                
+                Debug.Log($"レベルメータを初期化します。AudioSource: {creditBgmAudioSource.name}, Camera: {uiCamera.name}");
                 
                 // レベルメータを初期化（ParticleSystemはCameraが必要）
                 audioLevelMeter.Initialize(creditBgmAudioSource, uiCamera);
@@ -773,11 +798,11 @@ namespace NovelGame
             specialEndButton = new Button();
             specialEndButton.text = "「もうひとつ」の世界へ";
             specialEndButton.style.fontSize = 32;
-            specialEndButton.style.marginTop = 50;
-            specialEndButton.style.paddingTop = 20;
-            specialEndButton.style.paddingBottom = 20;
-            specialEndButton.style.paddingLeft = 40;
-            specialEndButton.style.paddingRight = 40;
+            specialEndButton.style.marginTop = 25; // 50から25に縮小
+            specialEndButton.style.paddingTop = 10; // 20から10に縮小
+            specialEndButton.style.paddingBottom = 10; // 20から10に縮小
+            specialEndButton.style.paddingLeft = 20; // 40から20に縮小
+            specialEndButton.style.paddingRight = 20; // 40から20に縮小
             specialEndButton.style.alignSelf = Align.Center;
             specialEndButton.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
             specialEndButton.style.color = Color.white;
@@ -819,7 +844,7 @@ namespace NovelGame
             item.AddToClassList("credits-content-item");
             item.style.flexDirection = FlexDirection.Column;
             item.style.alignItems = Align.Center;
-            item.style.marginBottom = 16;
+            item.style.marginBottom = 8; // 16から8に縮小
             item.style.width = Length.Percent(100);
 
             string roleText = role;
@@ -840,7 +865,7 @@ namespace NovelGame
             var roleLabel = new Label(roleText);
             roleLabel.style.fontSize = 24;
             roleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            roleLabel.style.marginBottom = 8;
+            roleLabel.style.marginBottom = 4; // 8から4に縮小
             roleLabel.style.color = new Color(1f, 0.84f, 0f); // yellow-300
             roleLabel.style.whiteSpace = WhiteSpace.Normal;
             roleLabel.style.maxWidth = Length.Percent(100);

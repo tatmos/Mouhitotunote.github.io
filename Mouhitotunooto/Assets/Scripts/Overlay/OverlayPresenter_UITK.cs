@@ -246,6 +246,11 @@ namespace NovelGame.Overlay
                             girlImage.style.top.value.value
                         );
                     }
+                    
+                    // 吹き出しの位置を画像要素の相対位置で再計算
+                    UpdateBalloonPositionRelativeToImage();
+                    
+                    // 吹き出しの開始位置を更新
                     if (balloonRoot != null)
                     {
                         startBalloonPosition = new Vector2(
@@ -372,9 +377,74 @@ namespace NovelGame.Overlay
                 }
             }
             
-            // 吹き出しの位置も調整（画像要素と相対位置を保つ）
-            // 吹き出しは画像要素の相対位置に配置されているため、
-            // 画像要素の位置が調整されたら自動的に調整される
+            // 吹き出しの位置を画像要素の相対位置で再計算
+            UpdateBalloonPositionRelativeToImage();
+        }
+        
+        /// <summary>
+        /// 吹き出しの位置を画像要素の相対位置で更新
+        /// </summary>
+        private void UpdateBalloonPositionRelativeToImage()
+        {
+            // GirlImageの現在位置を取得
+            float girlImageLeft = 0f;
+            float girlImageTop = 0f;
+            
+            if (girlImage != null)
+            {
+                // left/topで配置されている場合
+                if (girlImage.style.position.value == Position.Absolute)
+                {
+                    if (girlImage.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        girlImageLeft = girlImage.style.left.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.left >= 0)
+                    {
+                        girlImageLeft = girlImage.resolvedStyle.left;
+                    }
+                    
+                    if (girlImage.style.top.value.unit == LengthUnit.Pixel)
+                    {
+                        girlImageTop = girlImage.style.top.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.top >= 0)
+                    {
+                        girlImageTop = girlImage.resolvedStyle.top;
+                    }
+                }
+                else
+                {
+                    // right/bottomで配置されている場合（デフォルト位置）
+                    girlImageLeft = girlImage.resolvedStyle.left;
+                    girlImageTop = girlImage.resolvedStyle.top;
+                }
+            }
+            
+            // 吹き出しはGirlImageの左側に配置（相対配置）
+            // 画像の左端から左に150pxの位置（300pxから150pxに縮小）
+            float balloonLeft = girlImageLeft - 150f;
+            float balloonTop = girlImageTop - 50f; // GirlImageより少し上（100pxから50pxに縮小）
+            
+            if (balloonRoot != null)
+            {
+                balloonRoot.style.position = Position.Absolute;
+                balloonRoot.style.left = balloonLeft;
+                balloonRoot.style.top = balloonTop;
+                balloonRoot.style.right = StyleKeyword.Auto;
+                balloonRoot.style.bottom = StyleKeyword.Auto;
+                balloonRoot.MarkDirtyRepaint();
+            }
+            
+            if (thoughtBalloonRoot != null)
+            {
+                thoughtBalloonRoot.style.position = Position.Absolute;
+                thoughtBalloonRoot.style.left = balloonLeft;
+                thoughtBalloonRoot.style.top = balloonTop;
+                thoughtBalloonRoot.style.right = StyleKeyword.Auto;
+                thoughtBalloonRoot.style.bottom = StyleKeyword.Auto;
+                thoughtBalloonRoot.MarkDirtyRepaint();
+            }
         }
         
         /// <summary>
@@ -525,37 +595,77 @@ namespace NovelGame.Overlay
         }
 
         /// <summary>
-        /// 座標系解明結果に基づいて吹き出し位置を修正
+        /// 座標系解明結果に基づいて吹き出し位置を修正（画像要素の相対位置で計算）
         /// </summary>
         private void FixBalloonCoordinates()
         {
-            // GirlImageは右下（right: 20, bottom: 20）に配置
+            // GirlImageの現在位置を取得
+            float girlImageLeft = 0f;
+            float girlImageTop = 0f;
+            float girlImageWidth = 200f;
+            
+            if (girlImage != null)
+            {
+                // left/topで配置されている場合
+                if (girlImage.style.position.value == Position.Absolute)
+                {
+                    if (girlImage.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        girlImageLeft = girlImage.style.left.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.left >= 0)
+                    {
+                        girlImageLeft = girlImage.resolvedStyle.left;
+                    }
+                    
+                    if (girlImage.style.top.value.unit == LengthUnit.Pixel)
+                    {
+                        girlImageTop = girlImage.style.top.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.top >= 0)
+                    {
+                        girlImageTop = girlImage.resolvedStyle.top;
+                    }
+                }
+                else
+                {
+                    // right/bottomで配置されている場合（デフォルト位置）
+                    girlImageLeft = girlImage.resolvedStyle.left;
+                    girlImageTop = girlImage.resolvedStyle.top;
+                }
+                
+                girlImageWidth = girlImage.resolvedStyle.width > 0 ? girlImage.resolvedStyle.width : 200f;
+            }
+            
             // 吹き出しはGirlImageの左側に配置（相対配置）
-            float balloonRight = 240; // GirlImageの右端（right: 20）からさらに左に220px（画像幅200px + 余白20px）
-            float balloonBottom = 20;   // GirlImageと同じ下端からの距離
+            // 画像の左端から左に150pxの位置（300pxから150pxに縮小）
+            float balloonLeft = girlImageLeft - 150f;
+            float balloonTop = girlImageTop - 50f; // GirlImageより少し上（100pxから50pxに縮小）
             
             if (balloonRoot != null)
             {
                 balloonRoot.style.position = Position.Absolute;
-                balloonRoot.style.right = balloonRight;
-                balloonRoot.style.bottom = balloonBottom;
-                balloonRoot.style.left = StyleKeyword.Auto;  // 古いleft設定をクリア
-                balloonRoot.style.top = StyleKeyword.Auto; // 古いtop設定をクリア
+                balloonRoot.style.left = balloonLeft;
+                balloonRoot.style.top = balloonTop;
+                balloonRoot.style.right = StyleKeyword.Auto;  // 古いright設定をクリア
+                balloonRoot.style.bottom = StyleKeyword.Auto; // 古いbottom設定をクリア
                 balloonRoot.style.width = 280; // 固定幅
                 balloonRoot.style.maxWidth = 300;
                 balloonRoot.style.minWidth = 200;
+                balloonRoot.MarkDirtyRepaint();
             }
             
             if (thoughtBalloonRoot != null)
             {
                 thoughtBalloonRoot.style.position = Position.Absolute;
-                thoughtBalloonRoot.style.right = balloonRight;
-                thoughtBalloonRoot.style.bottom = balloonBottom;
-                thoughtBalloonRoot.style.left = StyleKeyword.Auto;  // 古いleft設定をクリア
-                thoughtBalloonRoot.style.top = StyleKeyword.Auto; // 古いtop設定をクリア
+                thoughtBalloonRoot.style.left = balloonLeft;
+                thoughtBalloonRoot.style.top = balloonTop;
+                thoughtBalloonRoot.style.right = StyleKeyword.Auto;  // 古いright設定をクリア
+                thoughtBalloonRoot.style.bottom = StyleKeyword.Auto; // 古いbottom設定をクリア
                 thoughtBalloonRoot.style.width = 280; // 固定幅
                 thoughtBalloonRoot.style.maxWidth = 300;
                 thoughtBalloonRoot.style.minWidth = 200;
+                thoughtBalloonRoot.MarkDirtyRepaint();
             }
         }
 
@@ -933,9 +1043,9 @@ namespace NovelGame.Overlay
             // 音符エフェクトレイヤーの位置とサイズをgirlImageと同じに設定
             if (musicNoteLayer != null && girlImage != null)
             {
-                // girlImageの位置とサイズを取得（resolvedStyleまたはstyleから）
-                float girlRight = 20f; // デフォルト値（右端からの距離）
-                float girlBottom = 20f;  // デフォルト値（下端からの距離）
+                // girlImageの位置とサイズを取得
+                float girlLeft = 0f;
+                float girlTop = 0f;
                 float girlWidth = 200f;  // デフォルト値
                 float girlHeight = 150f; // デフォルト値
                 
@@ -948,37 +1058,48 @@ namespace NovelGame.Overlay
                 {
                     girlHeight = girlImage.resolvedStyle.height;
                 }
-                // right/bottomから位置を取得
-                if (girlImage.resolvedStyle.right >= 0)
+                
+                // left/topで配置されている場合
+                if (girlImage.style.position.value == Position.Absolute)
                 {
-                    girlRight = girlImage.resolvedStyle.right;
+                    if (girlImage.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        girlLeft = girlImage.style.left.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.left >= 0)
+                    {
+                        girlLeft = girlImage.resolvedStyle.left;
+                    }
+                    
+                    if (girlImage.style.top.value.unit == LengthUnit.Pixel)
+                    {
+                        girlTop = girlImage.style.top.value.value;
+                    }
+                    else if (girlImage.resolvedStyle.top >= 0)
+                    {
+                        girlTop = girlImage.resolvedStyle.top;
+                    }
                 }
-                else if (girlImage.style.right.value.unit == LengthUnit.Pixel)
+                else
                 {
-                    girlRight = girlImage.style.right.value.value;
-                }
-                if (girlImage.resolvedStyle.bottom >= 0)
-                {
-                    girlBottom = girlImage.resolvedStyle.bottom;
-                }
-                else if (girlImage.style.bottom.value.unit == LengthUnit.Pixel)
-                {
-                    girlBottom = girlImage.style.bottom.value.value;
+                    // right/bottomで配置されている場合
+                    girlLeft = girlImage.resolvedStyle.left;
+                    girlTop = girlImage.resolvedStyle.top;
                 }
                 
-                // musicNoteLayerをgirlImageと同じ位置・サイズに設定（相対配置）
+                // musicNoteLayerをgirlImageと同じ位置・サイズに設定（left/topで絶対配置）
                 musicNoteLayer.style.position = Position.Absolute;
-                musicNoteLayer.style.right = girlRight;
-                musicNoteLayer.style.bottom = girlBottom;
-                musicNoteLayer.style.left = StyleKeyword.Auto;
-                musicNoteLayer.style.top = StyleKeyword.Auto;
+                musicNoteLayer.style.left = girlLeft;
+                musicNoteLayer.style.top = girlTop;
+                musicNoteLayer.style.right = StyleKeyword.Auto;
+                musicNoteLayer.style.bottom = StyleKeyword.Auto;
                 musicNoteLayer.style.width = girlWidth;
                 musicNoteLayer.style.height = girlHeight;
                 musicNoteLayer.style.display = DisplayStyle.Flex;
                 musicNoteLayer.style.visibility = Visibility.Visible;
                 musicNoteLayer.style.overflow = Overflow.Visible;
                 
-                Debug.Log($"[OverlayPresenter_UITK] MusicNoteLayerを設定: right={girlRight}, bottom={girlBottom}, width={girlWidth}, height={girlHeight}");
+                Debug.Log($"[OverlayPresenter_UITK] MusicNoteLayerを設定: left={girlLeft}, top={girlTop}, width={girlWidth}, height={girlHeight}");
             }
             
             // 音符エフェクトを開始
@@ -1075,8 +1196,9 @@ namespace NovelGame.Overlay
                 
                 // 実況者の位置を基準にランダムな位置に配置
                 // MusicNoteLayerのサイズを基準に、中央付近にランダムに配置
-                float randomX = Random.Range(-40f, 40f); // パーセンテージでのランダムオフセット
-                float randomY = Random.Range(-30f, 30f); // パーセンテージでのランダムオフセット
+                // ランダム範囲を縮小して画像の位置に近づける（±40% → ±20%、±30% → ±15%）
+                float randomX = Random.Range(-20f, 20f); // パーセンテージでのランダムオフセット
+                float randomY = Random.Range(-15f, 15f); // パーセンテージでのランダムオフセット
                 noteElement.style.left = new Length(50f + randomX, LengthUnit.Percent);
                 noteElement.style.bottom = new Length(50f + randomY, LengthUnit.Percent);
                 noteElement.pickingMode = PickingMode.Ignore;
