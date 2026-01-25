@@ -42,21 +42,43 @@ namespace NovelGame.Overlay
             }
             
             // 画像要素の強制サイズ設定（UXMLの設定が反映されていない場合）
-            if (girlImage != null && (girlImage.style.width.value.value == 0 || girlImage.style.height.value.value == 0))
+            // 背景とキャラを同じ位置に重ねて配置
+            float overlayX = 1320;  // 右下配置のX座標
+            float overlayY = 700;  // 右下配置のY座標
+            
+            if (roomImage != null)
             {
-                girlImage.style.width = 200;
-                girlImage.style.height = 150;
-                girlImage.style.position = Position.Absolute;
-                girlImage.style.right = 20;
-                girlImage.style.bottom = 20;
-            }
-            if (roomImage != null && (roomImage.style.width.value.value == 0 || roomImage.style.height.value.value == 0))
-            {
-                roomImage.style.width = 200;
-                roomImage.style.height = 150;
+                if (roomImage.style.width.value.value == 0 || roomImage.style.height.value.value == 0)
+                {
+                    roomImage.style.width = 200;
+                    roomImage.style.height = 150;
+                }
                 roomImage.style.position = Position.Absolute;
-                roomImage.style.right = 20;
-                roomImage.style.bottom = 20;
+                roomImage.style.left = overlayX;
+                roomImage.style.top = overlayY;
+                roomImage.style.right = StyleKeyword.Auto;
+                roomImage.style.bottom = StyleKeyword.Auto;
+            }
+            
+            if (girlImage != null)
+            {
+                if (girlImage.style.width.value.value == 0 || girlImage.style.height.value.value == 0)
+                {
+                    girlImage.style.width = 200;
+                    girlImage.style.height = 150;
+                }
+                girlImage.style.position = Position.Absolute;
+                girlImage.style.left = overlayX;  // 背景と同じX座標
+                girlImage.style.top = overlayY;   // 背景と同じY座標
+                girlImage.style.right = StyleKeyword.Auto;
+                girlImage.style.bottom = StyleKeyword.Auto;
+                
+                // GirlImageをRoomImageの後に配置して上に表示
+                if (overlayRoot != null && roomImage != null && girlImage.parent == overlayRoot)
+                {
+                    overlayRoot.Remove(girlImage);
+                    overlayRoot.Add(girlImage);
+                }
             }
             
             // すべてのオーバーレイ要素にpickingModeをIgnoreに設定（イベントを無視するため）
@@ -368,38 +390,12 @@ namespace NovelGame.Overlay
                     Debug.LogWarning("[OverlayPresenter_UITK] roomImageがnullです。");
                 }
                 
-                // 座標系解明結果を適用した座標設定（常に実行）
-                if (girlImage != null)
-                {
-                    bool needsSizeFix = (girlImage.resolvedStyle.width == 0 || girlImage.resolvedStyle.height == 0);
-                    
-                    if (needsSizeFix)
-                    {
-                        Debug.LogWarning("[OverlayPresenter_UITK] GirlImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
-                    }
-                    
-                    // 常に座標系解明結果を適用
-                    girlImage.style.position = Position.Absolute;
-                    girlImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
-                    girlImage.style.top = 700;       // 座標系解明結果：完璧な高さ
-                    girlImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
-                    girlImage.style.bottom = StyleKeyword.Auto;
-                    
-                    if (needsSizeFix)
-                    {
-                        girlImage.style.width = 200;
-                        girlImage.style.height = 150;
-                        girlImage.style.minWidth = 200;
-                        girlImage.style.minHeight = 150;
-                    }
-                    
-                    girlImage.style.display = DisplayStyle.Flex;
-                    girlImage.style.visibility = Visibility.Visible;
-                    girlImage.style.opacity = 1f;
-                    girlImage.MarkDirtyRepaint();
-                }
+                // 背景（RoomImage）とキャラ（GirlImage）を同じ位置に重ねて配置
+                // 背景を下に、キャラを上に表示するため、両方とも同じ座標を使用
+                float overlayX = 1320;  // 右下配置のX座標
+                float overlayY = 700;  // 右下配置のY座標
                 
-                // 座標系解明結果を適用した座標設定（常に実行）
+                // 背景（RoomImage）を先に配置（下層）
                 if (roomImage != null)
                 {
                     bool needsSizeFix = (roomImage.resolvedStyle.width == 0 || roomImage.resolvedStyle.height == 0);
@@ -409,10 +405,10 @@ namespace NovelGame.Overlay
                         Debug.LogWarning("[OverlayPresenter_UITK] RoomImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
                     }
                     
-                    // 常に座標系解明結果を適用
+                    // 背景を同じ位置に配置（下層）
                     roomImage.style.position = Position.Absolute;
-                    roomImage.style.left = 1320;     // 座標系解明結果：完璧な右下配置
-                    roomImage.style.top = 530;        // 座標系解明結果：GirlImageの上
+                    roomImage.style.left = overlayX;
+                    roomImage.style.top = overlayY;
                     roomImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
                     roomImage.style.bottom = StyleKeyword.Auto;
                     
@@ -428,6 +424,46 @@ namespace NovelGame.Overlay
                     roomImage.style.visibility = Visibility.Visible;
                     roomImage.style.opacity = 1f;
                     roomImage.MarkDirtyRepaint();
+                }
+                
+                // キャラ（GirlImage）を同じ位置に配置（上層、背景の上）
+                if (girlImage != null)
+                {
+                    bool needsSizeFix = (girlImage.resolvedStyle.width == 0 || girlImage.resolvedStyle.height == 0);
+                    
+                    if (needsSizeFix)
+                    {
+                        Debug.LogWarning("[OverlayPresenter_UITK] GirlImageのサイズが0x0です。座標系解明結果でサイズと座標を設定します。");
+                    }
+                    
+                    // キャラを背景と同じ位置に配置（上層）
+                    girlImage.style.position = Position.Absolute;
+                    girlImage.style.left = overlayX;  // 背景と同じX座標
+                    girlImage.style.top = overlayY;   // 背景と同じY座標
+                    girlImage.style.right = StyleKeyword.Auto;  // 古いright/bottomをクリア
+                    girlImage.style.bottom = StyleKeyword.Auto;
+                    
+                    // z-indexを設定してキャラを上に表示（UI Toolkitでは要素の順序が重要）
+                    // GirlImageをRoomImageの後に配置することで、自動的に上に表示される
+                    if (overlayRoot != null && roomImage != null && girlImage.parent == overlayRoot)
+                    {
+                        // GirlImageをRoomImageの後に移動（DOM順序で上に表示）
+                        overlayRoot.Remove(girlImage);
+                        overlayRoot.Add(girlImage);
+                    }
+                    
+                    if (needsSizeFix)
+                    {
+                        girlImage.style.width = 200;
+                        girlImage.style.height = 150;
+                        girlImage.style.minWidth = 200;
+                        girlImage.style.minHeight = 150;
+                    }
+                    
+                    girlImage.style.display = DisplayStyle.Flex;
+                    girlImage.style.visibility = Visibility.Visible;
+                    girlImage.style.opacity = 1f;
+                    girlImage.MarkDirtyRepaint();
                 }
                 
                 // 表示状態を確実にする
@@ -465,6 +501,56 @@ namespace NovelGame.Overlay
             // 表情を歌う状態に変更
             SetExpression(GirlExpression.Singing);
             
+            // 音符エフェクトレイヤーの位置とサイズをgirlImageと同じに設定
+            if (musicNoteLayer != null && girlImage != null)
+            {
+                // girlImageの位置とサイズを取得（resolvedStyleまたはstyleから）
+                float girlX = 1320f; // デフォルト値
+                float girlY = 700f;  // デフォルト値
+                float girlWidth = 200f;  // デフォルト値
+                float girlHeight = 150f; // デフォルト値
+                
+                // resolvedStyleから取得を試みる
+                if (girlImage.resolvedStyle.width > 0)
+                {
+                    girlWidth = girlImage.resolvedStyle.width;
+                }
+                if (girlImage.resolvedStyle.height > 0)
+                {
+                    girlHeight = girlImage.resolvedStyle.height;
+                }
+                if (girlImage.resolvedStyle.left >= 0)
+                {
+                    girlX = girlImage.resolvedStyle.left;
+                }
+                else if (girlImage.style.left.value.unit == LengthUnit.Pixel)
+                {
+                    girlX = girlImage.style.left.value.value;
+                }
+                if (girlImage.resolvedStyle.top >= 0)
+                {
+                    girlY = girlImage.resolvedStyle.top;
+                }
+                else if (girlImage.style.top.value.unit == LengthUnit.Pixel)
+                {
+                    girlY = girlImage.style.top.value.value;
+                }
+                
+                // musicNoteLayerをgirlImageと同じ位置・サイズに設定
+                musicNoteLayer.style.position = Position.Absolute;
+                musicNoteLayer.style.left = girlX;
+                musicNoteLayer.style.top = girlY;
+                musicNoteLayer.style.right = StyleKeyword.Auto;
+                musicNoteLayer.style.bottom = StyleKeyword.Auto;
+                musicNoteLayer.style.width = girlWidth;
+                musicNoteLayer.style.height = girlHeight;
+                musicNoteLayer.style.display = DisplayStyle.Flex;
+                musicNoteLayer.style.visibility = Visibility.Visible;
+                musicNoteLayer.style.overflow = Overflow.Visible;
+                
+                Debug.Log($"[OverlayPresenter_UITK] MusicNoteLayerを設定: left={girlX}, top={girlY}, width={girlWidth}, height={girlHeight}");
+            }
+            
             // 音符エフェクトを開始
             if (musicNoteLayer != null && coroutineRunner != null)
             {
@@ -473,6 +559,10 @@ namespace NovelGame.Overlay
                     coroutineRunner.StopCoroutine(musicNoteCoroutine);
                 }
                 musicNoteCoroutine = coroutineRunner.StartCoroutine(MusicNoteEffectCoroutine());
+            }
+            else
+            {
+                Debug.LogWarning($"[OverlayPresenter_UITK] 音符エフェクトを開始できません: musicNoteLayer={musicNoteLayer != null}, coroutineRunner={coroutineRunner != null}");
             }
         }
 
@@ -554,8 +644,9 @@ namespace NovelGame.Overlay
                 }
                 
                 // 実況者の位置を基準にランダムな位置に配置
-                float randomX = Random.Range(-30f, 30f);
-                float randomY = Random.Range(-20f, 20f);
+                // MusicNoteLayerのサイズを基準に、中央付近にランダムに配置
+                float randomX = Random.Range(-40f, 40f); // パーセンテージでのランダムオフセット
+                float randomY = Random.Range(-30f, 30f); // パーセンテージでのランダムオフセット
                 noteElement.style.left = new Length(50f + randomX, LengthUnit.Percent);
                 noteElement.style.bottom = new Length(50f + randomY, LengthUnit.Percent);
                 noteElement.pickingMode = PickingMode.Ignore;
