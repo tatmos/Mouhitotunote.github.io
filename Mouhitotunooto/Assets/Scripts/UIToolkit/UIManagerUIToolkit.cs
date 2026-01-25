@@ -2228,7 +2228,7 @@ namespace NovelGame
             FadeOutAudioOnSceneChange(false);
             // シナリオ選択BGMの音量を下げる（流したまま、フィルターをかける）
             LowerSelectionBGMVolume();
-            HideAllScreens();
+            HideAllScreens(true); // BGMを維持
             
             if (achievementsScreenDocument == null)
             {
@@ -2318,7 +2318,7 @@ namespace NovelGame
             FadeOutAudioOnSceneChange(false);
             // シナリオ選択BGMの音量を下げる（流したまま、フィルターをかける）
             LowerSelectionBGMVolume();
-            HideAllScreens();
+            HideAllScreens(true); // BGMを維持
             
             if (mouhitotsuScreenDocument == null)
             {
