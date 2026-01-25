@@ -2,17 +2,17 @@
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441132597879392&amp;guid=129863cdc8fc8a64386b92878645c775&amp;type=3#GameStyles"/>
     <ui:VisualElement name="ProfileScreen" class="screen-background" style="flex-grow: 1;">
         <ui:VisualElement name="BackgroundImage" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;"/>
-        <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; padding: 40px; max-width: 1400px; margin: 30px auto; width: 100%;">
-            <ui:Label name="ProfileSectionTitle" text="登場人物プロフィール" style="font-size: 36px; -unity-font-style: bold; margin-bottom: 30px; text-align: center;"/>
-            <ui:VisualElement name="ProfileLayout" class="profile-tab-layout" style="flex-direction: row; flex-grow: 1; gap: 20px; min-height: 500px;">
-                <ui:ScrollView name="ProfileListContainer" class="profile-list-container" style="width: 250px; flex-shrink: 0;">
-                    <ui:VisualElement name="ProfileList" style="flex-direction: column; gap: 10px; padding: 10px;"/>
+        <ui:VisualElement name="Content" class="card" style="flex-grow: 1; flex-direction: column; padding: 15px; max-width: 700px; margin: 15px auto; width: 100%;">
+            <ui:Label name="ProfileSectionTitle" text="登場人物プロフィール" style="font-size: 24px; -unity-font-style: bold; margin-bottom: 15px; text-align: center;"/>
+            <ui:VisualElement name="ProfileLayout" class="profile-tab-layout" style="flex-direction: row; flex-grow: 1; gap: 10px; min-height: 300px;">
+                <ui:ScrollView name="ProfileListContainer" class="profile-list-container" style="width: 150px; flex-shrink: 0;">
+                    <ui:VisualElement name="ProfileList" style="flex-direction: column; gap: 6px; padding: 6px;"/>
                 </ui:ScrollView>
                 <ui:ScrollView name="ProfileDetailContainer" class="profile-detail-container" style="flex-grow: 1; min-width: 0;">
-                    <ui:VisualElement name="ProfileDetail" style="flex-direction: column; padding: 20px; width: 100%; min-width: 0; max-width: 100%;"/>
+                    <ui:VisualElement name="ProfileDetail" style="flex-direction: column; padding: 12px; width: 100%; min-width: 0; max-width: 100%;"/>
                 </ui:ScrollView>
             </ui:VisualElement>
-            <ui:Button name="BackToSelectionButtonFromProfile" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 30px; min-width: 200px; min-height: 50px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
+            <ui:Button name="BackToSelectionButtonFromProfile" text="選択画面に戻る" class="button-gradient-indigo" style="margin-top: 15px; min-width: 160px; min-height: 40px; align-self: center; background-image: url(&quot;project://database/Assets/Images/ChoiceBoard.png?fileID=21300000&amp;guid=4e4b90da8e4d4cb46a7196f79b2591e1&amp;type=3#ChoiceBoard&quot;); background-color: rgba(99, 102, 241, 0); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

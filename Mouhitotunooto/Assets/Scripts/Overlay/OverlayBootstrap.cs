@@ -98,7 +98,7 @@ namespace NovelGame.Overlay
                         // PanelSettingsの設定を強制的に修正
                         if (panelSettings.referenceResolution.x <= 0 || panelSettings.referenceResolution.y <= 0)
                         {
-                            panelSettings.referenceResolution = new Vector2Int(1920, 1080);
+                            panelSettings.referenceResolution = new Vector2Int(960, 540);
                         }
                         if (panelSettings.scale <= 0 || float.IsNaN(panelSettings.scale))
                         {
@@ -118,7 +118,7 @@ namespace NovelGame.Overlay
                     // PanelSettingsを動的に作成
                     panelSettings = ScriptableObject.CreateInstance<UnityEngine.UIElements.PanelSettings>();
                     panelSettings.name = "OverlayPanelSettings";
-                    panelSettings.referenceResolution = new Vector2Int(1920, 1080);
+                    panelSettings.referenceResolution = new Vector2Int(960, 540);
                     panelSettings.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.MatchWidthOrHeight;
                     panelSettings.match = 0.5f;
                     panelSettings.scale = 1f;
@@ -840,7 +840,7 @@ namespace NovelGame.Overlay
             Debug.Log($"[OverlayBootstrap] 仮想座標系サイズ（UIToolkit）: {virtualWidth}x{virtualHeight}");
             Debug.Log($"[OverlayBootstrap] 実画面サイズ: {screenWidth}x{screenHeight}");
             
-            // 仮想座標系（1920x1080）を基準とした座標計算
+            // 仮想座標系（960x540）を基準とした座標計算
             float girlLeft = virtualWidth - 220;   // 仮想画面の右から220px
             float girlTop = virtualHeight - 170;   // 仮想画面の下から170px
             float roomLeft = virtualWidth - 220;   // 仮想画面の右から220px
@@ -2904,12 +2904,12 @@ namespace NovelGame.Overlay
         }
         
         /// <summary>
-        /// デバッグ用: 既存のGamePanelSettingsを1920x1080に修正
+        /// デバッグ用: 既存のGamePanelSettingsを960x540に修正
         /// </summary>
-        [ContextMenu("Debug: Fix GamePanelSettings to 1920x1080")]
+        [ContextMenu("Debug: Fix GamePanelSettings to 960x540")]
         public void DebugFixGamePanelSettings()
         {
-            Debug.Log("[OverlayBootstrap] 既存のGamePanelSettingsを1920x1080に修正開始");
+            Debug.Log("[OverlayBootstrap] 既存のGamePanelSettingsを960x540に修正開始");
             
             if (overlayDocument != null)
             {
@@ -2920,7 +2920,7 @@ namespace NovelGame.Overlay
                     Debug.Log($"[OverlayBootstrap] 現在のPanelSettings: {current.name}, 解像度: {current.referenceResolution}, match: {current.match}");
                     
                     // 既存のPanelSettingsを直接修正
-                    current.referenceResolution = new Vector2Int(1920, 1080); // 正しい解像度に修正
+                    current.referenceResolution = new Vector2Int(960, 540); // 正しい解像度に修正
                     current.match = 0.0f; // 幅基準（縦長画面に対応）
                     
                     Debug.Log($"[OverlayBootstrap] ✅ GamePanelSettingsを修正しました: 解像度={current.referenceResolution}, match={current.match}");
@@ -2979,12 +2979,12 @@ namespace NovelGame.Overlay
         }
         
         /// <summary>
-        /// デバッグ用: 正しい1920x1080 PanelSettingsを強制作成（旧版）
+        /// デバッグ用: 正しい960x540 PanelSettingsを強制作成（旧版）
         /// </summary>
-        [ContextMenu("Debug: Force Create 1920x1080 PanelSettings")]
+        [ContextMenu("Debug: Force Create 960x540 PanelSettings")]
         public void DebugForceCreatePanelSettings()
         {
-            Debug.Log("[OverlayBootstrap] 正しい1920x1080 PanelSettingsを強制作成開始");
+            Debug.Log("[OverlayBootstrap] 正しい960x540 PanelSettingsを強制作成開始");
             
             if (overlayDocument != null)
             {
@@ -2995,10 +2995,10 @@ namespace NovelGame.Overlay
                     Debug.Log($"[OverlayBootstrap] 現在のPanelSettings: {current.name}, 解像度: {current.referenceResolution}, match: {current.match}");
                 }
                 
-                // 新しいPanelSettingsを作成（1920x1080、幅基準）
+                // 新しいPanelSettingsを作成（960x540、幅基準）
                 var newPanelSettings = ScriptableObject.CreateInstance<UnityEngine.UIElements.PanelSettings>();
-                newPanelSettings.name = "OverlayPanelSettings_1920x1080";
-                newPanelSettings.referenceResolution = new Vector2Int(1920, 1080); // 正しい解像度
+                newPanelSettings.name = "OverlayPanelSettings_960x540";
+                newPanelSettings.referenceResolution = new Vector2Int(960, 540); // 正しい解像度
                 newPanelSettings.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.MatchWidthOrHeight;
                 newPanelSettings.match = 0.0f; // 幅基準（縦長画面に対応）
                 newPanelSettings.scale = 1f;

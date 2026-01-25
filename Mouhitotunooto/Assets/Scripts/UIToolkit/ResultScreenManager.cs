@@ -275,6 +275,7 @@ namespace NovelGame
             var scoreLabel = root.Q<Label>("ScoreText");
             if (scoreLabel != null)
             {
+                scoreLabel.style.fontSize = 10; // 20pxから10pxに縮小（半分）
                 scoreLabel.style.color = brightTextColor;
                 scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
             }

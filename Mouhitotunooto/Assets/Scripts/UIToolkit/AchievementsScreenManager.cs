@@ -100,12 +100,12 @@ namespace NovelGame
             var card = new VisualElement();
             card.AddToClassList("achievement-card");
             card.style.width = 300;
-            card.style.marginBottom = 16;
+            card.style.marginBottom = 4;
 
             var titleLabel = new Label(scenarioTitle);
             titleLabel.style.fontSize = 18;
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.marginBottom = 12;
+            titleLabel.style.marginBottom = 6;
             card.Add(titleLabel);
 
             var endsContainer = new VisualElement();
@@ -150,7 +150,7 @@ namespace NovelGame
             {
                 var trueEndDesc = new Label("【もうひとつ】を獲得したエンド");
                 trueEndDesc.style.fontSize = 12;
-                trueEndDesc.style.marginTop = 4;
+                trueEndDesc.style.marginTop = 2;
                 trueEndBox.Add(trueEndDesc);
             }
             endsContainer.Add(trueEndBox);
@@ -167,7 +167,7 @@ namespace NovelGame
             {
                 var falseEndDesc = new Label("【もうひとつ】を獲得できなかったエンド");
                 falseEndDesc.style.fontSize = 12;
-                falseEndDesc.style.marginTop = 4;
+                falseEndDesc.style.marginTop = 2;
                 falseEndBox.Add(falseEndDesc);
             }
             endsContainer.Add(falseEndBox);
@@ -184,12 +184,12 @@ namespace NovelGame
             var card = new VisualElement();
             card.AddToClassList("achievement-card");
             card.style.width = 300;
-            card.style.marginBottom = 16;
+            card.style.marginBottom = 4;
 
             var titleLabel = new Label("真実の扉");
             titleLabel.style.fontSize = 18;
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            titleLabel.style.marginBottom = 12;
+            titleLabel.style.marginBottom = 6;
             card.Add(titleLabel);
 
             var endsContainer = new VisualElement();
@@ -232,7 +232,7 @@ namespace NovelGame
             {
                 var trueEndDesc = new Label("「答えを知りたかった」を選んだエンド");
                 trueEndDesc.style.fontSize = 12;
-                trueEndDesc.style.marginTop = 4;
+                trueEndDesc.style.marginTop = 2;
                 trueEndBox.Add(trueEndDesc);
             }
             endsContainer.Add(trueEndBox);
@@ -249,7 +249,7 @@ namespace NovelGame
             {
                 var falseEndDesc = new Label("「好奇心から」を選んだエンド");
                 falseEndDesc.style.fontSize = 12;
-                falseEndDesc.style.marginTop = 4;
+                falseEndDesc.style.marginTop = 2;
                 falseEndBox.Add(falseEndDesc);
             }
             endsContainer.Add(falseEndBox);
@@ -283,7 +283,7 @@ namespace NovelGame
             {
                 var darkEnd2Desc = new Label("「これは何ですか？」と問うたエンド");
                 darkEnd2Desc.style.fontSize = 12;
-                darkEnd2Desc.style.marginTop = 4;
+                darkEnd2Desc.style.marginTop = 2;
                 darkEnd2Box.Add(darkEnd2Desc);
             }
             endsContainer.Add(darkEnd2Box);

@@ -723,15 +723,15 @@ namespace NovelGame
                     float originalHeight = titleImage.texture.height;
                     float aspectRatio = originalHeight / originalWidth;
                     
-                    // 最大幅を600pxに制限し、アスペクト比を維持して高さを計算
-                    float maxWidth = 600f;
+                    // 最大幅を225pxに制限し、アスペクト比を維持して高さを計算（450pxから半分に縮小）
+                    float maxWidth = 225f;
                     float calculatedWidth = Mathf.Min(originalWidth, maxWidth);
                     float calculatedHeight = calculatedWidth * aspectRatio;
                     
-                    // 最大高さも200pxに制限（必要に応じて）
-                    if (calculatedHeight > 200f)
+                    // 最大高さも75pxに制限（150pxから半分に縮小）
+                    if (calculatedHeight > 75f)
                     {
-                        calculatedHeight = 200f;
+                        calculatedHeight = 75f;
                         calculatedWidth = calculatedHeight / aspectRatio;
                     }
                     
@@ -740,7 +740,7 @@ namespace NovelGame
                     titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
                     titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
                     titleImageElement.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
-                    titleImageElement.style.marginBottom = 20;
+                    titleImageElement.style.marginBottom = 10; // 20から10に縮小
                     titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
                     titleLabel.style.display = DisplayStyle.None; // 元のLabelを非表示
                 }
@@ -1797,6 +1797,10 @@ namespace NovelGame
                 buttonContent.style.width = Length.Percent(100);
                 buttonContent.style.height = Length.Percent(100);
                 buttonContent.style.flexGrow = 1;
+                buttonContent.style.paddingLeft = 12;
+                buttonContent.style.paddingRight = 12;
+                buttonContent.style.paddingTop = 10;
+                buttonContent.style.paddingBottom = 10;
                 
                 string scenarioTitleText = scenario.title;
                 string scenarioDescriptionText = scenario.setup;
@@ -1812,18 +1816,18 @@ namespace NovelGame
                 Color completedTextColor = new Color(0x1A / 255f, 0x1A / 255f, 0x1A / 255f, 1f); // #1A1A1A（黒寄り）
 
                 var titleLabel = new Label(scenarioTitleText);
-                titleLabel.style.fontSize = UIConstants.FontSizeMedium;
+                titleLabel.style.fontSize = 16; // UIConstants.FontSizeMediumから16に縮小
                 titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 titleLabel.style.whiteSpace = WhiteSpace.Normal;
-                titleLabel.style.marginBottom = 5;
+                titleLabel.style.marginBottom = 3; // 5から3に縮小
                 buttonContent.Add(titleLabel);
                 
                 // シナリオの説明を追加（3行まで）
                 var descriptionLabel = new Label(scenarioDescriptionText);
-                descriptionLabel.style.fontSize = 14;
+                descriptionLabel.style.fontSize = 12; // 14から12に縮小
                 descriptionLabel.style.whiteSpace = WhiteSpace.Normal;
                 descriptionLabel.style.opacity = 0.9f;
-                descriptionLabel.style.maxHeight = 120; // 3行分の高さに制限（ボタンの高さに合わせて拡張）
+                descriptionLabel.style.maxHeight = 90; // 120から90に縮小（ボタンの高さに合わせて調整）
                 descriptionLabel.style.flexGrow = 1; // 利用可能なスペースを埋める
                 descriptionLabel.style.overflow = Overflow.Hidden;
                 buttonContent.Add(descriptionLabel);
@@ -1837,8 +1841,8 @@ namespace NovelGame
                 {
                     button.SetEnabled(false);
                     var lockLabel = new Label("🔒 ロック");
-                    lockLabel.style.fontSize = 12;
-                    lockLabel.style.marginTop = 5;
+                    lockLabel.style.fontSize = 11;
+                    lockLabel.style.marginTop = 3;
                     buttonContent.Add(lockLabel);
                     button.AddToClassList("scenario-button-locked");
                     // ロック状態の文字色も設定
@@ -1854,13 +1858,14 @@ namespace NovelGame
                     {
                         button.style.backgroundImage = new StyleBackground(scenarioButtonCompletedImage.texture);
                         button.style.backgroundColor = Color.clear; // 背景色をクリア
+                        // 9-sliceスプライトは自動的にスケールされるため、backgroundSizeは設定しない
                     }
                     // 完了マークを追加
                     var completedMark = new Label("✓");
-                    completedMark.style.fontSize = 16;
+                    completedMark.style.fontSize = 14;
                     completedMark.style.position = Position.Absolute;
-                    completedMark.style.top = 5;
-                    completedMark.style.right = 5;
+                    completedMark.style.top = 3;
+                    completedMark.style.right = 3;
                     completedMark.style.color = completedTextColor;
                     button.Add(completedMark);
                     // クリア後の文字色を設定
@@ -1875,6 +1880,7 @@ namespace NovelGame
                     {
                         button.style.backgroundImage = new StyleBackground(scenarioButtonNormalImage.texture);
                         button.style.backgroundColor = Color.clear; // 背景色をクリア
+                        // 9-sliceスプライトは自動的にスケールされるため、backgroundSizeは設定しない
                     }
                     // クリア前の文字色を設定
                     titleLabel.style.color = normalTextColor;
@@ -2385,8 +2391,13 @@ namespace NovelGame
                 ApplyButtonImage(backToTitleButton, uiButtonNormalImage, UIConstants.DarkBrown);
             }
 
-            // スクロールバーのスタイルを適用
+            // スクロールバーのスタイルを適用（CreateRetryButtonsの後に再度適用）
             ApplyScrollbarStyles(root);
+            
+            // MouhitotsuScrollViewのスタイルを確実に適用（少し遅延して実行）
+            root.schedule.Execute(() => {
+                ApplyScrollbarStyles(root);
+            }).ExecuteLater(200);
 
             // トランジション開始
             if (screenTransitionManager != null)

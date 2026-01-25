@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -91,8 +92,8 @@ namespace NovelGame
             // フラグをリセット
             wordFoundInCurrentScenario = false;
             
-            // スクロールバーを非表示にする
-            root.style.overflow = Overflow.Hidden;
+            // スクロールバーのスタイルを適用
+            ApplyScrollbarStyle();
             
             // 背景画像を設定
             onSetBackgroundImage?.Invoke(scenario.id, true);
@@ -135,6 +136,258 @@ namespace NovelGame
             if (screenTransitionManager != null)
             {
                 screenTransitionManager.StartScreenTransition(root, withScale: true);
+            }
+        }
+        
+        /// <summary>
+        /// スクロールバーのスタイルを適用
+        /// </summary>
+        private void ApplyScrollbarStyle()
+        {
+            var scrollView = root.Q<ScrollView>("ScenarioScrollView");
+            if (scrollView == null) return;
+            
+            // 複数のタイミングで適用（確実に適用されるように）
+            scrollView.RegisterCallback<GeometryChangedEvent>(evt => {
+                ApplyVerticalScrollbarStyle(scrollView);
+            });
+            
+            scrollView.RegisterCallback<AttachToPanelEvent>(evt => {
+                scrollView.schedule.Execute(() => {
+                    ApplyVerticalScrollbarStyle(scrollView);
+                }).ExecuteLater(50);
+            });
+            
+            // 即座にも適用を試みる（既にレンダリングされている場合）
+            ApplyVerticalScrollbarStyle(scrollView);
+            
+            // 複数のタイミングで適用（確実に適用されるように）
+            scrollView.schedule.Execute(() => {
+                ApplyVerticalScrollbarStyle(scrollView);
+            }).ExecuteLater(50);
+            
+            scrollView.schedule.Execute(() => {
+                ApplyVerticalScrollbarStyle(scrollView);
+            }).ExecuteLater(100);
+            
+            scrollView.schedule.Execute(() => {
+                ApplyVerticalScrollbarStyle(scrollView);
+            }).ExecuteLater(200);
+            
+            scrollView.schedule.Execute(() => {
+                ApplyVerticalScrollbarStyle(scrollView);
+            }).ExecuteLater(500);
+        }
+        
+        /// <summary>
+        /// 縦スクロールバーのスタイルを適用（ゲームのデザインに合わせる）
+        /// </summary>
+        private void ApplyVerticalScrollbarStyle(ScrollView scrollView)
+        {
+            if (scrollView == null) return;
+
+            // 縦スクロールバーのコンテナ（複数の方法で確実に検索）
+            VisualElement verticalScroller = null;
+            
+            // 方法1: 直接検索
+            verticalScroller = scrollView.Q<VisualElement>(className: "unity-scroll-view__vertical-scroller");
+            
+            // 方法2: すべての子要素から検索
+            if (verticalScroller == null)
+            {
+                var scrollViewChildren = scrollView.Children().ToList();
+                foreach (var child in scrollViewChildren)
+                {
+                    if (child.ClassListContains("unity-scroll-view__vertical-scroller"))
+                    {
+                        verticalScroller = child;
+                        break;
+                    }
+                }
+            }
+            
+            // 方法3: Queryを使用して検索
+            if (verticalScroller == null)
+            {
+                var scrollers = scrollView.Query<VisualElement>(className: "unity-scroll-view__vertical-scroller").ToList();
+                if (scrollers.Count > 0)
+                {
+                    verticalScroller = scrollers[0];
+                }
+            }
+            
+            // 方法4: すべての子孫要素から検索（最も確実）
+            if (verticalScroller == null)
+            {
+                var scrollViewDescendants = scrollView.Query<VisualElement>(className: "unity-scroll-view__vertical-scroller").ToList();
+                if (scrollViewDescendants.Count > 0)
+                {
+                    verticalScroller = scrollViewDescendants[0];
+                }
+            }
+            
+            if (verticalScroller == null) return;
+            
+            // コンテナのスタイルを適用（背景は透明、ボタンは非表示）
+            verticalScroller.style.width = 10;
+            verticalScroller.style.backgroundColor = Color.clear; // 背景を透明に
+            verticalScroller.style.borderTopLeftRadius = 5;
+            verticalScroller.style.borderTopRightRadius = 5;
+            verticalScroller.style.borderBottomLeftRadius = 5;
+            verticalScroller.style.borderBottomRightRadius = 5;
+            verticalScroller.style.borderTopWidth = 0;
+            verticalScroller.style.borderRightWidth = 0;
+            verticalScroller.style.borderBottomWidth = 0;
+            verticalScroller.style.borderLeftWidth = 0;
+            verticalScroller.style.width = new StyleLength(new Length(10, LengthUnit.Pixel));
+            verticalScroller.MarkDirtyRepaint();
+
+            // スクロールバー内のすべての子要素を検索
+            var scrollerChildren = verticalScroller.Children().ToList();
+            foreach (var child in scrollerChildren)
+            {
+                // ボタン要素を非表示（上矢印・下矢印ボタン）
+                string className = string.Join(" ", child.GetClasses());
+                string name = child.name;
+                
+                // ボタンっぽい要素を非表示
+                if (className.Contains("button") || className.Contains("Button") ||
+                    className.Contains("up") || className.Contains("down") ||
+                    className.Contains("scrollbar") && (className.Contains("up") || className.Contains("down")) ||
+                    name.Contains("button") || name.Contains("Button") ||
+                    name.Contains("up") || name.Contains("down") ||
+                    name.Contains("Up") || name.Contains("Down"))
+                {
+                    child.style.display = DisplayStyle.None;
+                    child.style.visibility = Visibility.Hidden;
+                }
+                
+                // Button型の要素も非表示
+                if (child is Button)
+                {
+                    child.style.display = DisplayStyle.None;
+                    child.style.visibility = Visibility.Hidden;
+                }
+            }
+
+            // ドラッガー（つまみ）を検索（複数のパターンで確実に検索）
+            VisualElement dragger = null;
+            
+            // 方法1: 直接検索
+            dragger = verticalScroller.Q<VisualElement>(className: "unity-base-slider__dragger");
+            
+            // 方法2: Slider内のドラッガーを検索
+            if (dragger == null)
+            {
+                var slider = verticalScroller.Q<Slider>();
+                if (slider != null)
+                {
+                    dragger = slider.Q<VisualElement>(className: "unity-base-slider__dragger");
+                }
+            }
+            
+            // 方法3: すべての子孫要素から検索
+            if (dragger == null)
+            {
+                var draggerDescendants = verticalScroller.Query<VisualElement>(className: "unity-base-slider__dragger").ToList();
+                if (draggerDescendants.Count > 0)
+                {
+                    dragger = draggerDescendants[0];
+                }
+            }
+            
+            if (dragger != null)
+            {
+                // ドラッガーのスタイルを適用（重要度: 最高）
+                dragger.style.backgroundColor = new Color(218f / 255f, 165f / 255f, 32f / 255f, 0.8f);
+                dragger.style.borderTopLeftRadius = 4;
+                dragger.style.borderTopRightRadius = 4;
+                dragger.style.borderBottomLeftRadius = 4;
+                dragger.style.borderBottomRightRadius = 4;
+                dragger.style.width = 8;
+                dragger.style.marginLeft = 1;
+                dragger.style.marginRight = 1;
+                dragger.style.marginTop = 1;
+                dragger.style.marginBottom = 1;
+                dragger.style.borderTopWidth = 0;
+                dragger.style.borderRightWidth = 0;
+                dragger.style.borderBottomWidth = 0;
+                dragger.style.borderLeftWidth = 0;
+                dragger.MarkDirtyRepaint();
+            }
+
+            // トラッカー（背景）を検索（複数のパターンで確実に検索）
+            VisualElement tracker = null;
+            
+            // 方法1: 直接検索
+            tracker = verticalScroller.Q<VisualElement>(className: "unity-base-slider__tracker");
+            
+            // 方法2: Slider内のトラッカーを検索
+            if (tracker == null)
+            {
+                var slider = verticalScroller.Q<Slider>();
+                if (slider != null)
+                {
+                    tracker = slider.Q<VisualElement>(className: "unity-base-slider__tracker");
+                }
+            }
+            
+            // 方法3: すべての子孫要素から検索
+            if (tracker == null)
+            {
+                var trackerDescendants = verticalScroller.Query<VisualElement>(className: "unity-base-slider__tracker").ToList();
+                if (trackerDescendants.Count > 0)
+                {
+                    tracker = trackerDescendants[0];
+                }
+            }
+            
+            if (tracker != null)
+            {
+                // トラッカーのスタイルを適用
+                tracker.style.backgroundColor = Color.clear;
+                tracker.style.borderTopWidth = 0;
+                tracker.style.borderRightWidth = 0;
+                tracker.style.borderBottomWidth = 0;
+                tracker.style.borderLeftWidth = 0;
+                tracker.MarkDirtyRepaint();
+            }
+            
+            // すべてのSlider要素にも直接スタイルを適用（念のため）
+            var allSliders = verticalScroller.Query<Slider>().ToList();
+            foreach (var slider in allSliders)
+            {
+                // Slider内のドラッガーとトラッカーを再検索
+                var sliderDragger = slider.Q<VisualElement>(className: "unity-base-slider__dragger");
+                if (sliderDragger != null)
+                {
+                    sliderDragger.style.backgroundColor = new Color(218f / 255f, 165f / 255f, 32f / 255f, 0.8f);
+                    sliderDragger.style.borderTopLeftRadius = 4;
+                    sliderDragger.style.borderTopRightRadius = 4;
+                    sliderDragger.style.borderBottomLeftRadius = 4;
+                    sliderDragger.style.borderBottomRightRadius = 4;
+                    sliderDragger.style.width = 8;
+                    sliderDragger.style.marginLeft = 1;
+                    sliderDragger.style.marginRight = 1;
+                    sliderDragger.style.marginTop = 1;
+                    sliderDragger.style.marginBottom = 1;
+                    sliderDragger.style.borderTopWidth = 0;
+                    sliderDragger.style.borderRightWidth = 0;
+                    sliderDragger.style.borderBottomWidth = 0;
+                    sliderDragger.style.borderLeftWidth = 0;
+                    sliderDragger.MarkDirtyRepaint();
+                }
+                
+                var sliderTracker = slider.Q<VisualElement>(className: "unity-base-slider__tracker");
+                if (sliderTracker != null)
+                {
+                    sliderTracker.style.backgroundColor = Color.clear;
+                    sliderTracker.style.borderTopWidth = 0;
+                    sliderTracker.style.borderRightWidth = 0;
+                    sliderTracker.style.borderBottomWidth = 0;
+                    sliderTracker.style.borderLeftWidth = 0;
+                    sliderTracker.MarkDirtyRepaint();
+                }
             }
         }
         
@@ -186,6 +439,7 @@ namespace NovelGame
             var scoreLabel = root.Q<Label>("ScoreText");
             if (scoreLabel != null)
             {
+                scoreLabel.style.fontSize = 10; // 20pxから10pxに縮小（半分）
                 scoreLabel.style.color = brightTextColor;
                 scoreLabel.style.textShadow = new TextShadow { offset = new Vector2(1, 1), blurRadius = 2, color = new Color(0, 0, 0, 0.8f) };
             }

@@ -67,11 +67,15 @@ namespace NovelGame
             cutsceneLabel.style.position = Position.Absolute;
             cutsceneLabel.style.left = 0;
             cutsceneLabel.style.right = 0;
-            cutsceneLabel.style.top = Length.Percent(40);
+            cutsceneLabel.style.top = Length.Percent(30); // 40から30に変更して上に移動
             cutsceneLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            cutsceneLabel.style.fontSize = 36;
+            cutsceneLabel.style.fontSize = 28; // 36から28に縮小
             cutsceneLabel.style.color = Color.white;
             cutsceneLabel.style.opacity = 0;
+            cutsceneLabel.style.whiteSpace = WhiteSpace.Normal; // テキストの折り返しを有効化
+            cutsceneLabel.style.paddingLeft = 40; // 左右にパディングを追加してはみ出しを防止
+            cutsceneLabel.style.paddingRight = 40;
+            cutsceneLabel.style.maxWidth = Length.Percent(90); // 最大幅を90%に制限
             overlay.Add(cutsceneLabel);
 
             // カットシーンテキストを生成
@@ -187,11 +191,15 @@ namespace NovelGame
             cutsceneLabel.style.position = Position.Absolute;
             cutsceneLabel.style.left = 0;
             cutsceneLabel.style.right = 0;
-            cutsceneLabel.style.top = Length.Percent(40);
+            cutsceneLabel.style.top = Length.Percent(30); // 40から30に変更して上に移動
             cutsceneLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            cutsceneLabel.style.fontSize = 36;
+            cutsceneLabel.style.fontSize = 28; // 36から28に縮小
             cutsceneLabel.style.color = Color.white;
             cutsceneLabel.style.opacity = 0;
+            cutsceneLabel.style.whiteSpace = WhiteSpace.Normal; // テキストの折り返しを有効化
+            cutsceneLabel.style.paddingLeft = 40; // 左右にパディングを追加してはみ出しを防止
+            cutsceneLabel.style.paddingRight = 40;
+            cutsceneLabel.style.maxWidth = Length.Percent(90); // 最大幅を90%に制限
             overlay.Add(cutsceneLabel);
 
             // カットシーンテキスト

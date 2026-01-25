@@ -18,8 +18,8 @@ namespace NovelGame
         private List<PanelSettings> originalPanelSettings = new List<PanelSettings>();
         
         [Header("Render Texture Settings")]
-        [SerializeField] private int renderTextureWidth = 1920;
-        [SerializeField] private int renderTextureHeight = 1080;
+        [SerializeField] private int renderTextureWidth = 960;
+        [SerializeField] private int renderTextureHeight = 540;
         [SerializeField] private int renderTextureDepth = 24;
         
         [Header("Display Settings")]
@@ -90,17 +90,16 @@ namespace NovelGame
             uiDisplayCanvas.worldCamera = Camera.main;
             uiDisplayCanvas.sortingOrder = displayCanvasSortOrder; // パーティクルより後ろに表示
             
-            // CanvasScalerを追加
-            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(renderTextureWidth, renderTextureHeight);
-            scaler.matchWidthOrHeight = 0.5f;
+            // CanvasScalerは使用しない（RenderTextureをそのまま表示するため）
+            // RenderTextureのサイズ（960x540）とPanelSettingsのReference Resolution（960x540）が一致しているため、
+            // CanvasScalerを使わずに、RawImageを直接画面サイズに合わせる
             
             // Raw Imageを作成（Render Textureを表示）
             GameObject imageObject = new GameObject("UIDisplayImage");
             imageObject.transform.SetParent(canvasObject.transform, false);
             
             RectTransform rectTransform = imageObject.AddComponent<RectTransform>();
+            // 画面全体をカバーするように設定
             rectTransform.anchorMin = Vector2.zero;
             rectTransform.anchorMax = Vector2.one;
             rectTransform.offsetMin = Vector2.zero;
@@ -109,6 +108,31 @@ namespace NovelGame
             uiDisplayImage = imageObject.AddComponent<RawImage>();
             uiDisplayImage.texture = uiRenderTexture;
             uiDisplayImage.raycastTarget = false; // クリック判定を無効化（UI ToolkitのUIがクリック可能なため）
+            
+            // RenderTextureを画面全体に表示するため、uvRectを調整
+            // RenderTextureのアスペクト比と画面のアスペクト比が異なる場合に備えて、
+            // アスペクト比を維持しながら画面全体に表示
+            float renderTextureAspect = (float)renderTextureWidth / renderTextureHeight;
+            float screenAspect = (float)Screen.width / Screen.height;
+            
+            if (renderTextureAspect > screenAspect)
+            {
+                // RenderTextureの方が横長の場合：高さを基準に表示
+                float scale = (float)Screen.height / renderTextureHeight;
+                float scaledWidth = renderTextureWidth * scale;
+                float uvWidth = Screen.width / scaledWidth;
+                float uvOffsetX = (1.0f - uvWidth) * 0.5f;
+                uiDisplayImage.uvRect = new Rect(uvOffsetX, 0, uvWidth, 1.0f);
+            }
+            else
+            {
+                // 画面の方が横長の場合：幅を基準に表示
+                float scale = (float)Screen.width / renderTextureWidth;
+                float scaledHeight = renderTextureHeight * scale;
+                float uvHeight = Screen.height / scaledHeight;
+                float uvOffsetY = (1.0f - uvHeight) * 0.5f;
+                uiDisplayImage.uvRect = new Rect(0, uvOffsetY, 1.0f, uvHeight);
+            }
         }
         
         /// <summary>

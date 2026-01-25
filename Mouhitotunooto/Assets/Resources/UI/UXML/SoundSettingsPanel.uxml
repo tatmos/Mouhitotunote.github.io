@@ -1,22 +1,22 @@
-﻿<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/UIToolkit/GameStyles.uss?fileID=7433441132597879392&amp;guid=129863cdc8fc8a64386b92878645c775&amp;type=3#GameStyles" />
     <ui:VisualElement name="SoundSettingsOverlay" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; display: none;">
-        <ui:VisualElement name="SoundSettingsPanel" class="card" style="background-color: rgb(43, 31, 24); border-width: 2px; border-color: rgb(184, 134, 11); min-width: 400px; padding: 30px;">
-            <ui:Label text="サウンド設定" style="font-size: 24px; -unity-font-style: bold; color: rgb(237, 215, 181); margin-bottom: 20px; -unity-text-align: middle-center;"/>
+        <ui:VisualElement name="SoundSettingsPanel" class="card" style="background-color: rgb(43, 31, 24); border-width: 2px; border-color: rgb(184, 134, 11); min-width: 320px; padding: 20px;">
+            <ui:Label text="サウンド設定" style="font-size: 20px; -unity-font-style: bold; color: rgb(237, 215, 181); margin-bottom: 15px; -unity-text-align: middle-center;"/>
             
-            <ui:VisualElement name="BGMContainer" style="flex-direction: row; align-items: center; margin-bottom: 15px;">
-                <ui:Label text="BGM音量" style="width: 100px; color: rgb(237, 215, 181); font-size: 16px;"/>
+            <ui:VisualElement name="BGMContainer" style="flex-direction: row; align-items: center; margin-bottom: 12px;">
+                <ui:Label text="BGM音量" style="width: 80px; color: rgb(237, 215, 181); font-size: 14px;"/>
                 <ui:Slider name="BGMSlider" low-value="0" high-value="1" style="flex-grow: 1;"/>
-                <ui:Label name="BGMValueLabel" text="100%" style="width: 50px; color: rgb(237, 215, 181); margin-left: 10px;"/>
+                <ui:Label name="BGMValueLabel" text="100%" style="width: 40px; color: rgb(237, 215, 181); margin-left: 8px;"/>
             </ui:VisualElement>
 
-            <ui:VisualElement name="SEContainer" style="flex-direction: row; align-items: center; margin-bottom: 30px;">
-                <ui:Label text="SE音量" style="width: 100px; color: rgb(237, 215, 181); font-size: 16px;"/>
+            <ui:VisualElement name="SEContainer" style="flex-direction: row; align-items: center; margin-bottom: 20px;">
+                <ui:Label text="SE音量" style="width: 80px; color: rgb(237, 215, 181); font-size: 14px;"/>
                 <ui:Slider name="SESlider" low-value="0" high-value="1" style="flex-grow: 1;"/>
-                <ui:Label name="SEValueLabel" text="100%" style="width: 50px; color: rgb(237, 215, 181); margin-left: 10px;"/>
+                <ui:Label name="SEValueLabel" text="100%" style="width: 40px; color: rgb(237, 215, 181); margin-left: 8px;"/>
             </ui:VisualElement>
 
-            <ui:Button name="CloseButton" text="閉じる" class="button-gradient" style="align-self: center; min-width: 150px;"/>
+            <ui:Button name="CloseButton" text="閉じる" class="button-gradient" style="align-self: center; min-width: 120px;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

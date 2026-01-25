@@ -197,10 +197,10 @@ namespace NovelGame
                 detailCard.style.backgroundColor = new Color(0.4f, 0.26f, 0.13f); // ブラウン/セピア系
             }
 
-            detailCard.style.paddingTop = 20;
-            detailCard.style.paddingBottom = 20;
-            detailCard.style.paddingLeft = 20;
-            detailCard.style.paddingRight = 20;
+            detailCard.style.paddingTop = 12;
+            detailCard.style.paddingBottom = 12;
+            detailCard.style.paddingLeft = 12;
+            detailCard.style.paddingRight = 12;
             detailCard.style.width = Length.Percent(100);
             detailCard.style.maxWidth = Length.Percent(100);
             detailCard.style.minWidth = 0;
@@ -241,10 +241,10 @@ namespace NovelGame
                 if (characterImage != null)
                 {
                     var imageContainer = new VisualElement();
-                    imageContainer.style.width = 200;
-                    imageContainer.style.height = 200;
-                    imageContainer.style.marginTop = 10;
-                    imageContainer.style.marginBottom = 15;
+                    imageContainer.style.width = 150;
+                    imageContainer.style.height = 150;
+                    imageContainer.style.marginTop = 8;
+                    imageContainer.style.marginBottom = 12;
                     imageContainer.style.alignSelf = Align.Center;
                     imageContainer.style.backgroundImage = new StyleBackground(characterImage.texture);
                     imageContainer.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);

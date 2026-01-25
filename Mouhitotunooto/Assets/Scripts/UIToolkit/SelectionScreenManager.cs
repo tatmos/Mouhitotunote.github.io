@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -139,13 +139,13 @@ namespace NovelGame
                     float originalHeight = titleImage.texture.height;
                     float aspectRatio = originalHeight / originalWidth;
                     
-                    float maxWidth = 600f;
+                    float maxWidth = 150f; // 300pxから150pxに縮小（半分）
                     float calculatedWidth = Mathf.Min(originalWidth, maxWidth);
                     float calculatedHeight = calculatedWidth * aspectRatio;
                     
-                    if (calculatedHeight > 200f)
+                    if (calculatedHeight > 75f) // 150pxから75pxに縮小（半分）
                     {
-                        calculatedHeight = 200f;
+                        calculatedHeight = 75f;
                         calculatedWidth = calculatedHeight / aspectRatio;
                     }
                     
@@ -154,7 +154,7 @@ namespace NovelGame
                     titleImageElement.style.backgroundImage = new StyleBackground(titleImage.texture);
                     titleImageElement.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
                     titleImageElement.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
-                    titleImageElement.style.marginBottom = 20;
+                    titleImageElement.style.marginBottom = 10; // 20から10に縮小
                     titleContainer.Insert(titleContainer.IndexOf(titleLabel), titleImageElement);
                     titleLabel.style.display = DisplayStyle.None;
                 }
