@@ -5,6 +5,314 @@ using UnityEngine.UIElements;
 namespace NovelGame.Overlay
 {
     /// <summary>
+    /// オーバーレイをドラッグ可能にするManipulator
+    /// </summary>
+    public class OverlayDragManipulator : Manipulator
+    {
+        private Vector2 startMousePosition;
+        private Vector2 startOverlayRootPosition;
+        private Vector2 startRoomImagePosition;
+        private Vector2 startGirlImagePosition;
+        private Vector2 startBalloonPosition;
+        private Vector2 startThoughtBalloonPosition;
+        private bool isDragging = false;
+        private VisualElement roomImage;
+        private VisualElement girlImage;
+        private VisualElement balloonRoot;
+        private VisualElement thoughtBalloonRoot;
+
+        public OverlayDragManipulator(VisualElement roomImage, VisualElement girlImage, 
+            VisualElement balloonRoot, VisualElement thoughtBalloonRoot)
+        {
+            this.roomImage = roomImage;
+            this.girlImage = girlImage;
+            this.balloonRoot = balloonRoot;
+            this.thoughtBalloonRoot = thoughtBalloonRoot;
+        }
+
+        protected override void RegisterCallbacksOnTarget()
+        {
+            target.RegisterCallback<MouseDownEvent>(OnMouseDown);
+            target.RegisterCallback<MouseMoveEvent>(OnMouseMove);
+            target.RegisterCallback<MouseUpEvent>(OnMouseUp);
+            target.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
+            target.RegisterCallback<MouseCaptureOutEvent>(OnMouseCaptureOut);
+        }
+
+        protected override void UnregisterCallbacksFromTarget()
+        {
+            target.UnregisterCallback<MouseDownEvent>(OnMouseDown);
+            target.UnregisterCallback<MouseMoveEvent>(OnMouseMove);
+            target.UnregisterCallback<MouseUpEvent>(OnMouseUp);
+            target.UnregisterCallback<MouseLeaveEvent>(OnMouseLeave);
+            target.UnregisterCallback<MouseCaptureOutEvent>(OnMouseCaptureOut);
+        }
+
+        private void OnMouseDown(MouseDownEvent evt)
+        {
+            // Manipulatorが画像要素に追加されているので、このメソッドが呼ばれた時点で
+            // 画像要素の上でクリックされたことが確定している
+            if (evt.button == 0 && !isDragging) // 左クリックかつドラッグ中でない場合
+            {
+                isDragging = true;
+                // マウス位置はパネル座標系（rootVisualElementを基準）
+                startMousePosition = evt.mousePosition;
+                
+                // OverlayRootの現在位置を取得（rootを基準とした絶対位置）
+                var overlayRoot = target;
+                // OverlayRootは通常、位置が設定されていない（0,0から開始）
+                // 実際の画像要素の位置を基準にする
+                startOverlayRootPosition = Vector2.zero; // OverlayRootは常に0,0から開始
+                
+                // RoomImageとGirlImageの現在位置を取得
+                if (roomImage != null)
+                {
+                    if (roomImage.style.position.value == Position.Absolute && 
+                        roomImage.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        startRoomImagePosition = new Vector2(
+                            roomImage.style.left.value.value,
+                            roomImage.style.top.value.value
+                        );
+                    }
+                    else
+                    {
+                        startRoomImagePosition = new Vector2(
+                            roomImage.resolvedStyle.left,
+                            roomImage.resolvedStyle.top
+                        );
+                    }
+                }
+                
+                if (girlImage != null)
+                {
+                    if (girlImage.style.position.value == Position.Absolute && 
+                        girlImage.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        startGirlImagePosition = new Vector2(
+                            girlImage.style.left.value.value,
+                            girlImage.style.top.value.value
+                        );
+                    }
+                    else
+                    {
+                        startGirlImagePosition = new Vector2(
+                            girlImage.resolvedStyle.left,
+                            girlImage.resolvedStyle.top
+                        );
+                    }
+                }
+                
+                // 吹き出しの現在位置を取得
+                if (balloonRoot != null)
+                {
+                    if (balloonRoot.style.position.value == Position.Absolute && 
+                        balloonRoot.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        startBalloonPosition = new Vector2(
+                            balloonRoot.style.left.value.value,
+                            balloonRoot.style.top.value.value
+                        );
+                    }
+                    else
+                    {
+                        startBalloonPosition = new Vector2(
+                            balloonRoot.resolvedStyle.left,
+                            balloonRoot.resolvedStyle.top
+                        );
+                    }
+                }
+                
+                if (thoughtBalloonRoot != null)
+                {
+                    if (thoughtBalloonRoot.style.position.value == Position.Absolute && 
+                        thoughtBalloonRoot.style.left.value.unit == LengthUnit.Pixel)
+                    {
+                        startThoughtBalloonPosition = new Vector2(
+                            thoughtBalloonRoot.style.left.value.value,
+                            thoughtBalloonRoot.style.top.value.value
+                        );
+                    }
+                    else
+                    {
+                        startThoughtBalloonPosition = new Vector2(
+                            thoughtBalloonRoot.resolvedStyle.left,
+                            thoughtBalloonRoot.resolvedStyle.top
+                        );
+                    }
+                }
+                
+                target.CaptureMouse();
+                // ドラッグ開始時のみイベントの伝播を止める
+                evt.StopPropagation();
+            }
+            // ドラッグ開始しない場合は、イベントを伝播させて他のUI要素が反応できるようにする
+        }
+
+        private void OnMouseMove(MouseMoveEvent evt)
+        {
+            if (isDragging && target.HasMouseCapture())
+            {
+                // マウスの移動量を計算（パネル座標系、UI座標系）
+                Vector2 delta = evt.mousePosition - startMousePosition;
+                
+                // 位置を更新（ドロップ時にこの位置が保持される）
+                UpdateElementPositions(delta);
+                
+                // イベントの伝播は止めない（他のUI要素も操作可能にする）
+                // evt.StopPropagation(); // コメントアウト
+            }
+        }
+        
+        /// <summary>
+        /// 要素の位置を更新（ドラッグ中とドロップ後の両方で使用）
+        /// </summary>
+        private void UpdateElementPositions(Vector2 delta)
+        {
+            // RoomImageとGirlImageの位置を同じオフセット分だけ更新
+            if (roomImage != null)
+            {
+                Vector2 newRoomImagePosition = startRoomImagePosition + delta;
+                roomImage.style.position = Position.Absolute;
+                roomImage.style.left = newRoomImagePosition.x;
+                roomImage.style.top = newRoomImagePosition.y;
+                roomImage.style.right = StyleKeyword.Auto;
+                roomImage.style.bottom = StyleKeyword.Auto;
+                roomImage.MarkDirtyRepaint();
+            }
+            
+            if (girlImage != null)
+            {
+                Vector2 newGirlImagePosition = startGirlImagePosition + delta;
+                girlImage.style.position = Position.Absolute;
+                girlImage.style.left = newGirlImagePosition.x;
+                girlImage.style.top = newGirlImagePosition.y;
+                girlImage.style.right = StyleKeyword.Auto;
+                girlImage.style.bottom = StyleKeyword.Auto;
+                girlImage.MarkDirtyRepaint();
+            }
+            
+            // 吹き出しの位置も更新（GirlImageと一緒に移動）
+            if (balloonRoot != null)
+            {
+                Vector2 newBalloonPosition = startBalloonPosition + delta;
+                balloonRoot.style.position = Position.Absolute;
+                balloonRoot.style.left = newBalloonPosition.x;
+                balloonRoot.style.top = newBalloonPosition.y;
+                balloonRoot.style.right = StyleKeyword.Auto;
+                balloonRoot.style.bottom = StyleKeyword.Auto;
+                balloonRoot.MarkDirtyRepaint();
+            }
+            
+            if (thoughtBalloonRoot != null)
+            {
+                Vector2 newThoughtBalloonPosition = startThoughtBalloonPosition + delta;
+                thoughtBalloonRoot.style.position = Position.Absolute;
+                thoughtBalloonRoot.style.left = newThoughtBalloonPosition.x;
+                thoughtBalloonRoot.style.top = newThoughtBalloonPosition.y;
+                thoughtBalloonRoot.style.right = StyleKeyword.Auto;
+                thoughtBalloonRoot.style.bottom = StyleKeyword.Auto;
+                thoughtBalloonRoot.MarkDirtyRepaint();
+            }
+            
+            target.MarkDirtyRepaint();
+        }
+
+        private void OnMouseUp(MouseUpEvent evt)
+        {
+            if (evt.button == 0 && isDragging)
+            {
+                // 最終位置を確定（ドロップ位置を保持）
+                if (target.HasMouseCapture())
+                {
+                    Vector2 delta = evt.mousePosition - startMousePosition;
+                    UpdateElementPositions(delta);
+                    
+                    // 開始位置を更新（次回ドラッグ時の基準位置）
+                    if (roomImage != null)
+                    {
+                        startRoomImagePosition = new Vector2(
+                            roomImage.style.left.value.value,
+                            roomImage.style.top.value.value
+                        );
+                    }
+                    if (girlImage != null)
+                    {
+                        startGirlImagePosition = new Vector2(
+                            girlImage.style.left.value.value,
+                            girlImage.style.top.value.value
+                        );
+                    }
+                    if (balloonRoot != null)
+                    {
+                        startBalloonPosition = new Vector2(
+                            balloonRoot.style.left.value.value,
+                            balloonRoot.style.top.value.value
+                        );
+                    }
+                    if (thoughtBalloonRoot != null)
+                    {
+                        startThoughtBalloonPosition = new Vector2(
+                            thoughtBalloonRoot.style.left.value.value,
+                            thoughtBalloonRoot.style.top.value.value
+                        );
+                    }
+                }
+                
+                // ドラッグ状態を終了（マウスキャプチャを解除）
+                EndDragging();
+                
+                // イベントの伝播を止めない（他のUI要素も反応できるように）
+                // evt.StopPropagation(); // コメントアウト
+            }
+        }
+        
+        /// <summary>
+        /// マウスが要素から離れた時（ドラッグ中でもキャプチャを解除）
+        /// </summary>
+        private void OnMouseLeave(MouseLeaveEvent evt)
+        {
+            if (isDragging)
+            {
+                // マウスが離れた場合も位置を確定
+                EndDragging();
+            }
+        }
+        
+        /// <summary>
+        /// マウスキャプチャが失われた時（他の要素がキャプチャした場合など）
+        /// </summary>
+        private void OnMouseCaptureOut(MouseCaptureOutEvent evt)
+        {
+            if (isDragging)
+            {
+                // キャプチャが失われた場合も位置を確定
+                EndDragging();
+            }
+        }
+        
+        /// <summary>
+        /// ドラッグを終了（マウスキャプチャを解除）
+        /// </summary>
+        private void EndDragging()
+        {
+            isDragging = false;
+            
+            // マウスキャプチャを確実に解除
+            if (target.HasMouseCapture())
+            {
+                target.ReleaseMouse();
+            }
+            
+            // マウスキャプチャが解除されたことを確認
+            if (target.HasMouseCapture())
+            {
+                Debug.LogWarning("[OverlayDragManipulator] マウスキャプチャの解除に失敗しました。");
+            }
+        }
+    }
+
+    /// <summary>
     /// UI Toolkitへ反映（画像・テキスト・フェード・アニメ）
     /// </summary>
     public class OverlayPresenter_UITK
@@ -20,6 +328,7 @@ namespace NovelGame.Overlay
         private readonly VisualElement musicNoteLayer;
         private readonly MonoBehaviour coroutineRunner;
         private Coroutine musicNoteCoroutine;
+        private OverlayDragManipulator dragManipulator;
 
         public OverlayPresenter_UITK(VisualElement root, MonoBehaviour coroutineRunner)
         {
@@ -39,6 +348,14 @@ namespace NovelGame.Overlay
             if (overlayRoot == null)
             {
                 Debug.LogError("[OverlayPresenter_UITK] OverlayRootが見つかりません。UXMLが正しく読み込まれているか確認してください。");
+            }
+            
+            // OverlayRootの初期位置を設定（ドラッグ可能にするため）
+            if (overlayRoot != null)
+            {
+                overlayRoot.style.position = Position.Absolute;
+                // OverlayRootは画面全体をカバーするため、位置は0,0で開始
+                // 実際の画像要素の位置は子要素で設定
             }
             
             // 画像要素の強制サイズ設定（UXMLの設定が反映されていない場合）
@@ -81,10 +398,36 @@ namespace NovelGame.Overlay
                 }
             }
             
-            // すべてのオーバーレイ要素にpickingModeをIgnoreに設定（イベントを無視するため）
-            if (overlayRoot != null) overlayRoot.pickingMode = PickingMode.Ignore;
-            if (roomImage != null) roomImage.pickingMode = PickingMode.Ignore;
-            if (girlImage != null) girlImage.pickingMode = PickingMode.Ignore;
+            // オーバーレイ要素のpickingMode設定
+            // OverlayRootはIgnoreのまま（他のUI要素へのイベントをブロックしない）
+            if (overlayRoot != null)
+            {
+                overlayRoot.pickingMode = PickingMode.Ignore;
+            }
+            
+            // 画像要素のみドラッグ可能にする
+            // RoomImageとGirlImageの両方にManipulatorを追加（どちらをクリックしてもドラッグ可能）
+            if (roomImage != null || girlImage != null)
+            {
+                // ドラッグManipulatorを作成（RoomImage、GirlImage、吹き出しも一緒に移動）
+                dragManipulator = new OverlayDragManipulator(roomImage, girlImage, balloonRoot, thoughtBalloonRoot);
+                
+                // RoomImageに追加
+                if (roomImage != null)
+                {
+                    roomImage.pickingMode = PickingMode.Position; // ドラッグ可能にする
+                    roomImage.AddManipulator(dragManipulator);
+                }
+                
+                // GirlImageにも追加（別のManipulatorインスタンスを作成）
+                if (girlImage != null)
+                {
+                    girlImage.pickingMode = PickingMode.Position; // ドラッグ可能にする
+                    // 同じManipulatorインスタンスは複数の要素に追加できないため、新しいインスタンスを作成
+                    var girlDragManipulator = new OverlayDragManipulator(roomImage, girlImage, balloonRoot, thoughtBalloonRoot);
+                    girlImage.AddManipulator(girlDragManipulator);
+                }
+            }
             if (balloonRoot != null) balloonRoot.pickingMode = PickingMode.Ignore;
             if (balloonLabel != null) balloonLabel.pickingMode = PickingMode.Ignore;
             if (thoughtBalloonRoot != null) thoughtBalloonRoot.pickingMode = PickingMode.Ignore;

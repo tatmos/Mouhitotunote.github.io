@@ -963,32 +963,6 @@ MonoBehaviour:
   creditsScreenDocument: {fileID: 1415366477}
   achievementsScreenDocument: {fileID: 1337415256}
   mouhitotsuScreenDocument: {fileID: 291218904}
-  selectionScreenUXML: {fileID: 9197481963319205126, guid: da963bad3c570994497793d7bd02bd47, type: 3}
-  scenarioScreenUXML: {fileID: 9197481963319205126, guid: 30628fd5415faae40a0ec62022273ee5, type: 3}
-  resultScreenUXML: {fileID: 9197481963319205126, guid: 1e65845b13f9e424393d79e8efc65ea5, type: 3}
-  profileScreenUXML: {fileID: 9197481963319205126, guid: c5b64b619e399d846b4f36473deeb455, type: 3}
-  creditsScreenUXML: {fileID: 9197481963319205126, guid: ac8aaa532cc020d478f2652ec1b882ba, type: 3}
-  achievementsScreenUXML: {fileID: 9197481963319205126, guid: 51908d6018affa24d8cbbd83843ce589, type: 3}
-  mouhitotsuScreenUXML: {fileID: 9197481963319205126, guid: fa8ca8afed74492bbbf1d45cc74484d9, type: 3}
-  soundSettingsPanelUXML: {fileID: 9197481963319205126, guid: fc150314e14548598a5105f16773bda4, type: 3}
-  scenarioBackgrounds:
-  - {fileID: 21300000, guid: 4b0debc5d9dd7f240ae5d51bb298778c, type: 3}
-  - {fileID: 21300000, guid: da780373390cd394a8342139e51a1bb5, type: 3}
-  - {fileID: 21300000, guid: 13152decb57da44498e176670cf8b154, type: 3}
-  - {fileID: 21300000, guid: e5fa3e97a6ac8574a9a5f8a981529892, type: 3}
-  - {fileID: 21300000, guid: c8e314c47a64c36438f04d220643c075, type: 3}
-  - {fileID: 21300000, guid: c82dbf72459299d4aa43bc89edd8b8ba, type: 3}
-  selectionScreenBackground: {fileID: 21300000, guid: 177f5023fb09abd4ca114c81d8d80700, type: 3}
-  profileScreenBackground: {fileID: 21300000, guid: beed6f7a533820243bde9f559d996f6e, type: 3}
-  scenarioButtonNormalImage: {fileID: 21300000, guid: 798e530e7509cbb4aa442b131682e843, type: 3}
-  scenarioButtonCompletedImage: {fileID: 21300000, guid: 1ffeffa49ba2a434ab6bb1c495d147bb, type: 3}
-  uiButtonNormalImage: {fileID: 21300000, guid: 7dde6c30576a9104ba7ea5d322c6d1b8, type: 3}
-  uiButtonDarkImage: {fileID: 21300000, guid: 7d49026a1bb0df1458c16ca777c11b91, type: 3}
-  uiButtonIndigoImage: {fileID: 21300000, guid: de83a0fbf179b0c4d9ce7a8658c3a661, type: 3}
-  titleImage: {fileID: 21300000, guid: fe53f7ce0b87dac4a9b432eb97770bc4, type: 3}
-  scoreDisplayBackgroundImage: {fileID: 21300000, guid: 86ff7f43719486445a677a75c3e82031, type: 3}
-  menuButtonImage: {fileID: 21300000, guid: a192ac7b29f5b594db724e1d4b160fde, type: 3}
-  distortionMaterial: {fileID: 2100000, guid: 24985ac6264dc2949b165aa5bcbd70e3, type: 2}
 --- !u!4 &1315741628
 Transform:
   m_ObjectHideFlags: 0
