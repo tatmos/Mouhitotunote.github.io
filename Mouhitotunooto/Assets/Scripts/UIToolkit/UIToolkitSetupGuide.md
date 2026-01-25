@@ -144,3 +144,8 @@ uGUIからUI Toolkit（UIElements）への移行手順です。
 - 画像のTexture Typeが「Sprite (2D and UI)」になっているか確認
 - StyleBackgroundで正しく設定されているか確認
 
+## 関連ドキュメント
+
+- **座標系と表示システム**: `UnityCoordinateSystemGuide.md` - UI要素が表示されない問題や座標計算の詳細ガイド
+- **UIスケーリング**: `UIScalingGuide.md` - PanelSettingsとスケーリング設定のガイド
+

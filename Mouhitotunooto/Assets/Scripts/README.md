@@ -73,6 +73,10 @@ UI ToolkitベースのUI管理を行うメインスクリプトです。以下�
 
 背景画像の生成プロンプトと配置方法については、`BackgroundImageGuide.md` を参照してください。
 
+## UI Toolkit 座標系と表示システム
+
+UI要素が表示されない問題や座標計算に関する詳細は、`UIToolkit/UnityCoordinateSystemGuide.md` を参照してください。
+
 ## UI Toolkitのメリット
 
 - **パフォーマンス**: UI ToolkitはuGUIより高速

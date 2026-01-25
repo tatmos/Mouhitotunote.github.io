@@ -1,0 +1,28 @@
+attempt to write a readonly database
+attempt to write a readonly database
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.2f1 (a9779f353c9b) revision 11106207'; Using compiler version '194234433'; Build Type 'Release'
+[Licensing::IpcConnector] Connection to channel LicenseClient-cha refused
+OS: 'Windows 11  (10.0.26100) 64bit Core' Language: 'ja' Physical Memory: 32003 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+Date: 2026-01-25T00:53:56Z
+[Licensing::Module] Successfully launched the LicensingClient (PId: 55120)
+Assertion failed on expression: 'SUCCEEDED(hr)'
+Assertion failed on expression: 'SUCCEEDED(hr)'
+Assertion failed on expression: 'ERROR_SUCCESS == status'
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.3.2f1\Editor\Unity.exe
+-batchmode
+-quit
+-projectPath
+D:\git\Mouhitotunote.github.io\Mouhitotunooto
+-buildTarget
+WebGL
+-buildPath
+D:\git\Mouhitotunote.github.io\Build\WebGL
+-logFile
+D:\git\Mouhitotunote.github.io\build.log
+Successfully changed project path to: D:\git\Mouhitotunote.github.io\Mouhitotunooto
+D:/git/Mouhitotunote.github.io/Mouhitotunooto
+Exiting without the bug reporter. Application will terminate with return code 1
